@@ -8,7 +8,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-plus-jakarta-sans);
+  --font-sans: var(--font-inter);
   
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
@@ -23,10 +23,13 @@
   --color-destructive-foreground: var(--destructive-foreground);
 
   /* Custom Colors for AI-Recruit360 */
-  --color-brand-blue: #002366;
-  --color-brand-orange: #ff5722;
-  --color-status-success: #10b981;
-  --color-status-danger: #e11d48;
+  --color-brand-navy: #0F172A;
+  --color-brand-cyan: #0EA5E9;
+  --color-brand-slate: #64748B;
+  --color-brand-light: #F8FAFC;
+  --color-brand-white: #FFFFFF;
+  --color-brand-success: #22C55E;
+  --color-brand-archived: #F59E0B;
 
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
@@ -48,52 +51,52 @@
 
 :root {
   --radius: 0.5rem;
-  --background: #f8fafc;
-  --foreground: #0f172a;
-  --card: #ffffff;
-  --card-foreground: #0f172a;
-  --popover: #ffffff;
-  --popover-foreground: #0f172a;
-  --primary: #1d4ed8;
-  --primary-foreground: #ffffff;
-  --secondary: #e2e8f0;
-  --secondary-foreground: #1e293b;
-  --accent: #0f766e;
-  --accent-foreground: #ffffff;
-  --muted: #f1f5f9;
-  --muted-foreground: #64748b;
-  --destructive: #dc2626;
-  --destructive-foreground: #ffffff;
-  --border: #dbe3ee;
-  --input: #dbe3ee;
-  --ring: #1d4ed8;
-  --chart-1: #1d4ed8;
-  --chart-2: #0f766e;
-  --chart-3: #10b981;
-  --chart-4: #dc2626;
-  --chart-5: #6366f1;
+  --background: #F8FAFC;
+  --foreground: #0F172A;
+  --card: #FFFFFF;
+  --card-foreground: #0F172A;
+  --popover: #FFFFFF;
+  --popover-foreground: #0F172A;
+  --primary: #0EA5E9;
+  --primary-foreground: #FFFFFF;
+  --secondary: #64748B;
+  --secondary-foreground: #FFFFFF;
+  --accent: #0EA5E9;
+  --accent-foreground: #FFFFFF;
+  --muted: #F8FAFC;
+  --muted-foreground: #64748B;
+  --destructive: #F59E0B;
+  --destructive-foreground: #FFFFFF;
+  --border: #64748B;
+  --input: #64748B;
+  --ring: #0EA5E9;
+  --chart-1: #0EA5E9;
+  --chart-2: #64748B;
+  --chart-3: #22C55E;
+  --chart-4: #F59E0B;
+  --chart-5: #0F172A;
 }
 
 .dark {
-  --background: #030712;
-  --foreground: #f8fafc;
-  --card: #0f172a;
-  --card-foreground: #f8fafc;
-  --popover: #0f172a;
-  --popover-foreground: #f8fafc;
-  --primary: #60a5fa;
-  --primary-foreground: #0b1220;
-  --secondary: #1e293b;
-  --secondary-foreground: #e2e8f0;
-  --accent: #2dd4bf;
-  --accent-foreground: #052e2b;
-  --muted: #1e293b;
-  --muted-foreground: #94a3b8;
-  --destructive: #ef4444;
-  --destructive-foreground: #ffffff;
-  --border: #1f2937;
-  --input: #1f2937;
-  --ring: #60a5fa;
+  --background: #0F172A;
+  --foreground: #F8FAFC;
+  --card: #0F172A;
+  --card-foreground: #F8FAFC;
+  --popover: #0F172A;
+  --popover-foreground: #F8FAFC;
+  --primary: #0EA5E9;
+  --primary-foreground: #FFFFFF;
+  --secondary: #64748B;
+  --secondary-foreground: #FFFFFF;
+  --accent: #0EA5E9;
+  --accent-foreground: #FFFFFF;
+  --muted: #0F172A;
+  --muted-foreground: #64748B;
+  --destructive: #F59E0B;
+  --destructive-foreground: #FFFFFF;
+  --border: #64748B;
+  --input: #64748B;
+  --ring: #0EA5E9;
 }
 
 @layer base {
@@ -103,8 +106,8 @@
   body {
     @apply bg-background text-foreground min-h-screen;
     background-image:
-      radial-gradient(circle at 0% 0%, rgba(29, 78, 216, 0.09), transparent 34%),
-      radial-gradient(circle at 100% 100%, rgba(15, 118, 110, 0.08), transparent 30%);
+      radial-gradient(circle at 0% 0%, rgba(14, 165, 233, 0.09), transparent 34%),
+      radial-gradient(circle at 100% 100%, rgba(100, 116, 139, 0.08), transparent 30%);
   }
 }
 
@@ -118,14 +121,10 @@
   }
 
   .surface-card {
-    @apply rounded-2xl border border-border/80 bg-card shadow-sm;
-  }
-
-  .hover-lift {
-    @apply transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg;
+    @apply rounded-md border border-gray-200 bg-brand-white shadow-sm;
   }
 
   .interactive-ring {
-    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-cyan/25;
   }
 }

@@ -33,10 +33,10 @@ const NAV_ITEMS = [
 
 function SidebarContent({ pathname }: { pathname: string }) {
   return (
-    <div className="flex h-full flex-col bg-[#0b1735] text-slate-100">
-      <div className="flex h-16 items-center border-b border-blue-400/20 px-6">
-        <Bot className="mr-2 h-6 w-6 text-primary" />
-        <span className="font-bold text-lg">AI-Recruit360</span>
+    <div className="flex h-full flex-col bg-brand-white text-brand-navy border-r border-gray-200">
+      <div className="flex h-16 items-center border-b border-gray-200 px-6">
+        <Bot className="mr-2 h-6 w-6 text-brand-cyan" />
+        <span className="font-bold text-lg tracking-tight">AI-Recruit360</span>
       </div>
       <div className="flex-1 space-y-1 px-3 py-6">
         {NAV_ITEMS.map((item) => (
@@ -44,10 +44,10 @@ function SidebarContent({ pathname }: { pathname: string }) {
             key={item.href}
             href={item.href}
             className={cn(
-              "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+              "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium",
               pathname === item.href
-                ? "bg-primary/20 text-white ring-1 ring-primary/40"
-                : "text-slate-300 hover:bg-white/10 hover:text-white"
+                ? "bg-brand-cyan text-brand-white"
+                : "text-brand-slate hover:bg-brand-light hover:text-brand-navy"
             )}
           >
             <item.icon className="w-5 h-5" />
@@ -55,8 +55,8 @@ function SidebarContent({ pathname }: { pathname: string }) {
           </Link>
         ))}
       </div>
-      <div className="border-t border-blue-400/20 p-4">
-        <Button variant="ghost" className="w-full justify-start gap-2 text-red-400 hover:bg-red-400/10 hover:text-red-300" asChild>
+      <div className="border-t border-gray-200 p-4">
+        <Button variant="ghost" className="w-full justify-start gap-2 text-brand-slate hover:bg-brand-light hover:text-brand-navy" asChild>
           <Link href="/auth/login">
             <LogOut className="w-4 h-4" />
             Sign Out
@@ -112,8 +112,8 @@ export default function DashboardLayout({
       {/* Mobile Sidebar */}
       <Sheet>
         <SheetTrigger asChild>
-          <Button variant="outline" size="icon" className="fixed left-4 top-4 z-50 border-border bg-white/90 shadow-sm backdrop-blur lg:hidden">
-            <Menu className="w-5 h-5" />
+          <Button variant="outline" size="icon" className="fixed left-4 top-4 z-50 border-gray-200 bg-brand-white shadow-sm lg:hidden">
+            <Menu className="w-5 h-5 text-brand-navy" />
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="w-72 border-r-0 p-0">
@@ -122,27 +122,27 @@ export default function DashboardLayout({
       </Sheet>
 
       {/* Desktop Sidebar */}
-      <div className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r border-blue-400/20 bg-[#0b1735] lg:block">
+      <div className="fixed inset-y-0 left-0 z-30 hidden w-64 lg:block">
         <SidebarContent pathname={pathname} />
       </div>
 
       {/* Main Content */}
       <div className="lg:pl-64 flex flex-col min-h-screen">
         {/* Header */}
-        <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b bg-background/90 px-4 shadow-sm backdrop-blur sm:px-6">
-          <h1 className="pl-12 text-lg font-semibold capitalize lg:pl-0">
+        <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-gray-200 bg-brand-white px-4 sm:px-6">
+          <h1 className="pl-12 text-lg font-semibold tracking-tight capitalize lg:pl-0 text-brand-navy">
             {currentSection}
           </h1>
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" className="relative text-muted-foreground">
+            <Button variant="ghost" size="icon" className="relative text-brand-slate hover:bg-brand-light">
               <Bell className="w-5 h-5" />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full" />
+              <span className="absolute top-2 right-2 w-2 h-2 bg-brand-success rounded-full" />
             </Button>
-            <div className="flex items-center gap-3 border-l pl-4 ml-2">
+            <div className="flex items-center gap-3 border-l border-gray-200 pl-4 ml-2">
               <div className="text-right hidden sm:block">
-                <div className="text-sm font-bold">{profile.recruiterName}</div>
-                <div className="text-xs text-muted-foreground font-medium">{profile.companyName}</div>
-                <div className="text-[10px] text-muted-foreground uppercase tracking-wider">{profile.recruiterRole}</div>
+                <div className="text-sm font-bold text-brand-navy">{profile.recruiterName}</div>
+                <div className="text-xs text-brand-slate font-medium">{profile.companyName}</div>
+                <div className="text-[10px] text-brand-slate uppercase tracking-wider">{profile.recruiterRole}</div>
               </div>
               <Avatar>
                 <AvatarImage src={profile.companyLogo} />

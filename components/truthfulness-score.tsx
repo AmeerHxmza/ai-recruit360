@@ -16,43 +16,63 @@ export function TruthfulnessScore({
   className,
   ...props
 }: TruthfulnessScoreProps) {
-  const getProgressColor = (value: number) => {
-    if (value >= 80) return "bg-green-500";
-    if (value >= 50) return "bg-yellow-500";
-    return "bg-red-500";
-  };
-
-  const getHeight = () => {
+  const getDimensions = () => {
     switch (size) {
-      case "sm":
-        return "h-2";
-      case "lg":
-        return "h-4";
-      default:
-        return "h-3";
+      case "sm": return { width: 36, height: 36, strokeWidth: 3 };
+      case "lg": return { width: 64, height: 64, strokeWidth: 5 };
+      default: return { width: 48, height: 48, strokeWidth: 4 };
     }
   };
 
+  const { width, height, strokeWidth } = getDimensions();
+  const radius = (width - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const strokeDashoffset = circumference - (score / 100) * circumference;
+
   return (
-    <div className={cn("w-full max-w-[200px]", className)} {...props}>
-      {showLabel && (
-        <div className="flex justify-between text-xs mb-1 font-medium">
-          <span>Truthfulness Score</span>
-          <span
-            className={cn(
-              score >= 80 ? "text-green-600" : score >= 50 ? "text-yellow-600" : "text-red-600"
-            )}
-          >
-            {score}%
+    <div className={cn("flex items-center gap-3", className)} {...props}>
+      <div className="relative" style={{ width, height }}>
+        <svg
+          className="transform -rotate-90"
+          width={width}
+          height={height}
+        >
+          <circle
+            cx={width / 2}
+            cy={height / 2}
+            r={radius}
+            strokeWidth={strokeWidth}
+            className="stroke-gray-100"
+            fill="none"
+          />
+          <circle
+            cx={width / 2}
+            cy={height / 2}
+            r={radius}
+            strokeWidth={strokeWidth}
+            className="stroke-brand-cyan"
+            fill="none"
+            strokeLinecap="round"
+            style={{
+              strokeDasharray: circumference,
+              strokeDashoffset,
+            }}
+          />
+        </svg>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className={cn(
+            "font-bold text-brand-navy tracking-tight",
+            size === "sm" ? "text-[10px]" : size === "lg" ? "text-base" : "text-xs"
+          )}>
+            {score}
           </span>
         </div>
-      )}
-      <div className={cn("w-full bg-slate-100 rounded-full overflow-hidden ring-1 ring-black/5", getHeight())}>
-        <div
-          className={cn("h-full transition-all duration-700 ease-out", getProgressColor(score))}
-          style={{ width: `${score}%` }}
-        />
       </div>
+      {showLabel && (
+        <span className="text-xs font-medium text-brand-slate">
+          Match Score
+        </span>
+      )}
     </div>
   );
 }

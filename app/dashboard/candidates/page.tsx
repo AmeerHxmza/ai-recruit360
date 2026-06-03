@@ -99,7 +99,7 @@ function CandidatesPageContent() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">Candidates</h2>
-          <p className="text-muted-foreground">
+          <p className="text-brand-slate">
             View and manage candidate applications.
           </p>
         </div>
@@ -108,7 +108,7 @@ function CandidatesPageContent() {
       {/* Filters */}
       <div className="surface-card flex flex-col gap-3 p-3 sm:flex-row sm:items-center">
         <div className="relative w-full sm:max-w-sm">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-brand-slate" />
           <Input
             type="search"
             placeholder="Search candidates..."
@@ -160,7 +160,7 @@ function CandidatesPageContent() {
       </div>
 
       {/* Candidates Table */}
-      <div className="hidden overflow-hidden rounded-xl border bg-white md:block">
+      <div className="hidden overflow-hidden rounded-md border bg-white md:block">
         {isLoading ? (
           <div className="space-y-3 p-4">
             {Array.from({ length: 5 }).map((_, idx) => (
@@ -188,9 +188,9 @@ function CandidatesPageContent() {
         )}
       </div>
       {!isLoading && filteredAndSortedCandidates.length === 0 ? (
-        <div className="surface-card rounded-xl p-8 text-center">
+        <div className="surface-card rounded-md p-8 text-center">
           <h3 className="text-lg font-semibold">No candidates match these filters</h3>
-          <p className="mt-2 text-sm text-muted-foreground">Try a different role or search keyword.</p>
+          <p className="mt-2 text-sm text-brand-slate">Try a different role or search keyword.</p>
         </div>
       ) : null}
     </div>
@@ -232,28 +232,28 @@ function CandidateRow({
   };
 
   return (
-    <TableRow className="group cursor-pointer transition-colors duration-200 hover:bg-muted/50">
+    <TableRow className="group cursor-pointer transition-colors duration-200 hover:bg-brand-light/50">
       <TableCell className="font-medium">
         <div className="flex flex-col">
           <span>{candidate.name}</span>
-          <span className="text-xs text-muted-foreground flex items-center gap-1">
+          <span className="text-xs text-brand-slate flex items-center gap-1">
             <Github className="w-3 h-3" /> {candidate.github}
           </span>
         </div>
       </TableCell>
       <TableCell>{candidate.role}</TableCell>
       <TableCell>
-        <Badge variant={candidate.flagged ? "destructive" : "secondary"} className={candidate.status === "Interviewed" ? "border-0 bg-primary/15 text-primary hover:bg-primary/20" : ""}>
+        <Badge variant={candidate.flagged ? "destructive" : "secondary"} className={candidate.status === "Interviewed" ? "border-0 bg-brand-cyan/15 text-brand-cyan hover:bg-brand-cyan/20" : ""}>
           {candidate.flagged ? "Flagged" : candidate.status}
         </Badge>
       </TableCell>
       <TableCell>
         <div className="w-[180px]">
           <TruthfulnessScore score={candidate.score} size="sm" showLabel={true} />
-          {candidate.flagged && <span className="text-xs text-red-500 font-medium mt-1 block">Suspicious Activity Detected</span>}
+          {candidate.flagged && <span className="text-xs text-brand-archived font-medium mt-1 block">Suspicious Activity Detected</span>}
         </div>
       </TableCell>
-      <TableCell className="text-muted-foreground">{candidate.applied}</TableCell>
+      <TableCell className="text-brand-slate">{candidate.applied}</TableCell>
       <TableCell className="text-right">
         <Sheet>
           <SheetTrigger asChild>
@@ -262,7 +262,7 @@ function CandidateRow({
           <SheetContent className="w-[400px] sm:w-[540px] overflow-y-auto">
             <SheetHeader className="mb-6">
               <div className="flex items-center gap-3 mb-2">
-                <div className="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center text-xl font-bold">
+                <div className="w-12 h-12 rounded-full bg-brand-light flex items-center justify-center text-xl font-bold">
                   {candidate.name.charAt(0)}
                 </div>
                 <div>
@@ -281,10 +281,10 @@ function CandidateRow({
             <div className="space-y-6">
               {/* Resume Summary */}
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wide flex items-center gap-2">
+                <h3 className="text-sm font-medium text-brand-slate mb-3 uppercase tracking-wide flex items-center gap-2">
                   <FileText className="w-4 h-4" /> Resume Summary
                 </h3>
-                <div className="p-4 rounded-lg bg-muted text-sm space-y-2">
+                <div className="p-4 rounded-lg bg-brand-light text-sm space-y-2">
                   <p>Senior Frontend Developer with 5 years of experience in React and TypeScript.</p>
                   <div className="flex flex-wrap gap-2 mt-2">
                     <Badge variant="secondary">React</Badge>
@@ -296,21 +296,21 @@ function CandidateRow({
 
               {/* Quiz/Reasoning Log */}
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wide flex items-center gap-2">
+                <h3 className="text-sm font-medium text-brand-slate mb-3 uppercase tracking-wide flex items-center gap-2">
                   <BrainCircuit className="w-4 h-4" /> AI Reasoning Log
                 </h3>
-                <div className="bg-slate-950 text-slate-50 p-4 rounded-lg text-sm font-mono space-y-3">
-                  <div className="border-l-2 border-green-500 pl-3">
-                    <div className="text-green-400 text-xs mb-1">Pass • Code Verification</div>
+                <div className="bg-brand-navy text-brand-light p-4 rounded-lg text-sm font-mono space-y-3">
+                  <div className="border-l-2 border-brand-success pl-3">
+                    <div className="text-brand-success text-xs mb-1">Pass • Code Verification</div>
                     <p>Candidate demonstrated strong understanding of React Hooks in the coding challenge. Solution was optimal O(n).</p>
                   </div>
-                  <div className="border-l-2 border-yellow-500 pl-3">
-                    <div className="text-yellow-400 text-xs mb-1">Warning • Voice Stress Analysis</div>
+                  <div className="border-l-2 border-brand-archived pl-3">
+                    <div className="text-brand-archived text-xs mb-1">Warning • Voice Stress Analysis</div>
                     <p>Slight hesitation detected when asked about &quot;Database Sharding experience&quot;. Recommendation: Probe further in technical round.</p>
                   </div>
                   {candidate.flagged && (
-                    <div className="border-l-2 border-red-500 pl-3">
-                      <div className="text-red-400 text-xs mb-1">Fail • Browser Behavior</div>
+                    <div className="border-l-2 border-brand-archived pl-3">
+                      <div className="text-brand-archived text-xs mb-1">Fail • Browser Behavior</div>
                       <p>Tab switching detected 4 times during the quiz. High probability of external assistance.</p>
                     </div>
                   )}
@@ -319,17 +319,17 @@ function CandidateRow({
 
               {/* Interview Recording */}
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wide flex items-center gap-2">
+                <h3 className="text-sm font-medium text-brand-slate mb-3 uppercase tracking-wide flex items-center gap-2">
                   <Mic className="w-4 h-4" /> Voice Interview
                 </h3>
                 <div className="p-3 border rounded-lg flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600">
-                      <div className="w-2 h-2 bg-red-600 rounded-full animate-pulse" />
+                    <div className="w-8 h-8 rounded-full bg-brand-archived/10 flex items-center justify-center text-brand-archived">
+                      <div className="w-2 h-2 bg-brand-archived rounded-full animate-pulse" />
                     </div>
                     <div>
                       <div className="font-medium text-sm">Tech Screen Recording</div>
-                      <div className="text-xs text-muted-foreground">14:20 mins</div>
+                      <div className="text-xs text-brand-slate">14:20 mins</div>
                     </div>
                   </div>
                   <Button size="sm" variant="outline">Play</Button>
@@ -362,12 +362,12 @@ function CardCandidate({
   onAction: (message: string, tone: "success" | "error" | "info") => void;
 }) {
   return (
-    <div className="surface-card hover-lift space-y-4 p-4">
+    <div className="surface-card  space-y-4 p-4">
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="font-semibold">{candidate.name}</p>
-          <p className="text-sm text-muted-foreground">{candidate.role}</p>
-          <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+          <p className="text-sm text-brand-slate">{candidate.role}</p>
+          <p className="mt-1 flex items-center gap-1 text-xs text-brand-slate">
             <Github className="h-3 w-3" /> {candidate.github}
           </p>
         </div>
@@ -376,7 +376,7 @@ function CardCandidate({
         </Badge>
       </div>
       <TruthfulnessScore score={candidate.score} size="sm" showLabel />
-      <div className="flex items-center justify-between text-xs text-muted-foreground">
+      <div className="flex items-center justify-between text-xs text-brand-slate">
         <span>Applied {candidate.applied}</span>
         <Button variant="ghost" size="sm" onClick={() => onAction("Open full candidate details on desktop/tablet table view.", "info")}>
           View Details
