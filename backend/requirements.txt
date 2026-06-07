@@ -1,0 +1,37 @@
+# AI-Recruit360 FastAPI Backend Dependencies
+# ─────────────────────────────────────────────────────────────
+# Setup with venv:
+#   python -m venv venv
+#   venv\Scripts\activate          (Windows)
+#   pip install -r requirements.txt
+#   uvicorn main:app --reload --port 8000
+# ─────────────────────────────────────────────────────────────
+
+# Web framework
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+
+# File uploads (multipart/form-data)
+python-multipart==0.0.12
+
+# Supabase client
+supabase==2.10.0
+
+# OpenAI SDK — GPT-4o-mini
+openai==1.54.0
+
+# PDF parsing
+pypdf==4.3.1
+
+# JWT validation (Supabase tokens)
+python-jose[cryptography]==3.3.0
+
+# HTTP client
+httpx==0.27.2
+
+# Settings management
+pydantic-settings==2.6.1
+pydantic==2.10.3
+
+# Environment variable loading
+python-dotenv==1.0.1
