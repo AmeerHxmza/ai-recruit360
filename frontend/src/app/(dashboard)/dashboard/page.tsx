@@ -1,246 +1,314 @@
-import { StatsCard } from "@/components/features/stats-card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { HiringConfidenceScore } from "@/components/features/hiring-confidence-score";
-import { Users, Briefcase, CalendarCheck, CheckCircle2, ChevronRight, Download, ShieldCheck } from "lucide-react";
+import { Users, Briefcase, CalendarCheck, CheckCircle2, ChevronRight, ShieldCheck, Sparkles, Plus, TrendingUp, Cpu, Activity, Award, ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 
 export const revalidate = 0;
 
 export default async function DashboardPage() {
   const supabase = await createClient();
-  // Fetch live applications from Supabase with joined candidate and job data
-  const { data: applicationsData, error } = await supabase
-    .from('applications')
+
+  // Fetch candidate applications from Supabase with joined candidate and job data
+  const { data: candidatesData } = await supabase
+    .from("candidates")
     .select(`
       id,
+      name,
+      email,
       status,
-      match_score,
-      hiring_confidence,
-      candidates (
-        id,
-        first_name,
-        last_name
-      ),
+      ai_score,
+      technical_score,
+      communication_score,
+      honesty_score,
+      xai_reasoning,
+      created_at,
       jobs (
         id,
-        title
-      ),
-      interviews (
-        id,
-        overall_score,
-        truthfulness_score
+        title,
+        department
       )
     `)
-    .order('hiring_confidence', { ascending: false });
+    .order("ai_score", { ascending: false });
 
-  const applications = applicationsData || [];
+  const candidates = candidatesData || [];
 
-  // 1. Fetch Active Jobs Count
+  // Fetch Active Jobs Count
   const { count: activeJobsCount } = await supabase
-    .from('jobs')
-    .select('*', { count: 'exact', head: true })
-    .eq('status', 'active');
+    .from("jobs")
+    .select("*", { count: "exact", head: true })
+    .eq("status", "active");
 
-  const candidatesCount = applications.length;
-  // Let's treat 'offered' or 'interviewed' with high score as verified/strong for stats
-  const verifiedCount = applications.filter(a => a.status === 'offered' || (a.status === 'interviewed' && (a.hiring_confidence ?? 0) > 85)).length;
-  
-  // Compute average confidence
-  let totalConfidence = 0;
-  let confidenceCount = 0;
-  applications.forEach((a: any) => {
-    if (typeof a.hiring_confidence === 'number') {
-      totalConfidence += a.hiring_confidence;
-      confidenceCount++;
-    }
+  const totalCandidates = candidates.length;
+  const completedInterviews = candidates.filter((c) => c.status === "completed").length;
+  const verifiedMatches = candidates.filter((c) => (c.ai_score ?? 0) >= 80).length;
+
+  let totalScore = 0;
+  candidates.forEach((c) => {
+    totalScore += c.ai_score || 0;
   });
-  const avgConfidence = confidenceCount > 0 ? Math.round(totalConfidence / confidenceCount) : 0;
+  const avgScore = totalCandidates > 0 ? Math.round(totalScore / totalCandidates) : 0;
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "offered":
-        return (
-          <span className="badge-verified">
-            Offered
-          </span>
-        );
-      case "interviewed":
-        return (
-          <span className="badge-strong">
-            Interviewed
-          </span>
-        );
-      case "screening":
-        return (
-          <span className="badge-review">
-            Screening
-          </span>
-        );
-      case "rejected":
-        return (
-          <span className="badge-risk">
-            Rejected
-          </span>
-        );
-      default:
-        return (
-          <span className="badge-pending">
-            Pending
-          </span>
-        );
+  const getStatusBadge = (status: string, aiScore: number) => {
+    if (status === "completed" && aiScore >= 80) {
+      return (
+        <span className="badge-success">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E] animate-pulse" />
+          Verified Match
+        </span>
+      );
     }
+    if (status === "completed" && aiScore >= 60) {
+      return (
+        <span className="chip-enterprise">
+          Strong Candidate
+        </span>
+      );
+    }
+    if (status === "completed" && aiScore < 40) {
+      return (
+        <span className="badge-danger">
+          Risk Detected
+        </span>
+      );
+    }
+    if (status === "rejected") {
+      return <span className="badge-danger">Rejected</span>;
+    }
+    return <span className="badge-warning">Interviewing</span>;
   };
 
   return (
-    <div className="space-y-8 pb-10">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="space-y-8 pb-12 font-sans">
+      {/* Top Banner */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[rgba(148,163,184,0.12)] pb-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">
-            Dashboard
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">Monitor candidate evaluation and verification outcomes.</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            <Download className="w-4 h-4 mr-2" />
-            Export Report
-          </Button>
-        </div>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid gap-4 sm:grid-cols-3 xl:grid-cols-5">
-        <StatsCard
-          title="Active Jobs"
-          value={(activeJobsCount || 0).toString()}
-          description="Open requisitions"
-          icon={Briefcase}
-        />
-        <StatsCard
-          title="Candidates Evaluated"
-          value={candidatesCount.toString()}
-          description="Total pipeline processed"
-          icon={Users}
-        />
-        <StatsCard
-          title="Interviews Completed"
-          value={confidenceCount.toString()}
-          description="Conducted automatically"
-          icon={CalendarCheck}
-        />
-        <StatsCard
-          title="Verified Candidates"
-          value={verifiedCount.toString()}
-          description="Passed truth verification"
-          icon={CheckCircle2}
-        />
-        <StatsCard
-          title="Avg Hiring Confidence"
-          value={`${avgConfidence}%`}
-          description="Overall candidate quality"
-          icon={ShieldCheck}
-        />
-      </div>
-
-      {/* Candidates Table */}
-      <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
-        <div className="p-5 border-b border-border bg-muted/20 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div
-              className="w-1 h-6 rounded-full bg-primary"
-            />
-            <h2 className="text-base font-semibold tracking-tight">Top Ranked Candidates</h2>
+          <div className="eyebrow flex items-center gap-2 mb-1">
+            <Sparkles className="w-3.5 h-3.5 text-[#8AB4F8]" strokeWidth={1.75} />
+            <span>Executive Command Center</span>
           </div>
-          <Button variant="ghost" size="sm" className="text-muted-foreground text-xs" asChild>
-            <Link href="/dashboard/rankings" className="flex items-center gap-1">
-              View All Rankings <ChevronRight className="w-3.5 h-3.5" />
-            </Link>
-          </Button>
+          <h1 className="font-display text-3xl font-medium text-[#F2F5F9]">
+            Hiring Intelligence Dashboard
+          </h1>
+          <p className="font-sans text-xs text-[#9AA6B8] mt-1">
+            Real-time candidate evaluation, multi-axis technical scoring, and behavioral audit logs.
+          </p>
         </div>
+
+        <div className="flex items-center gap-3">
+          <Link href="/dashboard/jobs">
+            <button className="btn-primary text-xs">
+              <Plus className="w-4 h-4" strokeWidth={1.75} />
+              <span>Create New Job</span>
+            </button>
+          </Link>
+        </div>
+      </div>
+
+      {/* 5 Enterprise KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        {/* Card 1 */}
+        <div className="card-enterprise space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="eyebrow text-[11px]">Active Jobs</span>
+            <div className="w-8 h-8 rounded-[8px] bg-[rgba(138,180,248,0.10)] text-[#8AB4F8] flex items-center justify-center">
+              <Briefcase className="w-4 h-4" strokeWidth={1.75} />
+            </div>
+          </div>
+          <div className="font-mono text-3xl font-medium text-[#F2F5F9]">{activeJobsCount || 0}</div>
+          <div className="font-mono text-[11px] text-[#22C55E]">Open requisitions</div>
+        </div>
+
+        {/* Card 2 */}
+        <div className="card-enterprise space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="eyebrow text-[11px]">Applicants</span>
+            <div className="w-8 h-8 rounded-[8px] bg-[rgba(138,180,248,0.10)] text-[#8AB4F8] flex items-center justify-center">
+              <Users className="w-4 h-4" strokeWidth={1.75} />
+            </div>
+          </div>
+          <div className="font-mono text-3xl font-medium text-[#F2F5F9]">{totalCandidates}</div>
+          <div className="font-mono text-[11px] text-[#66707F]">Total submissions</div>
+        </div>
+
+        {/* Card 3 */}
+        <div className="card-enterprise space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="eyebrow text-[11px]">Interviews</span>
+            <div className="w-8 h-8 rounded-[8px] bg-[rgba(138,180,248,0.10)] text-[#8AB4F8] flex items-center justify-center">
+              <CalendarCheck className="w-4 h-4" strokeWidth={1.75} />
+            </div>
+          </div>
+          <div className="font-mono text-3xl font-medium text-[#F2F5F9]">{completedInterviews}</div>
+          <div className="font-mono text-[11px] text-[#66707F]">AI sessions done</div>
+        </div>
+
+        {/* Card 4 */}
+        <div className="card-enterprise space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="eyebrow text-[11px]">Verified Match</span>
+            <div className="w-8 h-8 rounded-[8px] bg-[rgba(34,197,94,0.12)] text-[#22C55E] flex items-center justify-center">
+              <CheckCircle2 className="w-4 h-4" strokeWidth={1.75} />
+            </div>
+          </div>
+          <div className="font-mono text-3xl font-medium text-[#F2F5F9]">{verifiedMatches}</div>
+          <div className="font-mono text-[11px] text-[#22C55E]">Score $\ge$ 80%</div>
+        </div>
+
+        {/* Card 5 */}
+        <div className="card-enterprise space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="eyebrow text-[11px]">Quality Index</span>
+            <div className="w-8 h-8 rounded-[8px] bg-[rgba(138,180,248,0.10)] text-[#8AB4F8] flex items-center justify-center">
+              <Award className="w-4 h-4" strokeWidth={1.75} />
+            </div>
+          </div>
+          <div className="font-mono text-3xl font-medium text-[#8AB4F8]">{avgScore}%</div>
+          <div className="font-mono text-[11px] text-[#66707F]">Average overall score</div>
+        </div>
+      </div>
+
+      {/* Candidate Leaderboard DataTable */}
+      <div className="card-enterprise p-0 overflow-hidden">
+        <div className="p-6 border-b border-[rgba(148,163,184,0.12)] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-[#8AB4F8] animate-pulse" />
+              <h2 className="font-display text-lg font-medium text-[#F2F5F9]">
+                Candidate Leaderboard &amp; AI Scores
+              </h2>
+            </div>
+            <p className="font-sans text-xs text-[#9AA6B8]">
+              Ranked dynamically by multi-axis technical, communication, and honesty scores.
+            </p>
+          </div>
+          <Link href="/dashboard/candidates">
+            <button className="btn-secondary text-xs py-1.5 px-3">
+              <span>View All Candidates</span>
+              <ChevronRight className="w-3.5 h-3.5" strokeWidth={1.75} />
+            </button>
+          </Link>
+        </div>
+
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="bg-muted/20 hover:bg-muted/20">
-                <TableHead className="w-[250px] text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Candidate</TableHead>
-                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Job Match</TableHead>
-                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Interview</TableHead>
-                <TableHead className="w-[180px] text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Hiring Confidence</TableHead>
-                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Rank</TableHead>
-                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Status</TableHead>
-                <TableHead className="text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Actions</TableHead>
+              <TableRow className="border-b border-[rgba(148,163,184,0.12)] bg-[#0A0F18]">
+                <TableHead className="w-16 text-center eyebrow text-[11px]">Rank</TableHead>
+                <TableHead className="eyebrow text-[11px]">Candidate Name</TableHead>
+                <TableHead className="eyebrow text-[11px]">Requisition</TableHead>
+                <TableHead className="eyebrow text-[11px]">Technical</TableHead>
+                <TableHead className="eyebrow text-[11px]">Communication</TableHead>
+                <TableHead className="eyebrow text-[11px]">Honesty</TableHead>
+                <TableHead className="eyebrow text-[11px]">Overall Score</TableHead>
+                <TableHead className="eyebrow text-[11px]">Status</TableHead>
+                <TableHead className="text-right eyebrow text-[11px]">Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {applications.map((app: any, index: number) => {
-                const candidate = app.candidates;
-                const job = app.jobs;
-                const interview = Array.isArray(app.interviews) ? app.interviews[0] : app.interviews || {};
+              {candidates.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={9} className="text-center py-14 text-[#66707F] text-xs font-mono">
+                    No candidates evaluated yet. Candidates will appear here as soon as they complete their interview.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                candidates.map((candidate: any, index: number) => {
+                  const rank = index + 1;
+                  const jobTitle = candidate.jobs?.title || "Engineering Position";
+                  const aiScore = candidate.ai_score || 0;
 
-                const rank = index + 1;
-                const isTopRank = rank <= 3;
-                const fullName = `${candidate?.first_name || ''} ${candidate?.last_name || ''}`.trim() || 'Unknown';
-
-                return (
-                  <TableRow key={app.id} className="hover:bg-muted/20 transition-colors duration-150">
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <Link
-                          href={`/dashboard/candidates/${candidate?.id}`}
-                          className="font-semibold text-foreground hover:text-primary transition-colors duration-150"
-                        >
-                          {fullName}
-                        </Link>
-                        <span className="text-xs text-muted-foreground mt-0.5">
-                          {job?.title || 'Unknown Role'} • {candidate?.id?.split('-')[0]}
+                  return (
+                    <TableRow
+                      key={candidate.id}
+                      className="border-b border-[rgba(148,163,184,0.12)] hover:bg-[#121B2B] transition-colors"
+                    >
+                      {/* Rank Badge */}
+                      <TableCell className="text-center">
+                        <span className="font-mono text-xs font-medium text-[#7DA2F2]">
+                          #{rank < 10 ? `0${rank}` : rank}
                         </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="font-semibold text-foreground">{app.match_score || 0}%</div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="font-medium text-muted-foreground">{interview?.overall_score || 0}%</div>
-                    </TableCell>
-                    <TableCell>
-                      <HiringConfidenceScore 
-                        matchScore={app.match_score || 0} 
-                        quizScore={0}
-                        interviewScore={interview?.overall_score || 0}
-                        truthfulnessScore={interview?.truthfulness_score || 0} 
-                        size="sm" 
-                        showLabel={false} 
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <div
-                        className={
-                          isTopRank
-                            ? "inline-flex items-center justify-center w-7 h-7 rounded-lg text-xs font-bold text-white bg-primary shadow-sm"
-                            : "inline-flex items-center justify-center w-7 h-7 rounded-lg bg-muted text-muted-foreground text-xs font-bold"
-                        }
-                      >
-                        #{rank}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {getStatusBadge(app.status)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" asChild>
-                        <Link href={`/dashboard/candidates/${candidate?.id}`}>
-                          <ChevronRight className="w-4 h-4" />
-                          <span className="sr-only">View Details</span>
+                      </TableCell>
+
+                      {/* Candidate Name */}
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <Link
+                            href={`/dashboard/candidates/${candidate.id}`}
+                            className="font-display font-medium text-sm text-[#F2F5F9] hover:text-[#8AB4F8] transition-colors"
+                          >
+                            {candidate.name}
+                          </Link>
+                          <span className="font-mono text-[11px] text-[#66707F]">{candidate.email}</span>
+                        </div>
+                      </TableCell>
+
+                      {/* Job Role */}
+                      <TableCell>
+                        <span className="font-sans text-xs text-[#9AA6B8]">
+                          {jobTitle}
+                        </span>
+                      </TableCell>
+
+                      {/* Technical Score */}
+                      <TableCell>
+                        <span className="font-mono text-xs font-medium text-[#F2F5F9]">
+                          {candidate.technical_score || aiScore || 0}%
+                        </span>
+                      </TableCell>
+
+                      {/* Communication Score */}
+                      <TableCell>
+                        <span className="font-mono text-xs font-medium text-[#F2F5F9]">
+                          {candidate.communication_score || aiScore || 0}%
+                        </span>
+                      </TableCell>
+
+                      {/* Honesty Score */}
+                      <TableCell>
+                        <span className="font-mono text-xs font-medium text-[#F2F5F9]">
+                          {candidate.honesty_score || 85}%
+                        </span>
+                      </TableCell>
+
+                      {/* Overall AI Score Progress Bar */}
+                      <TableCell>
+                        <div className="flex items-center gap-3 max-w-[140px]">
+                          <div className="flex-1 h-1.5 bg-[#0B1019] rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all duration-500 ${
+                                aiScore >= 80
+                                  ? "bg-[#22C55E]"
+                                  : aiScore >= 60
+                                  ? "bg-[#8AB4F8]"
+                                  : "bg-[#EF4444]"
+                              }`}
+                              style={{ width: `${aiScore}%` }}
+                            />
+                          </div>
+                          <span className="font-mono text-xs font-medium text-[#8AB4F8] min-w-[32px]">
+                            {aiScore}%
+                          </span>
+                        </div>
+                      </TableCell>
+
+                      {/* Status */}
+                      <TableCell>
+                        {getStatusBadge(candidate.status, aiScore)}
+                      </TableCell>
+
+                      {/* Actions */}
+                      <TableCell className="text-right">
+                        <Link href={`/dashboard/candidates/${candidate.id}`}>
+                          <button className="btn-secondary text-[11px] py-1 px-2.5">
+                            <span>XAI Report</span>
+                            <ChevronRight className="w-3 h-3" strokeWidth={1.75} />
+                          </button>
                         </Link>
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
             </TableBody>
           </Table>
         </div>

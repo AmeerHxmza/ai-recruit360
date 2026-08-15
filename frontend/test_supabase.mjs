@@ -1,21 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+const url = "https://hkybdnbrrdjkrotwftrn.supabase.co";
+const key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhreWJkbmJycmRqa3JvdHdmdHJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3Njc1NjEsImV4cCI6MjEwMjM0MzU2MX0.n6CfsNz32OH-jPK0unDY9outlr0kFHRIlwKqN6pW4ss";
 
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-async function testConnection() {
-  console.log("Testing Frontend Supabase Connection...");
-  const { data, error } = await supabase.from('todos').select('*').limit(1);
-  if (error) {
-    if (error.code === '42P01') {
-      console.log("✅ Frontend Connection Successful! (Note: 'todos' table does not exist, but we reached the database)");
-    } else {
-      console.error("❌ Frontend Connection Failed:", error);
-    }
-  } else {
-    console.log("✅ Frontend Connection Successful! Fetched data:", data);
-  }
-}
-testConnection();
+const supabase = createClient(url, key);
+console.log("Supabase Client Created successfully!");
+const { data, error } = await supabase.from('jobs').select('*');
+console.log("Data fetched from Supabase jobs table:", data, "Error:", error);

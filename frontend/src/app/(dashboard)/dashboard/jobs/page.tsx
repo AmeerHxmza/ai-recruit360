@@ -7,18 +7,8 @@ import { createClient } from "@/lib/supabase/client";
 const supabase = createClient();
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FeedbackToast } from "@/components/ui/feedback-toast";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -36,16 +26,11 @@ import {
   Trash2,
   Link2,
   Users,
-  Github,
-  AlertTriangle,
   Share2,
-  Twitter,
-  Linkedin,
   Copy,
-  Loader2
+  Loader2,
+  Sparkles
 } from "lucide-react";
-
-const FASTAPI_URL = process.env.NEXT_PUBLIC_FASTAPI_URL || "http://localhost:8000";
 
 type Job = {
   id: string;
@@ -71,29 +56,30 @@ export default function JobsPage() {
     setIsLoading(true);
     const { data: jobsData } = await supabase
       .from("jobs")
-      .select("id, title, department, description, status, github_required, knockout_enabled")
+      .select("id, title, department, description, status")
       .order("created_at", { ascending: false });
 
     if (jobsData) {
-      // Get candidate counts per job
       const { data: countData } = await supabase
-        .from("applications")
+        .from("candidates")
         .select("job_id");
 
       const countMap: Record<string, number> = {};
       (countData || []).forEach((c: any) => {
-        countMap[c.job_id] = (countMap[c.job_id] || 0) + 1;
+        if (c.job_id) {
+          countMap[c.job_id] = (countMap[c.job_id] || 0) + 1;
+        }
       });
 
       setJobs(jobsData.map((j: any) => ({
         id: j.id,
         title: j.title,
-        department: j.department || "",
+        department: j.department || "Engineering",
         description: j.description || "",
         candidates: countMap[j.id] || 0,
-        status: j.status,
-        githubRequired: j.github_required,
-        knockoutEnabled: j.knockout_enabled,
+        status: j.status === "closed" ? "Closed" : "Active",
+        githubRequired: false,
+        knockoutEnabled: true,
       })));
     }
     setIsLoading(false);
@@ -104,7 +90,7 @@ export default function JobsPage() {
   const handleDeleteJob = async (jobId: string) => {
     setJobs((prev) => prev.filter((j) => j.id !== jobId));
     await supabase.from("jobs").delete().eq("id", jobId);
-    setToast({ message: "Job deleted.", tone: "success" });
+    setToast({ message: "Job requisition deleted.", tone: "success" });
   };
 
   const filteredJobs = useMemo(() => {
@@ -117,64 +103,65 @@ export default function JobsPage() {
   }, [jobs, search, statusFilter]);
 
   return (
-    <div className="space-y-6 lg:space-y-8">
+    <div className="space-y-6 lg:space-y-8 pb-12 font-sans">
       {toast ? <FeedbackToast message={toast.message} tone={toast.tone} onClose={() => setToast(null)} /> : null}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      
+      {/* Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-[rgba(148,163,184,0.12)] pb-6">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">Jobs</h2>
-          <p className="text-muted-foreground">
-            Manage your open positions and requirements.
+          <div className="eyebrow flex items-center gap-2 mb-1">
+            <Sparkles className="w-3.5 h-3.5 text-[#8AB4F8]" strokeWidth={1.75} />
+            <span>Requisition Management</span>
+          </div>
+          <h2 className="font-display text-3xl font-medium text-[#F2F5F9]">Job Postings</h2>
+          <p className="font-sans text-xs text-[#9AA6B8] mt-1">
+            Create, manage, and share active AI-screened job openings.
           </p>
         </div>
         <CreateJobDialog onDone={(message, tone) => setToast({ message, tone })} onCreated={loadJobs} />
       </div>
 
       {/* Filters */}
-      <div className="surface-card flex flex-col gap-3 p-3 sm:flex-row sm:items-center">
+      <div className="card-enterprise p-4 flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative w-full sm:max-w-sm">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
+          <Search className="absolute left-3.5 top-3 h-4 w-4 text-[#66707F]" strokeWidth={1.75} />
+          <input
             type="search"
-            placeholder="Search jobs..."
-            className="pl-8 w-full"
+            placeholder="Search job title or department..."
+            className="input-enterprise w-full pl-10 h-10 text-xs"
             value={search}
-            onChange={(event) => {
-              setIsLoading(true);
-              setSearch(event.target.value);
-            }}
+            onChange={(event) => setSearch(event.target.value)}
           />
         </div>
-        <Button
-          variant="outline"
-          className="sm:w-auto capitalize"
+        <button
+          className="btn-secondary text-xs font-mono py-2 px-4"
           onClick={() => {
-            setIsLoading(true);
             setStatusFilter((prev) => (prev === "all" ? "active" : prev === "active" ? "closed" : "all"));
           }}
         >
-          Status: {statusFilter}
-        </Button>
+          Status Filter: {statusFilter}
+        </button>
       </div>
 
       {/* Jobs List */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
         {isLoading
           ? Array.from({ length: 3 }).map((_, idx) => (
-              <Card key={idx} className="surface-card space-y-4 p-6">
-                <Skeleton className="h-5 w-2/3" />
-                <Skeleton className="h-4 w-1/3" />
-                <Skeleton className="h-12 w-full" />
-                <Skeleton className="h-8 w-full" />
-              </Card>
+              <div key={idx} className="card-enterprise p-6 space-y-4">
+                <Skeleton className="h-5 w-2/3 bg-[#0B1019]" />
+                <Skeleton className="h-4 w-1/3 bg-[#0B1019]" />
+                <Skeleton className="h-12 w-full bg-[#0B1019]" />
+              </div>
             ))
           : filteredJobs.map((job) => (
-          <Card key={job.id} className="surface-card hover-lift relative overflow-visible">
-            <div className={`absolute top-0 left-0 w-1 h-full ${job.status === "Active" ? "bg-success" : "bg-muted"}`} />
-            <CardHeader className="pb-2">
-              <div className="flex justify-between items-start">
+          <div key={job.id} className="card-enterprise p-6 flex flex-col justify-between space-y-5">
+            <div className="space-y-3">
+              <div className="flex items-start justify-between">
                 <div>
-                  <CardTitle className="text-lg">{job.title}</CardTitle>
-                  <CardDescription>{job.department}</CardDescription>
+                  <span className="eyebrow block mb-1">
+                    {job.department}
+                  </span>
+                  <h3 className="font-display text-xl font-medium text-[#F2F5F9]">{job.title}</h3>
                 </div>
                 <div className="flex items-center gap-1">
                   <ShareJobDialog jobTitle={job.title} jobId={job.id} onDone={(message, tone) => setToast({ message, tone })} />
@@ -182,7 +169,7 @@ export default function JobsPage() {
                     job={job}
                     onCopyLink={(jobId) => {
                       navigator.clipboard.writeText(`${window.location.origin}/apply/${jobId}`);
-                      setToast({ message: "Job link copied to clipboard.", tone: "success" });
+                      setToast({ message: "Candidate application link copied.", tone: "success" });
                     }}
                     onUpdate={(jobId) => {
                       const selected = jobs.find((item) => item.id === jobId) ?? null;
@@ -192,52 +179,41 @@ export default function JobsPage() {
                   />
                 </div>
               </div>
-            </CardHeader>
-            <CardContent className="pb-2">
-              <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
-                <div className="flex items-center gap-1">
-                  <Users className="w-4 h-4" />
-                  <span>{job.candidates} Candidate{job.candidates !== 1 ? "s" : ""}</span>
-                </div>
-                <Badge variant={job.status === "Active" ? "default" : "secondary"}>
+
+              <p className="font-sans text-xs text-[#9AA6B8] line-clamp-3 leading-relaxed">
+                {job.description || "Active engineering position with automated PyMuPDF resume screening and 10-question AI interview generation."}
+              </p>
+            </div>
+
+            <div className="space-y-4 pt-3 border-t border-[rgba(148,163,184,0.12)]">
+              <div className="flex items-center justify-between text-xs font-sans">
+                <span className="flex items-center gap-1.5 text-[#9AA6B8]">
+                  <Users className="w-4 h-4 text-[#8AB4F8]" strokeWidth={1.75} />
+                  {job.candidates} Candidate{job.candidates !== 1 ? "s" : ""} Applied
+                </span>
+                <span className={job.status === "Active" ? "badge-success" : "badge-warning"}>
                   {job.status}
-                </Badge>
+                </span>
               </div>
 
-              <div className="space-y-2">
-                {job.githubRequired && (
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Github className="w-3 h-3" />
-                    GitHub Verification Required
-                  </div>
-                )}
-                {job.knockoutEnabled && (
-                  <div className="flex items-center gap-2 text-xs text-accent">
-                    <AlertTriangle className="w-3 h-3" />
-                    Knockout Criteria Active
-                  </div>
-                )}
-              </div>
-            </CardContent>
-            <CardFooter className="pt-4 border-t bg-muted/20">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full text-primary hover:text-primary hover:bg-primary/10"
+              <button
+                className="btn-primary w-full justify-center text-xs"
                 onClick={() => router.push(`/dashboard/candidates?job=${encodeURIComponent(job.id)}`)}
               >
-                View Candidates
-              </Button>
-            </CardFooter>
-          </Card>
+                View Requisition Candidates
+              </button>
+            </div>
+          </div>
         ))}
+
         {!isLoading && filteredJobs.length === 0 ? (
-          <Card className="surface-card col-span-full p-8 text-center">
-            <CardTitle className="text-lg">No jobs found</CardTitle>
-            <CardDescription className="mt-2">Try adjusting search or status filter.</CardDescription>
-          </Card>
+          <div className="card-enterprise col-span-full p-12 text-center space-y-2">
+            <h3 className="font-display text-lg font-medium text-[#F2F5F9]">No job postings found</h3>
+            <p className="font-sans text-xs text-[#9AA6B8]">Create your first job posting to start evaluating applicants.</p>
+          </div>
         ) : null}
       </div>
+
       <EditJobDialog
         key={editingJob?.id ?? "no-edit"}
         job={editingJob}
@@ -246,9 +222,7 @@ export default function JobsPage() {
           await supabase.from("jobs").update({
             title: updatedJob.title,
             department: updatedJob.department,
-            status: updatedJob.status,
-            github_required: updatedJob.githubRequired,
-            knockout_enabled: updatedJob.knockoutEnabled,
+            status: updatedJob.status.toLowerCase(),
           }).eq("id", updatedJob.id);
           setJobs((prev) => prev.map((item) => (item.id === updatedJob.id ? updatedJob : item)));
           setEditingJob(null);
@@ -270,8 +244,7 @@ function CreateJobDialog({
   const [title, setTitle] = useState("");
   const [department, setDepartment] = useState("");
   const [description, setDescription] = useState("");
-  const [githubRequired, setGithubRequired] = useState(false);
-  const [knockoutEnabled, setKnockoutEnabled] = useState(false);
+  const [open, setOpen] = useState(false);
 
   const handleCreate = async () => {
     if (!title.trim() || !department.trim()) {
@@ -279,78 +252,71 @@ function CreateJobDialog({
       return;
     }
     setIsSubmitting(true);
+    
+    const { data: userData } = await supabase.auth.getUser();
+    const user = userData?.user;
+
+    if (!user) {
+      onDone("Recruiter authentication required. Please sign in.", "error");
+      setIsSubmitting(false);
+      return;
+    }
+
     const { error } = await supabase.from("jobs").insert({
+      recruiter_id: user.id,
       title: title.trim(),
       department: department.trim(),
-      description: description.trim(),
-      github_required: githubRequired,
-      knockout_enabled: knockoutEnabled,
-      status: "Active",
+      description: description.trim() || "Role description.",
+      status: "active",
     });
     setIsSubmitting(false);
     if (error) {
-      onDone("Failed to create job. Please try again.", "error");
+      onDone(`Failed to create job: ${error.message}`, "error");
     } else {
       setTitle(""); setDepartment(""); setDescription("");
-      setGithubRequired(false); setKnockoutEnabled(false);
-      onDone("Job created successfully.", "success");
+      setOpen(false);
+      onDone("Job requisition created successfully.", "success");
       onCreated?.();
     }
   };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="accent">
-          <Plus className="mr-2 h-4 w-4" /> Create Job
-        </Button>
+        <button className="btn-primary text-xs">
+          <Plus className="w-4 h-4" strokeWidth={1.75} /> Create New Job Posting
+        </button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[440px] bg-[#0C121D] border-[rgba(148,163,184,0.12)] text-[#F2F5F9] font-sans">
         <DialogHeader>
-          <DialogTitle>Create New Job</DialogTitle>
-          <DialogDescription>
-            Set up the requirements for your new position.
+          <DialogTitle className="font-display text-lg font-medium text-[#F2F5F9]">Create Job Requisition</DialogTitle>
+          <DialogDescription className="font-sans text-xs text-[#9AA6B8]">
+            Set position requirements for candidate resume screening.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
+        <div className="grid gap-4 py-3">
           <div className="grid gap-2">
-            <Label htmlFor="title">Job Title</Label>
-            <Input id="title" placeholder="e.g. Senior Backend Engineer" value={title} onChange={(e) => setTitle(e.target.value)} />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="department">Department</Label>
-            <Input id="department" placeholder="e.g. Engineering" value={department} onChange={(e) => setDepartment(e.target.value)} />
+            <Label htmlFor="title" className="eyebrow">Job Title *</Label>
+            <input id="title" placeholder="e.g. Senior Full-Stack Engineer" className="input-enterprise h-10" value={title} onChange={(e) => setTitle(e.target.value)} />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="desc">Description</Label>
-            <Input id="desc" placeholder="Brief description of the role" value={description} onChange={(e) => setDescription(e.target.value)} />
+            <Label htmlFor="department" className="eyebrow">Department *</Label>
+            <input id="department" placeholder="e.g. Engineering" className="input-enterprise h-10" value={department} onChange={(e) => setDepartment(e.target.value)} />
           </div>
-
-          <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm bg-muted/20">
-            <div className="space-y-0.5">
-              <Label className="text-base">Require GitHub</Label>
-              <p className="text-xs text-muted-foreground">Verify candidate&apos;s code contributions</p>
-            </div>
-            <Switch id="github-mode" checked={githubRequired} onCheckedChange={setGithubRequired} />
-          </div>
-
-          <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm bg-red-50 border-red-100">
-            <div className="space-y-0.5">
-              <Label className="text-base text-red-900">Knockout Criteria</Label>
-              <p className="text-xs text-red-700/80">Auto-reject low Truthfulness scores</p>
-            </div>
-            <Switch id="knockout-mode" checked={knockoutEnabled} onCheckedChange={setKnockoutEnabled} />
+          <div className="grid gap-2">
+            <Label htmlFor="desc" className="eyebrow">Description</Label>
+            <input id="desc" placeholder="Role description & required skills" className="input-enterprise h-10" value={description} onChange={(e) => setDescription(e.target.value)} />
           </div>
         </div>
         <DialogFooter>
-          <Button type="button" variant="accent" onClick={handleCreate} disabled={isSubmitting}>
+          <button className="btn-primary text-xs w-full justify-center h-10" onClick={handleCreate} disabled={isSubmitting}>
             {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            Create Job
-          </Button>
+            Publish Requisition
+          </button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 function ShareJobDialog({
@@ -369,62 +335,29 @@ function ShareJobDialog({
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(jobLink);
-    onDone("Job link copied to clipboard.", "success");
-  };
-
-  const shareOnTwitter = () => {
-    window.open(`https://twitter.com/intent/tweet?text=We are hiring for a ${encodeURIComponent(jobTitle)}! Apply here:&url=${encodeURIComponent(jobLink)}`, '_blank');
-    onDone("Opened X share.", "info");
-  };
-
-  const shareOnLinkedIn = () => {
-    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(jobLink)}`, '_blank');
-    onDone("Opened LinkedIn share.", "info");
+    onDone("Candidate application link copied.", "success");
   };
 
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:bg-primary/10 hover:text-primary" title="Share Job">
-          <Share2 className="w-4 h-4" />
+        <Button variant="ghost" size="icon" className="h-8 w-8 text-[#8AB4F8] hover:bg-[#121B2B]" title="Share Job">
+          <Share2 className="w-4 h-4" strokeWidth={1.75} />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md bg-[#0C121D] border-[rgba(148,163,184,0.12)] text-[#F2F5F9] font-sans">
         <DialogHeader>
-          <DialogTitle>Share Job Listing</DialogTitle>
-          <DialogDescription>
-            Share this link to attract more candidates for the {jobTitle} position.
+          <DialogTitle className="font-display text-lg font-medium text-[#F2F5F9]">Share Candidate Portal</DialogTitle>
+          <DialogDescription className="font-sans text-xs text-[#9AA6B8]">
+            Share this link with applicants for {jobTitle}.
           </DialogDescription>
         </DialogHeader>
         <div className="flex items-center space-x-2 mt-4">
-          <div className="grid flex-1 gap-2">
-            <Label htmlFor="link" className="sr-only">
-              Link
-            </Label>
-            <Input
-              id="link"
-              defaultValue={jobLink}
-              readOnly
-            />
-          </div>
-          <Button type="button" size="sm" className="px-3" onClick={copyToClipboard} variant="secondary">
-            <span className="sr-only">Copy</span>
-            <Copy className="h-4 w-4" />
-          </Button>
+          <input id="link" defaultValue={jobLink} readOnly className="input-enterprise flex-1 font-mono text-xs h-10" />
+          <button type="button" className="btn-primary h-10 px-4 text-xs" onClick={copyToClipboard}>
+            <Copy className="h-4 w-4" strokeWidth={1.75} />
+          </button>
         </div>
-        <DialogFooter className="sm:justify-start mt-6 flex-col gap-2">
-          <span className="text-xs text-muted-foreground mb-2">Or share directly to:</span>
-          <div className="flex gap-2">
-            <Button type="button" variant="outline" className="flex-1 gap-2 border-primary/30 hover:bg-primary/10" onClick={shareOnLinkedIn}>
-              <Linkedin className="h-4 w-4 text-[#0A66C2]" />
-              LinkedIn
-            </Button>
-            <Button type="button" variant="outline" className="flex-1 gap-2 border-border hover:bg-muted" onClick={shareOnTwitter}>
-              <Twitter className="h-4 w-4 text-foreground fill-current" />
-              X (Twitter)
-            </Button>
-          </div>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
@@ -450,50 +383,37 @@ function JobActionsMenu({
         setIsOpen(false);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   return (
     <div className="relative" ref={containerRef}>
-      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsOpen((prev) => !prev)}>
-        <MoreVertical className="w-4 h-4" />
+      <Button variant="ghost" size="icon" className="h-8 w-8 text-[#9AA6B8] hover:bg-[#121B2B]" onClick={() => setIsOpen((prev) => !prev)}>
+        <MoreVertical className="w-4 h-4" strokeWidth={1.75} />
       </Button>
       {isOpen ? (
-        <div className="absolute right-0 z-20 mt-2 w-40 rounded-xl border bg-card p-1 shadow-lg">
+        <div className="absolute right-0 z-20 mt-2 w-40 rounded-[8px] border border-[rgba(148,163,184,0.12)] bg-[#0C121D] p-1 shadow-lg text-[#F2F5F9] text-xs font-sans">
           <button
             type="button"
-            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm hover:bg-muted"
-            onClick={() => {
-              onUpdate(job.id);
-              setIsOpen(false);
-            }}
+            className="flex w-full items-center gap-2 rounded-[6px] px-3 py-2 text-left hover:bg-[#121B2B]"
+            onClick={() => { onUpdate(job.id); setIsOpen(false); }}
           >
-            <Pencil className="h-4 w-4" />
-            Update
+            <Pencil className="h-3.5 w-3.5 text-[#8AB4F8]" strokeWidth={1.75} /> Update
           </button>
           <button
             type="button"
-            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm hover:bg-muted"
-            onClick={() => {
-              onCopyLink(job.id);
-              setIsOpen(false);
-            }}
+            className="flex w-full items-center gap-2 rounded-[6px] px-3 py-2 text-left hover:bg-[#121B2B]"
+            onClick={() => { onCopyLink(job.id); setIsOpen(false); }}
           >
-            <Link2 className="h-4 w-4" />
-            Copy Link
+            <Link2 className="h-3.5 w-3.5 text-[#8AB4F8]" strokeWidth={1.75} /> Copy Portal Link
           </button>
           <button
             type="button"
-            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-destructive hover:bg-destructive/10"
-            onClick={() => {
-              onDelete(job.id);
-              setIsOpen(false);
-            }}
+            className="flex w-full items-center gap-2 rounded-[6px] px-3 py-2 text-left text-[#EF4444] hover:bg-[rgba(239,68,68,0.1)]"
+            onClick={() => { onDelete(job.id); setIsOpen(false); }}
           >
-            <Trash2 className="h-4 w-4" />
-            Delete
+            <Trash2 className="h-3.5 w-3.5" strokeWidth={1.75} /> Delete
           </button>
         </div>
       ) : null}
@@ -511,92 +431,30 @@ function EditJobDialog({
   onSave: (job: Job) => void;
 }) {
   const [formState, setFormState] = useState<Job | null>(job);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!job || !formState) return null;
 
   return (
     <Dialog open={!!job} onOpenChange={(open) => (!open ? onClose() : null)}>
-      <DialogContent className="sm:max-w-[460px]">
+      <DialogContent className="sm:max-w-[440px] bg-[#0C121D] border-[rgba(148,163,184,0.12)] text-[#F2F5F9] font-sans">
         <DialogHeader>
-          <DialogTitle>Update Job</DialogTitle>
-          <DialogDescription>Edit details for the selected role.</DialogDescription>
+          <DialogTitle className="font-display text-lg font-medium text-[#F2F5F9]">Update Job Requisition</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-2">
           <div className="grid gap-2">
-            <Label htmlFor="edit-title">Job Title</Label>
-            <Input
-              id="edit-title"
-              value={formState.title}
-              onChange={(event) => setFormState((prev) => (prev ? { ...prev, title: event.target.value } : prev))}
-            />
+            <Label htmlFor="edit-title" className="eyebrow">Job Title</Label>
+            <input id="edit-title" value={formState.title} onChange={(e) => setFormState((p) => p ? { ...p, title: e.target.value } : p)} className="input-enterprise h-10" />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="edit-department">Department</Label>
-            <Input
-              id="edit-department"
-              value={formState.department}
-              onChange={(event) => setFormState((prev) => (prev ? { ...prev, department: event.target.value } : prev))}
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="edit-status">Status</Label>
-            <select
-              id="edit-status"
-              value={formState.status}
-              onChange={(event) =>
-                setFormState((prev) =>
-                  prev
-                    ? { ...prev, status: event.target.value === "Closed" ? "Closed" : "Active" }
-                    : prev
-                )
-              }
-              className="h-9 rounded-md border border-input bg-background px-3 text-sm"
-            >
-              <option value="Active">Active</option>
-              <option value="Closed">Closed</option>
-            </select>
-          </div>
-          <div className="flex items-center justify-between rounded-lg border p-3">
-            <div>
-              <p className="text-sm font-medium">Require GitHub</p>
-              <p className="text-xs text-muted-foreground">Validate public code activity.</p>
-            </div>
-            <Switch
-              checked={formState.githubRequired}
-              onCheckedChange={(checked) => setFormState((prev) => (prev ? { ...prev, githubRequired: checked } : prev))}
-            />
-          </div>
-          <div className="flex items-center justify-between rounded-lg border p-3">
-            <div>
-              <p className="text-sm font-medium">Knockout Criteria</p>
-              <p className="text-xs text-muted-foreground">Auto-flag low truthfulness scores.</p>
-            </div>
-            <Switch
-              checked={formState.knockoutEnabled}
-              onCheckedChange={(checked) => setFormState((prev) => (prev ? { ...prev, knockoutEnabled: checked } : prev))}
-            />
+            <Label htmlFor="edit-department" className="eyebrow">Department</Label>
+            <input id="edit-department" value={formState.department} onChange={(e) => setFormState((p) => p ? { ...p, department: e.target.value } : p)} className="input-enterprise h-10" />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
-          <Button
-            variant="accent"
-            disabled={isSubmitting || !formState.title.trim() || !formState.department.trim()}
-            onClick={() => {
-              setIsSubmitting(true);
-              setTimeout(() => {
-                onSave({
-                  ...formState,
-                  title: formState.title.trim(),
-                  department: formState.department.trim(),
-                });
-              }, 500);
-            }}
-          >
-            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          <button className="btn-secondary text-xs h-10" onClick={onClose}>Cancel</button>
+          <button className="btn-primary text-xs h-10" onClick={() => onSave(formState)}>
             Save Changes
-          </Button>
+          </button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

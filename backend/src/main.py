@@ -1,41 +1,43 @@
+import logging
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from routers import jobs, candidates, apply
-from core.config import settings
-import logging
+from src.api.v1.routers import jobs, apply, interview
+from src.core.config import settings
 
 logger = logging.getLogger(__name__)
 
 app = FastAPI(
-    title="AI-Recruit360 API",
+    title="AI-Recruit360 API Engine",
     description=(
-        "AI-powered recruitment intelligence backend — "
-        "resume parsing, interview evaluation, and hiring confidence scoring."
+        "Enterprise-grade recruitment intelligence backend — "
+        "PyMuPDF resume parsing, LangGraph 3-Node AI screening, and XAI candidate scoring."
     ),
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
 )
 
-# CORS — allow Next.js dev and production
+# CORS Middleware — Allows all origins in development
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.ALLOWED_CORS_ORIGINS,
+    allow_origins=["*"],  # Allows all origins for local dev and testing
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # ─── Routers ──────────────────────────────────────────────────────────────────
-# Jobs: /api/v1/jobs  (list, create, get, update, delete, close)
-app.include_router(jobs.router, prefix="/api/v1/jobs", tags=["Jobs"])
+# Jobs Router: /api/jobs (Create, List)
+app.include_router(jobs.router, prefix="/api/jobs", tags=["Jobs"])
 
-app.include_router(candidates.router, prefix="/api/v1/candidates", tags=["Candidates"])
-
-# Apply Portal: /api/apply  (submit application, submit interview)
+# Apply Router: /api/apply (Public candidate resume upload & screening)
 app.include_router(apply.router, prefix="/api/apply", tags=["Apply Portal"])
+
+# Interview Router: /api/interview (Question fetching, answer posting, proctoring)
+app.include_router(interview.router, prefix="/api/interview", tags=["Interview Room"])
 # ──────────────────────────────────────────────────────────────────────────────
+
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
@@ -45,17 +47,20 @@ async def global_exception_handler(request: Request, exc: Exception):
         content={"detail": "An internal server error occurred.", "error": str(exc)},
     )
 
+
 @app.get("/", tags=["Health"])
 async def root():
     return {
-        "service": "AI-Recruit360 API",
+        "service": "AI-Recruit360 API Engine",
         "version": "1.0.0",
         "status": "running",
         "docs": "/docs",
-        "routes": {
-            "jobs":       "/api/v1/jobs",
-            "candidates": "/api/v1/candidates",
-            "apply":      "/api/apply",
+        "endpoints": {
+            "jobs": "/api/jobs",
+            "apply": "/api/apply/{job_id}",
+            "interview_next": "/api/interview/{candidate_id}/next",
+            "interview_answer": "/api/interview/{candidate_id}/answer",
+            "proctor_log": "/api/interview/{candidate_id}/proctor-log",
         },
     }
 

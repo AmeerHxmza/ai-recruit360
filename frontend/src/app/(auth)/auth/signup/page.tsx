@@ -6,12 +6,9 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { FeedbackToast } from "@/components/ui/feedback-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, ArrowRight } from "lucide-react";
 
 const signupSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
@@ -64,87 +61,90 @@ export default function SignupPage() {
   }
 
   return (
-    <Card className="border-none shadow-none bg-transparent">
-      <CardHeader className="space-y-1 px-0">
-        <CardTitle className="text-2xl font-bold tracking-tight sm:text-3xl">
+    <div className="space-y-6 font-sans">
+      <div className="space-y-1.5">
+        <h2 className="font-display text-2xl font-medium text-[#F2F5F9]">
           Create an account
-        </CardTitle>
-        <CardDescription>
-          Get started with AI-Recruit360
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="px-0">
-        {toast ? <FeedbackToast className="mb-4" message={toast.message} tone={toast.tone} onClose={() => setToast(null)} /> : null}
+        </h2>
+        <p className="font-sans text-xs text-[#9AA6B8]">
+          Get started with AI-Recruit360 Enterprise
+        </p>
+      </div>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Full Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="John Doe" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="companyName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Company Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Acme Corp" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input placeholder="name@company.com" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Password</FormLabel>
-                  <FormControl>
-                    <Input type="password" placeholder="••••••••" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Button type="submit" className="w-full" variant="accent" disabled={isSubmitting}>
-              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Create Account
-            </Button>
-          </form>
-        </Form>
-      </CardContent>
-      <CardFooter className="px-0 flex flex-col gap-4">
-        <div className="text-center text-sm text-muted-foreground w-full">
-          Already have an account?{" "}
-          <Link href="/auth/login" className="underline underline-offset-4 hover:text-primary">
-            Sign in
-          </Link>
-        </div>
-      </CardFooter>
-    </Card>
+      {toast ? <FeedbackToast message={toast.message} tone={toast.tone} onClose={() => setToast(null)} /> : null}
+
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <label className="eyebrow block mb-1">Full Name *</label>
+                <FormControl>
+                  <input placeholder="John Doe" className="input-enterprise w-full h-11" {...field} />
+                </FormControl>
+                <FormMessage className="text-[11px] font-mono text-[#EF4444]" />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="companyName"
+            render={({ field }) => (
+              <FormItem>
+                <label className="eyebrow block mb-1">Company Name *</label>
+                <FormControl>
+                  <input placeholder="Acme Corp" className="input-enterprise w-full h-11" {...field} />
+                </FormControl>
+                <FormMessage className="text-[11px] font-mono text-[#EF4444]" />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <label className="eyebrow block mb-1">Email Address *</label>
+                <FormControl>
+                  <input type="email" placeholder="name@company.com" className="input-enterprise w-full h-11" {...field} />
+                </FormControl>
+                <FormMessage className="text-[11px] font-mono text-[#EF4444]" />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <label className="eyebrow block mb-1">Password *</label>
+                <FormControl>
+                  <input type="password" placeholder="••••••••" className="input-enterprise w-full h-11" {...field} />
+                </FormControl>
+                <FormMessage className="text-[11px] font-mono text-[#EF4444]" />
+              </FormItem>
+            )}
+          />
+
+          <button type="submit" className="btn-primary w-full justify-center h-11 text-xs" disabled={isSubmitting}>
+            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            <span>Create Account</span>
+            <ArrowRight className="w-4 h-4" strokeWidth={1.75} />
+          </button>
+        </form>
+      </Form>
+
+      <div className="pt-2 text-center text-xs text-[#9AA6B8] border-t border-[rgba(148,163,184,0.12)]">
+        Already have an account?{" "}
+        <Link href="/auth/login" className="text-[#8AB4F8] hover:underline font-mono">
+          Sign in
+        </Link>
+      </div>
+    </div>
   );
 }

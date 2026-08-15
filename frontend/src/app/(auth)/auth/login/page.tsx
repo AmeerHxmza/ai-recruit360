@@ -6,26 +6,9 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { FeedbackToast } from "@/components/ui/feedback-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, ArrowRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 const loginSchema = z.object({
@@ -72,73 +55,75 @@ export default function LoginPage() {
   }
 
   return (
-    <Card className="border-none shadow-none bg-transparent">
-      <CardHeader className="space-y-1 px-0">
-        <CardTitle className="text-2xl font-bold tracking-tight sm:text-3xl">
+    <div className="space-y-6 font-sans">
+      <div className="space-y-1.5">
+        <h2 className="font-display text-2xl font-medium text-[#F2F5F9]">
           Welcome back
-        </CardTitle>
-        <CardDescription>Enter your email to sign in.</CardDescription>
-      </CardHeader>
-      <CardContent className="px-0">
-        {toast && (
-          <FeedbackToast
-            className="mb-4"
-            message={toast.message}
-            tone={toast.tone}
-            onClose={() => setToast(null)}
+        </h2>
+        <p className="font-sans text-xs text-[#9AA6B8]">
+          Enter your recruiter credentials to sign in.
+        </p>
+      </div>
+
+      {toast && (
+        <FeedbackToast
+          message={toast.message}
+          tone={toast.tone}
+          onClose={() => setToast(null)}
+        />
+      )}
+
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <label className="eyebrow block mb-1">Email Address *</label>
+                <FormControl>
+                  <input type="email" placeholder="name@company.com" className="input-enterprise w-full h-11" {...field} />
+                </FormControl>
+                <FormMessage className="text-[11px] font-mono text-[#EF4444]" />
+              </FormItem>
+            )}
           />
-        )}
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input placeholder="name@company.com" type="email" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Password</FormLabel>
-                  <FormControl>
-                    <Input type="password" placeholder="••••••••" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Button
-              type="submit"
-              className="w-full"
-              variant="accent"
-              disabled={isSubmitting}
-            >
-              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Sign In
-            </Button>
-          </form>
-        </Form>
-      </CardContent>
-      <CardFooter className="px-0 flex flex-col gap-4">
-        <div className="text-center text-sm text-muted-foreground w-full">
-          Don&apos;t have an account?{" "}
-          <Link
-            href="/auth/signup"
-            className="underline underline-offset-4 hover:text-primary font-medium"
+
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <label className="eyebrow block mb-1">Password *</label>
+                <FormControl>
+                  <input type="password" placeholder="••••••••" className="input-enterprise w-full h-11" {...field} />
+                </FormControl>
+                <FormMessage className="text-[11px] font-mono text-[#EF4444]" />
+              </FormItem>
+            )}
+          />
+
+          <button
+            type="submit"
+            className="btn-primary w-full justify-center h-11 text-xs"
+            disabled={isSubmitting}
           >
-            Sign up
-          </Link>
-        </div>
-      </CardFooter>
-    </Card>
+            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <span>Sign In</span>
+            <ArrowRight className="w-4 h-4" strokeWidth={1.75} />
+          </button>
+        </form>
+      </Form>
+
+      <div className="pt-2 text-center text-xs text-[#9AA6B8] border-t border-[rgba(148,163,184,0.12)]">
+        Don&apos;t have an account?{" "}
+        <Link
+          href="/auth/signup"
+          className="text-[#8AB4F8] hover:underline font-mono"
+        >
+          Sign up
+        </Link>
+      </div>
+    </div>
   );
 }

@@ -1,5 +1,5 @@
 from supabase import create_client, Client
-from core.config import settings
+from src.core.config import settings
 
 # Service-role client — bypasses RLS, used by backend only
 # NEVER expose SUPABASE_SERVICE_KEY to the frontend

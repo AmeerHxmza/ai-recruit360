@@ -1,210 +1,633 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { ChevronDown, Star, CheckCircle2, Bot, Target } from "lucide-react";
+import {
+  ArrowRight,
+  Bot,
+  Brain,
+  Check,
+  CheckCircle2,
+  ChevronRight,
+  Cpu,
+  FileSearch,
+  Globe2,
+  Lock,
+  Mic,
+  ShieldCheck,
+  Sparkles,
+  Zap,
+  HelpCircle
+} from "lucide-react";
+import { HeroCanvas } from "@/components/home/hero-canvas";
 
 export default function LandingPage() {
+  const [billingCycle, setBillingCycle] = useState<"annual" | "monthly">("annual");
+  const [activeTab, setActiveTab] = useState<"screening" | "interview" | "xai">("screening");
+  const [activeNav, setActiveNav] = useState<"home" | "how-it-works" | "platform-tour" | "pricing" | "security" | "faq">("home");
+
   return (
-    <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-blue-100">
-      {/* Navigation */}
-      <header className="flex items-center justify-between px-6 py-6 max-w-[1400px] mx-auto">
-        <div className="flex items-center gap-2">
-          {/* Logo mimicking the reference */}
-          <div className="relative flex items-center justify-center w-8 h-8">
-            <div className="absolute w-full h-full border-2 border-[#4A65FF] rounded-full opacity-40"></div>
-            <div className="absolute w-5 h-5 border-2 border-[#4A65FF] rounded-full opacity-70"></div>
-            <div className="absolute w-2 h-2 bg-[#4A65FF] rounded-full"></div>
+    <div className="min-h-screen bg-[#05070D] text-[#9AA6B8] font-sans selection:bg-[#8AB4F8] selection:text-[#06101F]">
+      {/* Floating Glassmorphism Sticky Navbar */}
+      <header className="sticky top-4 z-50 max-w-6xl mx-auto px-4 sm:px-6 transition-all duration-300">
+        <div className="w-full rounded-[18px] bg-[#070C18]/75 backdrop-blur-xl border border-[rgba(148,163,184,0.18)] shadow-2xl shadow-[rgba(0,0,0,0.6)] px-6 py-3 flex items-center justify-between">
+          {/* Logo */}
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-[8px] bg-[#8AB4F8] text-[#06101F] flex items-center justify-center font-bold shadow-md shadow-[rgba(138,180,248,0.3)]">
+              <Cpu className="w-4 h-4" strokeWidth={1.75} />
+            </div>
+            <span className="font-display font-medium text-lg text-[#F2F5F9] tracking-tight">
+              AI-Recruit<span className="text-[#7DA2F2]">360</span>
+            </span>
           </div>
-          <span className="font-bold text-[22px] tracking-tight text-slate-800">
-            airecruit360.
-          </span>
-        </div>
-        
-        <nav className="hidden lg:flex items-center gap-8 text-[15px] font-medium text-slate-600">
-          <Link href="#" className="hover:text-slate-900 flex items-center gap-1 transition-colors">
-            Product <ChevronDown className="w-4 h-4 text-slate-400" />
-          </Link>
-          <Link href="#" className="hover:text-slate-900 flex items-center gap-1 transition-colors">
-            Solutions <ChevronDown className="w-4 h-4 text-slate-400" />
-          </Link>
-          <Link href="#" className="hover:text-slate-900 transition-colors">Pricing</Link>
-          <Link href="#" className="hover:text-slate-900 transition-colors">Blog</Link>
-        </nav>
-        
-        <div className="flex items-center gap-4">
-          <Link href="/auth/login">
-            <Button variant="outline" className="border-slate-200 text-slate-700 font-bold px-6 h-10 hover:bg-slate-50 transition-colors text-xs tracking-wide">
-              SIGN IN
-            </Button>
-          </Link>
-          <Link href="/auth/signup">
-            <Button className="bg-[#4A65FF] hover:bg-[#3B52D9] text-white font-bold px-6 h-10 rounded-md transition-colors text-xs tracking-wide shadow-sm shadow-blue-200">
-              SIGN UP
-            </Button>
-          </Link>
+
+          {/* Centered Floating Pill Navigation */}
+          <nav className="hidden md:flex items-center gap-1.5 bg-[#0A0F1D]/80 border border-[rgba(148,163,184,0.12)] p-1 rounded-full text-xs font-sans">
+            <a
+              href="#"
+              onClick={() => setActiveNav("home")}
+              className={`px-4 py-1.5 rounded-full transition-all ${
+                activeNav === "home"
+                  ? "bg-[rgba(138,180,248,0.16)] text-[#F2F5F9] font-medium border border-[rgba(138,180,248,0.3)] shadow-sm"
+                  : "text-[#9AA6B8] hover:text-[#F2F5F9]"
+              }`}
+            >
+              Home
+            </a>
+            <a
+              href="#how-it-works"
+              onClick={() => setActiveNav("how-it-works")}
+              className={`px-4 py-1.5 rounded-full transition-all ${
+                activeNav === "how-it-works"
+                  ? "bg-[rgba(138,180,248,0.16)] text-[#F2F5F9] font-medium border border-[rgba(138,180,248,0.3)] shadow-sm"
+                  : "text-[#9AA6B8] hover:text-[#F2F5F9]"
+              }`}
+            >
+              How It Works
+            </a>
+            <a
+              href="#platform-tour"
+              onClick={() => setActiveNav("platform-tour")}
+              className={`px-4 py-1.5 rounded-full transition-all ${
+                activeNav === "platform-tour"
+                  ? "bg-[rgba(138,180,248,0.16)] text-[#F2F5F9] font-medium border border-[rgba(138,180,248,0.3)] shadow-sm"
+                  : "text-[#9AA6B8] hover:text-[#F2F5F9]"
+              }`}
+            >
+              Platform Tour
+            </a>
+            <a
+              href="#pricing"
+              onClick={() => setActiveNav("pricing")}
+              className={`px-4 py-1.5 rounded-full transition-all ${
+                activeNav === "pricing"
+                  ? "bg-[rgba(138,180,248,0.16)] text-[#F2F5F9] font-medium border border-[rgba(138,180,248,0.3)] shadow-sm"
+                  : "text-[#9AA6B8] hover:text-[#F2F5F9]"
+              }`}
+            >
+              Pricing
+            </a>
+            <a
+              href="#security"
+              onClick={() => setActiveNav("security")}
+              className={`px-4 py-1.5 rounded-full transition-all ${
+                activeNav === "security"
+                  ? "bg-[rgba(138,180,248,0.16)] text-[#F2F5F9] font-medium border border-[rgba(138,180,248,0.3)] shadow-sm"
+                  : "text-[#9AA6B8] hover:text-[#F2F5F9]"
+              }`}
+            >
+              Security
+            </a>
+            <a
+              href="#faq"
+              onClick={() => setActiveNav("faq")}
+              className={`px-4 py-1.5 rounded-full transition-all ${
+                activeNav === "faq"
+                  ? "bg-[rgba(138,180,248,0.16)] text-[#F2F5F9] font-medium border border-[rgba(138,180,248,0.3)] shadow-sm"
+                  : "text-[#9AA6B8] hover:text-[#F2F5F9]"
+              }`}
+            >
+              FAQ
+            </a>
+          </nav>
+
+          {/* Right Action Buttons */}
+          <div className="flex items-center gap-3">
+            <Link href="/auth/login">
+              <button className="px-4 py-2 rounded-[10px] border border-[rgba(148,163,184,0.25)] text-xs font-sans text-[#F2F5F9] hover:bg-[#121B2B] hover:border-[rgba(148,163,184,0.4)] transition-all">
+                Login
+              </button>
+            </Link>
+            <Link href="/auth/signup">
+              <button className="px-5 py-2 rounded-[10px] bg-[#8AB4F8] text-[#06101F] font-semibold text-xs font-sans hover:bg-[#A9C8FA] transition-all shadow-md shadow-[rgba(138,180,248,0.25)] flex items-center gap-1.5">
+                <span>Start Free</span>
+              </button>
+            </Link>
+          </div>
         </div>
       </header>
 
       {/* Hero Section */}
-      <main className="max-w-[1400px] mx-auto px-6 pt-20 pb-24 flex flex-col lg:flex-row items-center gap-16 lg:gap-8">
-        
-        {/* Left Content */}
-        <div className="flex-1 space-y-8 max-w-xl z-10">
-          <h1 className="text-5xl lg:text-[64px] font-bold leading-[1.1] tracking-tight text-slate-900">
-            Hire the top 1%<br />
-            of talent with<br />
-            AI agents
-          </h1>
-          <p className="text-[19px] text-slate-500 leading-relaxed max-w-md font-medium">
-            Automate resume screening, conduct dynamic technical interviews, and make data-driven hiring decisions using advanced AI.
-          </p>
-          <Link href="/auth/signup" className="inline-block pt-2">
-            <Button className="bg-[#4A65FF] hover:bg-[#3B52D9] text-white font-bold px-8 h-[52px] rounded-md transition-colors text-sm tracking-widest uppercase shadow-lg shadow-blue-500/20">
-              GET STARTED
-            </Button>
-          </Link>
-        </div>
+      <section className="relative pt-16 pb-24 px-6 overflow-hidden">
+        {/* Scattered Background Circles & Glow */}
+        <div className="absolute top-12 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-[rgba(37,99,235,0.18)] blur-[120px] rounded-full pointer-events-none" />
+        <div className="absolute top-40 right-10 w-72 h-72 bg-[rgba(138,180,248,0.10)] blur-[90px] rounded-full pointer-events-none" />
 
-        {/* Right Content - Abstract UI Mockup mimicking the reference style */}
-        <div className="flex-1 relative w-full h-[500px] lg:h-[600px] flex items-center justify-center">
-          {/* Background concentric circles */}
-          <div className="absolute w-[450px] h-[450px] rounded-full border border-slate-100 bg-slate-50/30 -z-10"></div>
-          <div className="absolute w-[280px] h-[280px] rounded-full border border-slate-100 bg-white shadow-xl shadow-slate-200/40 -z-10 flex items-center justify-center">
-            {/* Center target icon */}
-            <div className="relative flex items-center justify-center w-24 h-24">
-              <div className="absolute w-full h-full border-[6px] border-[#4A65FF]/20 rounded-full"></div>
-              <div className="absolute w-16 h-16 border-[5px] border-[#4A65FF]/60 rounded-full"></div>
-              <div className="absolute w-6 h-6 bg-[#4A65FF] rounded-full"></div>
+        <div className="max-w-7xl mx-auto space-y-12 relative z-10">
+          <div className="text-center space-y-6 max-w-4xl mx-auto">
+            {/* Eyebrow Label */}
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[rgba(138,180,248,0.10)] border border-[rgba(148,163,184,0.14)] text-[#7DA2F2]">
+              <Sparkles className="w-3.5 h-3.5 text-[#8AB4F8]" strokeWidth={1.75} />
+              <span className="eyebrow text-[11px]">Autonomous Hiring Intelligence Platform</span>
+            </div>
+
+            {/* Main Headline */}
+            <h1 className="font-display text-4xl sm:text-6xl lg:text-7xl font-medium text-[#F2F5F9] tracking-tight leading-[1.1]">
+              Screen Resumes &amp; Conduct Voice AI Interviews <span className="text-[#7DA2F2]">10x Faster</span>
+            </h1>
+
+            {/* Subtitle Copy */}
+            <p className="font-sans text-base sm:text-lg text-[#9AA6B8] max-w-2xl mx-auto leading-relaxed">
+              AI-Recruit360 parses candidate applications, executes bilingual AI interviews, and delivers Explainable AI (XAI) evidence audit reports to engineering leaders.
+            </p>
+
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
+              <Link href="/auth/signup">
+                <button className="btn-primary text-sm h-12 px-7">
+                  <span>Deploy Hiring Engine</span>
+                  <ArrowRight className="w-4 h-4" strokeWidth={1.75} />
+                </button>
+              </Link>
+              <a href="#how-it-works">
+                <button className="btn-secondary text-sm h-12 px-7">
+                  Explore Workflow
+                </button>
+              </a>
+            </div>
+
+            {/* Trust Micro-Badges */}
+            <div className="flex flex-wrap items-center justify-center gap-6 text-xs font-mono text-[#66707F] pt-4">
+              <span className="flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-[#22C55E]" strokeWidth={1.75} />
+                SOC-2 Type II Certified
+              </span>
+              <span className="flex items-center gap-1.5">
+                <Globe2 className="w-4 h-4 text-[#8AB4F8]" strokeWidth={1.75} />
+                Bilingual (English &amp; Urdu)
+              </span>
+              <span className="flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4 text-[#22C55E]" strokeWidth={1.75} />
+                Zero Hiring Bias Audited
+              </span>
             </div>
           </div>
 
-          {/* Connected Profile Nodes */}
-          <div className="absolute left-[5%] top-[25%] flex items-center gap-4">
-             <div className="w-14 h-14 rounded-full bg-indigo-100 border-4 border-white shadow-lg overflow-hidden flex items-center justify-center relative z-20">
-               <img src="https://i.pravatar.cc/150?img=47" alt="Candidate" className="w-full h-full object-cover" />
-             </div>
-             {/* Connection line */}
-             <div className="w-24 h-1 bg-gradient-to-r from-transparent to-[#4A65FF] absolute left-10 top-1/2 -translate-y-1/2 rotate-[15deg] origin-left -z-10 opacity-60"></div>
-          </div>
-
-          <div className="absolute left-[0%] top-[50%] flex items-center gap-4">
-             <div className="w-12 h-12 rounded-full bg-emerald-100 border-4 border-white shadow-lg overflow-hidden flex items-center justify-center relative z-20">
-               <img src="https://i.pravatar.cc/150?img=11" alt="Candidate" className="w-full h-full object-cover" />
-             </div>
-             <div className="w-24 h-1 bg-gradient-to-r from-transparent to-[#4A65FF] absolute left-8 top-1/2 -translate-y-1/2 -rotate-[5deg] origin-left -z-10 opacity-60"></div>
-          </div>
-
-          <div className="absolute left-[10%] bottom-[25%] flex items-center gap-4">
-             <div className="w-14 h-14 rounded-full bg-amber-100 border-4 border-white shadow-lg overflow-hidden flex items-center justify-center relative z-20">
-               <img src="https://i.pravatar.cc/150?img=33" alt="Candidate" className="w-full h-full object-cover" />
-             </div>
-             <div className="w-24 h-1 bg-gradient-to-r from-transparent to-[#4A65FF] absolute left-10 top-1/2 -translate-y-1/2 -rotate-[25deg] origin-left -z-10 opacity-60"></div>
-          </div>
-
-          {/* Main App Window Mockup */}
-          <div className="absolute right-[-5%] lg:right-[0%] top-1/2 -translate-y-1/2 w-[400px] h-[320px] bg-white rounded-xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col z-30">
-            {/* Window Header */}
-            <div className="h-4 bg-slate-800 flex items-center px-3 gap-1.5 w-full">
-              <div className="w-2 h-2 rounded-full bg-red-400"></div>
-              <div className="w-2 h-2 rounded-full bg-amber-400"></div>
-              <div className="w-2 h-2 rounded-full bg-green-400"></div>
-            </div>
-            {/* Split layout inside window */}
-            <div className="flex flex-1">
-              <div className="flex-1 p-6 flex flex-col justify-center relative">
-                {/* Decorative floating line */}
-                <div className="absolute -left-16 top-1/2 w-16 h-1 bg-[#4A65FF] -translate-y-1/2"></div>
-
-                <div className="text-[10px] font-bold text-slate-400 tracking-widest uppercase mb-2">
-                  Top Match
-                </div>
-                <h3 className="text-2xl font-semibold text-slate-800 mb-1">
-                  Hello <span className="text-[#4A65FF]">Alex</span>
-                </h3>
-                <div className="w-16 h-1.5 bg-slate-200 rounded-full mb-6 mt-3"></div>
-                
-                <div className="w-24 h-8 bg-[#4A65FF] rounded-md shadow-md mb-8"></div>
-                
-                {/* Stats Row */}
-                <div className="flex items-center gap-4 mt-auto">
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center">
-                      <Star className="w-3 h-3 text-white fill-white" />
-                    </div>
-                    <div className="flex text-amber-400">
-                      <Star className="w-2.5 h-2.5 fill-amber-400" /><Star className="w-2.5 h-2.5 fill-amber-400" /><Star className="w-2.5 h-2.5 fill-amber-400" /><Star className="w-2.5 h-2.5 fill-amber-400" /><Star className="w-2.5 h-2.5 fill-amber-400" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="w-[160px] bg-blue-50 relative overflow-hidden">
-                <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=400&h=600" alt="Professional" className="w-full h-full object-cover" />
-                {/* Floating overlay tag */}
-                <div className="absolute top-4 right-4 px-3 py-1 bg-white/90 backdrop-blur-sm rounded text-[10px] font-bold text-slate-600 shadow-sm">
-                  98% Match
-                </div>
-              </div>
-            </div>
+          {/* Product Mockup Frame */}
+          <div className="pt-6">
+            <HeroCanvas />
           </div>
         </div>
-      </main>
+      </section>
 
-      {/* Trust/Social Proof Section */}
-      <section className="mt-12 pb-24 flex flex-col items-center">
-        <h3 className="text-[17px] font-bold text-slate-700 mb-10">
-          Trusted by modern engineering teams around the world
-        </h3>
-        
-        <div className="flex flex-wrap justify-center items-center gap-8 lg:gap-16">
-          {/* G2 Badge */}
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-[#FF492C] flex items-center justify-center shadow-sm">
-              <span className="text-white font-bold text-xl italic font-serif leading-none">G<span className="text-[14px]">2</span></span>
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-slate-800 text-lg leading-none">5</span>
-                <div className="flex text-[#FFB400] gap-0.5">
-                  <Star className="w-4 h-4 fill-[#FFB400]" /><Star className="w-4 h-4 fill-[#FFB400]" /><Star className="w-4 h-4 fill-[#FFB400]" /><Star className="w-4 h-4 fill-[#FFB400]" /><Star className="w-4 h-4 fill-[#FFB400]" />
-                </div>
-              </div>
-              <p className="text-[13px] text-slate-500 mt-1">G2 - 50+ reviews</p>
-            </div>
+      {/* How It Works (4-Step Enterprise Workflow) */}
+      <section id="how-it-works" className="py-24 px-6 bg-[#0A0F18] border-y border-[rgba(148,163,184,0.12)]">
+        <div className="max-w-7xl mx-auto space-y-16">
+          <div className="text-center space-y-3 max-w-2xl mx-auto">
+            <span className="eyebrow block">Autonomous Pipeline</span>
+            <h2 className="font-display text-3xl sm:text-5xl font-medium text-[#F2F5F9]">
+              How AI-Recruit360 Works
+            </h2>
+            <p className="font-sans text-sm text-[#9AA6B8] leading-relaxed">
+              From open requisition setup to anti-cheat verified candidate offers in 4 automated stages.
+            </p>
           </div>
 
-          {/* Built In Badge */}
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-[#95C11F] flex items-center justify-center shadow-sm">
-              <span className="text-white font-bold text-xl leading-none">B</span>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Step 1 */}
+            <div className="card-enterprise space-y-4 relative">
+              <span className="font-mono text-3xl font-medium text-[#7DA2F2]">01</span>
+              <h3 className="font-display text-lg font-medium text-[#F2F5F9]">Requisition Setup</h3>
+              <p className="font-sans text-xs text-[#9AA6B8] leading-relaxed">
+                Define target experience levels, technical skill rubrics, and mandatory knockout requirements in seconds.
+              </p>
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-slate-800 text-lg leading-none">5</span>
-                <div className="flex text-[#FFB400] gap-0.5">
-                  <Star className="w-4 h-4 fill-[#FFB400]" /><Star className="w-4 h-4 fill-[#FFB400]" /><Star className="w-4 h-4 fill-[#FFB400]" /><Star className="w-4 h-4 fill-[#FFB400]" /><Star className="w-4 h-4 fill-[#FFB400]" />
-                </div>
-              </div>
-              <p className="text-[13px] text-slate-500 mt-1">Built In - 100+ reviews</p>
-            </div>
-          </div>
 
-          {/* Capterra Badge */}
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-[#003B5C] flex items-center justify-center shadow-sm relative overflow-hidden">
-              <div className="absolute w-full h-full bg-gradient-to-tr from-[#00A1E0] to-transparent opacity-50"></div>
-              <Target className="w-6 h-6 text-white relative z-10" />
+            {/* Step 2 */}
+            <div className="card-enterprise space-y-4 relative">
+              <span className="font-mono text-3xl font-medium text-[#7DA2F2]">02</span>
+              <h3 className="font-display text-lg font-medium text-[#F2F5F9]">CV Intake &amp; Screening</h3>
+              <p className="font-sans text-xs text-[#9AA6B8] leading-relaxed">
+                Applicants submit PDF resumes. Our engine screens experience and instantly generates 10 tailored interview questions.
+              </p>
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-slate-800 text-lg leading-none">5</span>
-                <div className="flex text-[#FFB400] gap-0.5">
-                  <Star className="w-4 h-4 fill-[#FFB400]" /><Star className="w-4 h-4 fill-[#FFB400]" /><Star className="w-4 h-4 fill-[#FFB400]" /><Star className="w-4 h-4 fill-[#FFB400]" /><Star className="w-4 h-4 fill-[#FFB400]" />
-                </div>
-              </div>
-              <p className="text-[13px] text-slate-500 mt-1">Capterra - 10+ reviews</p>
+
+            {/* Step 3 */}
+            <div className="card-enterprise space-y-4 relative">
+              <span className="font-mono text-3xl font-medium text-[#7DA2F2]">03</span>
+              <h3 className="font-display text-lg font-medium text-[#F2F5F9]">Conversational AI Session</h3>
+              <p className="font-sans text-xs text-[#9AA6B8] leading-relaxed">
+                Candidates complete a voice and text interview avatar session monitored by real-time proctoring telemetry.
+              </p>
+            </div>
+
+            {/* Step 4 */}
+            <div className="card-enterprise space-y-4 relative">
+              <span className="font-mono text-3xl font-medium text-[#7DA2F2]">04</span>
+              <h3 className="font-display text-lg font-medium text-[#F2F5F9]">Explainable AI Audit</h3>
+              <p className="font-sans text-xs text-[#9AA6B8] leading-relaxed">
+                Recruiters review candidate multi-axis radar charts, transcript evidence quotes, and verified hiring rankings.
+              </p>
             </div>
           </div>
         </div>
       </section>
+
+      {/* Interactive Platform Tour / How to Use */}
+      <section id="platform-tour" className="py-24 px-6 bg-[#05070D]">
+        <div className="max-w-7xl mx-auto space-y-12">
+          <div className="text-center space-y-3 max-w-2xl mx-auto">
+            <span className="eyebrow block">Platform Preview</span>
+            <h2 className="font-display text-3xl sm:text-5xl font-medium text-[#F2F5F9]">
+              Designed for Enterprise Talent Teams
+            </h2>
+            <p className="font-sans text-sm text-[#9AA6B8]">
+              Switch tabs to explore the core modules used by hiring managers.
+            </p>
+          </div>
+
+          {/* Tab Controls */}
+          <div className="flex justify-center gap-2 p-1.5 rounded-[10px] bg-[#0C121D] border border-[rgba(148,163,184,0.12)] max-w-md mx-auto">
+            <button
+              onClick={() => setActiveTab("screening")}
+              className={`flex-1 py-2 px-4 rounded-[8px] text-xs font-mono transition-all ${
+                activeTab === "screening"
+                  ? "bg-[#8AB4F8] text-[#06101F] font-semibold"
+                  : "text-[#9AA6B8] hover:text-[#F2F5F9]"
+              }`}
+            >
+              Resume Screening
+            </button>
+            <button
+              onClick={() => setActiveTab("interview")}
+              className={`flex-1 py-2 px-4 rounded-[8px] text-xs font-mono transition-all ${
+                activeTab === "interview"
+                  ? "bg-[#8AB4F8] text-[#06101F] font-semibold"
+                  : "text-[#9AA6B8] hover:text-[#F2F5F9]"
+              }`}
+            >
+              AI Interview Room
+            </button>
+            <button
+              onClick={() => setActiveTab("xai")}
+              className={`flex-1 py-2 px-4 rounded-[8px] text-xs font-mono transition-all ${
+                activeTab === "xai"
+                  ? "bg-[#8AB4F8] text-[#06101F] font-semibold"
+                  : "text-[#9AA6B8] hover:text-[#F2F5F9]"
+              }`}
+            >
+              XAI Evidence
+            </button>
+          </div>
+
+          {/* Tab Content Display */}
+          <div className="card-enterprise p-8 space-y-6 max-w-4xl mx-auto bg-[#0A0E16]">
+            {activeTab === "screening" && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between border-b border-[rgba(148,163,184,0.12)] pb-4">
+                  <div className="flex items-center gap-3">
+                    <FileSearch className="w-5 h-5 text-[#8AB4F8]" strokeWidth={1.75} />
+                    <h3 className="font-display text-lg font-medium text-[#F2F5F9]">Automated Resume Parsing &amp; Question Generation</h3>
+                  </div>
+                  <span className="chip-enterprise">Instant Parse</span>
+                </div>
+                <p className="font-sans text-xs text-[#9AA6B8] leading-relaxed">
+                  Extract candidate work history, key project contributions, and technical skills directly from uploaded PDF resumes to dynamically formulate role-specific evaluation rubrics.
+                </p>
+                <div className="p-4 rounded-[8px] bg-[#0B1019] border border-[rgba(148,163,184,0.12)] font-mono text-xs text-[#7DA2F2] space-y-1">
+                  <div>✓ Extracted 5+ years React &amp; Node.js experience</div>
+                  <div>✓ Verified Github portfolio repository commit history</div>
+                  <div>✓ Generated 10 customized technical interview questions</div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === "interview" && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between border-b border-[rgba(148,163,184,0.12)] pb-4">
+                  <div className="flex items-center gap-3">
+                    <Mic className="w-5 h-5 text-[#8AB4F8]" strokeWidth={1.75} />
+                    <h3 className="font-display text-lg font-medium text-[#F2F5F9]">Bilingual Voice &amp; Video Interview Avatar</h3>
+                  </div>
+                  <span className="badge-success">Live Session Active</span>
+                </div>
+                <p className="font-sans text-xs text-[#9AA6B8] leading-relaxed">
+                  Candidates converse naturally with an AI avatar in English or Urdu. Real-time proctoring telemetry logs tab switches, secondary window focus, and response latency.
+                </p>
+                <div className="p-4 rounded-[8px] bg-[#0B1019] border border-[rgba(148,163,184,0.12)] font-mono text-xs text-[#F2F5F9] space-y-1">
+                  <div className="text-[#66707F]">Q3: Explain how you optimize SQL query execution plans in high-throughput PostgreSQL databases.</div>
+                  <div className="text-[#8AB4F8] pt-1">&quot;I analyze EXPLAIN ANALYZE output, add composite indexes, and leverage connection pooling...&quot;</div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === "xai" && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between border-b border-[rgba(148,163,184,0.12)] pb-4">
+                  <div className="flex items-center gap-3">
+                    <Brain className="w-5 h-5 text-[#8AB4F8]" strokeWidth={1.75} />
+                    <h3 className="font-display text-lg font-medium text-[#F2F5F9]">Explainable AI Candidate Audit</h3>
+                  </div>
+                  <span className="badge-success">Score: 92%</span>
+                </div>
+                <p className="font-sans text-xs text-[#9AA6B8] leading-relaxed">
+                  No black-box scores. Every rating is accompanied by direct transcript quotes, claim vs. reality verification, and behavioral integrity checks.
+                </p>
+                <div className="p-4 rounded-[8px] bg-[#0B1019] border border-[rgba(148,163,184,0.12)] font-mono text-xs text-[#22C55E]">
+                  ✓ Verified Match: Candidate technical score exceeds 90%. Anti-cheat proctoring log clean.
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Enterprise SaaS Pricing Section */}
+      <section id="pricing" className="py-24 px-6 bg-[#0A0F18] border-t border-[rgba(148,163,184,0.12)]">
+        <div className="max-w-7xl mx-auto space-y-16">
+          <div className="text-center space-y-4 max-w-2xl mx-auto">
+            <span className="eyebrow block">Flexible SaaS Plans</span>
+            <h2 className="font-display text-3xl sm:text-5xl font-medium text-[#F2F5F9]">
+              Predictable Enterprise Pricing
+            </h2>
+            <p className="font-sans text-sm text-[#9AA6B8]">
+              Scale your hiring capacity without increasing talent acquisition headcount.
+            </p>
+
+            {/* Billing Toggle */}
+            <div className="flex items-center justify-center gap-3 pt-2">
+              <span className={`text-xs font-mono ${billingCycle === "monthly" ? "text-[#F2F5F9]" : "text-[#66707F]"}`}>Monthly</span>
+              <button
+                onClick={() => setBillingCycle((prev) => (prev === "annual" ? "monthly" : "annual"))}
+                className="w-12 h-6 rounded-full bg-[#0C121D] border border-[rgba(148,163,184,0.25)] p-1 relative transition-colors"
+              >
+                <div className={`w-4 h-4 rounded-full bg-[#8AB4F8] transition-transform ${billingCycle === "annual" ? "translate-x-6" : "translate-x-0"}`} />
+              </button>
+              <span className={`text-xs font-mono flex items-center gap-1.5 ${billingCycle === "annual" ? "text-[#F2F5F9]" : "text-[#66707F]"}`}>
+                Annual <span className="chip-enterprise text-[9px] py-0 px-1.5">Save 20%</span>
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Starter Plan */}
+            <div className="card-enterprise p-8 flex flex-col justify-between space-y-6">
+              <div className="space-y-4">
+                <span className="eyebrow block">Startup Tier</span>
+                <h3 className="font-display text-2xl font-medium text-[#F2F5F9]">Starter</h3>
+                <p className="font-sans text-xs text-[#9AA6B8]">Ideal for growing startups hiring technical talent.</p>
+                <div className="font-mono text-4xl font-medium text-[#F2F5F9]">
+                  ${billingCycle === "annual" ? "159" : "199"}
+                  <span className="text-xs text-[#66707F] font-sans">/month</span>
+                </div>
+
+                <div className="space-y-2.5 pt-4 border-t border-[rgba(148,163,184,0.12)] font-sans text-xs">
+                  <div className="flex items-center gap-2 text-[#F2F5F9]">
+                    <Check className="w-4 h-4 text-[#8AB4F8]" strokeWidth={1.75} />
+                    Up to 5 active job requisitions
+                  </div>
+                  <div className="flex items-center gap-2 text-[#F2F5F9]">
+                    <Check className="w-4 h-4 text-[#8AB4F8]" strokeWidth={1.75} />
+                    100 AI candidate interviews / mo
+                  </div>
+                  <div className="flex items-center gap-2 text-[#F2F5F9]">
+                    <Check className="w-4 h-4 text-[#8AB4F8]" strokeWidth={1.75} />
+                    Automated PDF resume parsing
+                  </div>
+                  <div className="flex items-center gap-2 text-[#F2F5F9]">
+                    <Check className="w-4 h-4 text-[#8AB4F8]" strokeWidth={1.75} />
+                    Standard XAI audit reports
+                  </div>
+                </div>
+              </div>
+
+              <Link href="/auth/signup">
+                <button className="btn-secondary w-full justify-center text-xs h-11">
+                  Start Starter Trial
+                </button>
+              </Link>
+            </div>
+
+            {/* Growth / Professional Plan (Popular) */}
+            <div className="card-enterprise p-8 flex flex-col justify-between space-y-6 border-[#8AB4F8] relative bg-[#0C121D]">
+              <div className="absolute -top-3.5 right-6 bg-[#8AB4F8] text-[#06101F] font-mono text-[10px] font-semibold uppercase tracking-wider py-1 px-3 rounded-full">
+                Most Popular
+              </div>
+
+              <div className="space-y-4">
+                <span className="eyebrow text-[#7DA2F2] block">Scale Tier</span>
+                <h3 className="font-display text-2xl font-medium text-[#F2F5F9]">Professional</h3>
+                <p className="font-sans text-xs text-[#9AA6B8]">For scaling companies evaluating high volume applications.</p>
+                <div className="font-mono text-4xl font-medium text-[#8AB4F8]">
+                  ${billingCycle === "annual" ? "399" : "499"}
+                  <span className="text-xs text-[#66707F] font-sans">/month</span>
+                </div>
+
+                <div className="space-y-2.5 pt-4 border-t border-[rgba(148,163,184,0.12)] font-sans text-xs">
+                  <div className="flex items-center gap-2 text-[#F2F5F9]">
+                    <Check className="w-4 h-4 text-[#8AB4F8]" strokeWidth={1.75} />
+                    Up to 25 active job requisitions
+                  </div>
+                  <div className="flex items-center gap-2 text-[#F2F5F9]">
+                    <Check className="w-4 h-4 text-[#8AB4F8]" strokeWidth={1.75} />
+                    1,000 AI candidate interviews / mo
+                  </div>
+                  <div className="flex items-center gap-2 text-[#F2F5F9]">
+                    <Check className="w-4 h-4 text-[#8AB4F8]" strokeWidth={1.75} />
+                    Real-time Anti-Cheat proctoring
+                  </div>
+                  <div className="flex items-center gap-2 text-[#F2F5F9]">
+                    <Check className="w-4 h-4 text-[#8AB4F8]" strokeWidth={1.75} />
+                    Bilingual voice avatar interviews
+                  </div>
+                  <div className="flex items-center gap-2 text-[#F2F5F9]">
+                    <Check className="w-4 h-4 text-[#8AB4F8]" strokeWidth={1.75} />
+                    Custom evaluation rubrics &amp; ATS integration
+                  </div>
+                </div>
+              </div>
+
+              <Link href="/auth/signup">
+                <button className="btn-primary w-full justify-center text-xs h-11">
+                  <span>Start Professional Trial</span>
+                  <ArrowRight className="w-4 h-4" strokeWidth={1.75} />
+                </button>
+              </Link>
+            </div>
+
+            {/* Enterprise Plan */}
+            <div className="card-enterprise p-8 flex flex-col justify-between space-y-6">
+              <div className="space-y-4">
+                <span className="eyebrow block">Custom Tier</span>
+                <h3 className="font-display text-2xl font-medium text-[#F2F5F9]">Enterprise</h3>
+                <p className="font-sans text-xs text-[#9AA6B8]">Custom model fine-tuning, SOC-2 SLAs, and unlimited hiring.</p>
+                <div className="font-mono text-4xl font-medium text-[#F2F5F9]">
+                  Custom
+                </div>
+
+                <div className="space-y-2.5 pt-4 border-t border-[rgba(148,163,184,0.12)] font-sans text-xs">
+                  <div className="flex items-center gap-2 text-[#F2F5F9]">
+                    <Check className="w-4 h-4 text-[#8AB4F8]" strokeWidth={1.75} />
+                    Unlimited job requisitions &amp; interviews
+                  </div>
+                  <div className="flex items-center gap-2 text-[#F2F5F9]">
+                    <Check className="w-4 h-4 text-[#8AB4F8]" strokeWidth={1.75} />
+                    White-label candidate portal branding
+                  </div>
+                  <div className="flex items-center gap-2 text-[#F2F5F9]">
+                    <Check className="w-4 h-4 text-[#8AB4F8]" strokeWidth={1.75} />
+                    Dedicated AI model fine-tuning
+                  </div>
+                  <div className="flex items-center gap-2 text-[#F2F5F9]">
+                    <Check className="w-4 h-4 text-[#8AB4F8]" strokeWidth={1.75} />
+                    99.99% Uptime SLA &amp; dedicated success manager
+                  </div>
+                </div>
+              </div>
+
+              <Link href="/auth/signup">
+                <button className="btn-secondary w-full justify-center text-xs h-11">
+                  Contact Enterprise Sales
+                </button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Security & Compliance Grid */}
+      <section id="security" className="py-24 px-6 bg-[#05070D]">
+        <div className="max-w-7xl mx-auto space-y-12">
+          <div className="text-center space-y-3 max-w-2xl mx-auto">
+            <span className="eyebrow block">Security &amp; Trust</span>
+            <h2 className="font-display text-3xl sm:text-5xl font-medium text-[#F2F5F9]">
+              Enterprise Security First
+            </h2>
+            <p className="font-sans text-sm text-[#9AA6B8]">
+              Engineered with SOC-2, GDPR, and anti-bias audit protections from day one.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="card-enterprise space-y-3">
+              <Lock className="w-6 h-6 text-[#8AB4F8]" strokeWidth={1.75} />
+              <h3 className="font-display text-lg font-medium text-[#F2F5F9]">SOC-2 Type II Certified</h3>
+              <p className="font-sans text-xs text-[#9AA6B8] leading-relaxed">
+                All candidate PII, transcripts, and resume PDFs are encrypted in transit via TLS 1.3 and at rest via AES-256.
+              </p>
+            </div>
+
+            <div className="card-enterprise space-y-3">
+              <ShieldCheck className="w-6 h-6 text-[#22C55E]" strokeWidth={1.75} />
+              <h3 className="font-display text-lg font-medium text-[#F2F5F9]">Anti-Bias Audited</h3>
+              <p className="font-sans text-xs text-[#9AA6B8] leading-relaxed">
+                Our AI scoring rubrics evaluate strictly against technical job criteria and transcript evidence, completely blind to demographic indicators.
+              </p>
+            </div>
+
+            <div className="card-enterprise space-y-3">
+              <Globe2 className="w-6 h-6 text-[#8AB4F8]" strokeWidth={1.75} />
+              <h3 className="font-display text-lg font-medium text-[#F2F5F9]">GDPR &amp; Global Compliance</h3>
+              <p className="font-sans text-xs text-[#9AA6B8] leading-relaxed">
+                Full compliance with EU candidate data retention regulations, right-to-be-forgotten deletion APIs, and candidate consent logs.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section id="faq" className="py-24 px-6 bg-[#0A0F18] border-t border-[rgba(148,163,184,0.12)]">
+        <div className="max-w-4xl mx-auto space-y-12">
+          <div className="text-center space-y-3">
+            <span className="eyebrow block">Frequently Asked Questions</span>
+            <h2 className="font-display text-3xl sm:text-5xl font-medium text-[#F2F5F9]">
+              Executive Answers
+            </h2>
+          </div>
+
+          <div className="space-y-4">
+            <div className="card-enterprise space-y-2 p-6">
+              <h3 className="font-display text-base font-medium text-[#F2F5F9]">How does AI-Recruit360 prevent candidate cheating or proxy test takers?</h3>
+              <p className="font-sans text-xs text-[#9AA6B8] leading-relaxed">
+                Our platform embeds browser integrity telemetry that monitors tab switches, window blur events, and response latency. Suspicious behavior is logged and flagged directly in the candidate&apos;s proctoring report.
+              </p>
+            </div>
+
+            <div className="card-enterprise space-y-2 p-6">
+              <h3 className="font-display text-base font-medium text-[#F2F5F9]">Is the candidate scoring explainable or a black box?</h3>
+              <p className="font-sans text-xs text-[#9AA6B8] leading-relaxed">
+                100% Explainable. Every candidate score is backed by exact transcript evidence quotes, rubric score justifications, and claim vs. reality evaluations accessible in the recruiter dashboard.
+              </p>
+            </div>
+
+            <div className="card-enterprise space-y-2 p-6">
+              <h3 className="font-display text-base font-medium text-[#F2F5F9]">Can candidates conduct interviews in Urdu or English?</h3>
+              <p className="font-sans text-xs text-[#9AA6B8] leading-relaxed">
+                Yes. Our AI avatar natively understands and evaluates responses in both English and Urdu, facilitating global technical recruitment.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-[#04060B] border-t border-[rgba(148,163,184,0.12)] py-16 px-6 font-sans text-xs">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-[6px] bg-[#8AB4F8] text-[#06101F] flex items-center justify-center font-bold">
+                <Cpu className="w-3.5 h-3.5" strokeWidth={1.75} />
+              </div>
+              <span className="font-display font-medium text-base text-[#F2F5F9]">AI-Recruit360</span>
+            </div>
+            <p className="font-sans text-xs text-[#66707F] leading-relaxed">
+              Autonomous hiring intelligence platform for high-growth tech companies.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <span className="eyebrow block">Platform</span>
+            <ul className="space-y-2 text-[#9AA6B8]">
+              <li><a href="#how-it-works" className="hover:text-[#F2F5F9]">How It Works</a></li>
+              <li><a href="#platform-tour" className="hover:text-[#F2F5F9]">Platform Tour</a></li>
+              <li><a href="#pricing" className="hover:text-[#F2F5F9]">Pricing Plans</a></li>
+            </ul>
+          </div>
+
+          <div className="space-y-3">
+            <span className="eyebrow block">Security</span>
+            <ul className="space-y-2 text-[#9AA6B8]">
+              <li><a href="#security" className="hover:text-[#F2F5F9]">SOC-2 Compliance</a></li>
+              <li><a href="#security" className="hover:text-[#F2F5F9]">Anti-Bias Audit</a></li>
+              <li><a href="#security" className="hover:text-[#F2F5F9]">Privacy Policy</a></li>
+            </ul>
+          </div>
+
+          <div className="space-y-3">
+            <span className="eyebrow block">Account</span>
+            <ul className="space-y-2 text-[#9AA6B8]">
+              <li><Link href="/auth/login" className="hover:text-[#F2F5F9]">Sign In</Link></li>
+              <li><Link href="/auth/signup" className="hover:text-[#F2F5F9]">Create Account</Link></li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="max-w-7xl mx-auto pt-12 mt-12 border-t border-[rgba(148,163,184,0.12)] flex flex-col sm:flex-row items-center justify-between text-[#66707F] font-mono text-[11px]">
+          <div>&copy; {new Date().getFullYear()} AI-Recruit360 Inc. Enterprise B2B SaaS.</div>
+          <div>All candidate data encrypted via AES-256.</div>
+        </div>
+      </footer>
     </div>
   );
 }
