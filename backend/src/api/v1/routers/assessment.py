@@ -25,7 +25,7 @@ async def get_candidate_mcqs(candidate_id: str):
         "candidate_id": candidate["id"],
         "candidate_name": candidate.get("name", "Applicant"),
         "mcq_data": candidate.get("mcq_data") or [],
-        "status": candidate.get("status", "assessment_pending")
+        "status": candidate.get("status", "interviewing")
     }
 
 
@@ -60,17 +60,17 @@ async def submit_mcq_assessment(payload: MCQSubmitRequest):
     # Percentage score
     mcq_score = int((correct_count / total_questions) * 100) if total_questions > 0 else 0
 
-    # 3. Update candidate in Supabase with fallback
+    # 3. Update candidate in Supabase with status satisfying candidates_status_check ('interviewing', 'pending', 'completed', 'rejected')
     try:
         update_data = {
             "mcq_score": mcq_score,
-            "status": "interview_pending",
+            "status": "interviewing",
             "ai_score": max(candidate.get("ai_score", 0), int(mcq_score * 0.5 + 25))
         }
         supabase.table("candidates").update(update_data).eq("id", candidate_id).execute()
     except Exception:
         try:
-            supabase.table("candidates").update({"status": "interview_pending"}).eq("id", candidate_id).execute()
+            supabase.table("candidates").update({"status": "interviewing"}).eq("id", candidate_id).execute()
         except Exception:
             pass
 

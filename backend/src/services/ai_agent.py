@@ -70,6 +70,28 @@ def get_llm():
 
 # --- Node 1: Hard Knockout Filter ---
 def knockout_node(state: AgentState) -> AgentState:
+    resume_lower = (state.get("resume_text") or "").lower()
+    jd_lower = (state.get("job_description") or "").lower()
+    candidate_city = (state.get("city") or "").lower()
+
+    # Rule 1: Technical vs Non-Technical Domain Alignment Check
+    tech_jd_keywords = ["software", "developer", "engineer", "python", "react", "full-stack", "frontend", "backend", "fullstack", "programming", "code", "java", "sql", "web"]
+    non_tech_cv_keywords = ["hse", "safety officer", "safety inspection", "aramco approved", "site safety", "nebosh", "iosh", "osha", "construction", "scaffold", "first aid"]
+    tech_cv_keywords = ["python", "javascript", "typescript", "react", "node", "sql", "git", "java", "c++", "developer", "engineer", "software", "api", "html", "css", "docker", "fastapi"]
+
+    is_tech_jd = any(k in jd_lower for k in tech_jd_keywords)
+    is_non_tech_cv = any(k in resume_lower for k in non_tech_cv_keywords)
+    has_tech_skills = any(k in resume_lower for k in tech_cv_keywords)
+
+    # Immediate Knockout if applying for Engineering/Tech role with Safety/Non-Tech CV and 0 programming skills
+    if is_tech_jd and is_non_tech_cv and not has_tech_skills:
+        return {
+            **state,
+            "passed_knockout": False,
+            "knockout_reason": "Knockout Failed: Candidate background (HSE Safety Officer / Non-Technical) does not match required Software Engineering tech stack."
+        }
+
+    # Rule 2: LLM Evaluation
     try:
         llm = get_llm().with_structured_output(KnockoutResult)
         prompt = f"""You are an elite technical recruiter conducting a Hard Knockout evaluation.
@@ -96,10 +118,17 @@ Return structured JSON: {{"passed": bool, "reason": str}}.
             "knockout_reason": result.reason
         }
     except Exception as e:
+        # If LLM API fails (e.g. 429 quota error), evaluate baseline tech skills deterministically
+        passed = has_tech_skills if is_tech_jd else True
+        reason = (
+            "Passed baseline stack check."
+            if passed
+            else f"Knockout Failed: Resume lacks required technical stack skills (API fallback: {str(e)})"
+        )
         return {
             **state,
-            "passed_knockout": True,
-            "knockout_reason": f"Auto-passed (Knockout fallback: {str(e)})"
+            "passed_knockout": passed,
+            "knockout_reason": reason
         }
 
 

@@ -75,7 +75,8 @@ async def submit_application(
     mcq_data = screening.get("mcq_data", [])
     hr_questions = screening.get("hr_questions", [])
 
-    status_str = "assessment_pending" if passed_knockout else "rejected"
+    # Status must satisfy PostgreSQL constraint candidates_status_check ('pending', 'interviewing', 'completed', 'rejected')
+    status_str = "interviewing" if passed_knockout else "rejected"
 
     # 5. Insert Candidate into Supabase Database with Graceful Column Fallback
     candidate_data = {
