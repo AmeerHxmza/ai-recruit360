@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState, use } from "react";
-import { Video, ShieldAlert, Send, CheckCircle2, AlertTriangle, ArrowRight, Sparkles } from "lucide-react";
+import { Video, ShieldAlert, Send, CheckCircle2, AlertTriangle, ArrowRight, Sparkles, Mic, MicOff } from "lucide-react";
 import Link from "next/link";
+import { Logo } from "@/components/ui/logo";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -18,6 +19,7 @@ export default function InterviewRoomPage({ params }: PageProps) {
   const [completed, setCompleted] = useState(false);
   const [tabSwitchCount, setTabSwitchCount] = useState(0);
   const [showWarning, setShowWarning] = useState(false);
+  const [micActive, setMicActive] = useState(true);
 
   const API_URL = process.env.NEXT_PUBLIC_FASTAPI_URL || "http://localhost:8000";
 
@@ -95,141 +97,172 @@ export default function InterviewRoomPage({ params }: PageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-[#05070D] text-[#9AA6B8] flex flex-col font-sans selection:bg-[#8AB4F8] selection:text-[#06101F]">
-      {/* Top Bar */}
-      <header className="border-b border-[rgba(148,163,184,0.12)] bg-[#05070D]/80 backdrop-blur-md px-6 py-4 flex items-center justify-between sticky top-0 z-30">
+    <div className="min-h-screen bg-[#0B0F19] text-white flex flex-col font-sans selection:bg-[#4361EE] selection:text-white">
+      {/* Top Header Bar */}
+      <header className="border-b border-white/10 bg-[#0B0F19]/80 backdrop-blur-md px-6 py-4 flex items-center justify-between sticky top-0 z-30">
         <div className="flex items-center gap-3">
-          <div className="h-3 w-3 rounded-full bg-[#8AB4F8] animate-pulse shadow-sm shadow-[#8AB4F8]" />
-          <span className="font-display font-medium text-base text-[#F2F5F9]">AI-Recruit360 Candidate Interview Portal</span>
+          <Logo size="sm" href="/" variant="dark" />
+          <span className="text-gray-500">|</span>
+          <span className="font-display font-bold text-sm text-gray-200">Candidate Interview Portal</span>
         </div>
         <div className="flex items-center gap-4 font-mono text-xs">
           {tabSwitchCount > 0 && (
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[rgba(234,179,8,0.12)] text-[#EAB308] border border-[rgba(234,179,8,0.25)]">
-              <ShieldAlert className="w-3.5 h-3.5" strokeWidth={1.75} />
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
+              <ShieldAlert className="w-3.5 h-3.5" strokeWidth={2} />
               <span>Proctor Warning: {tabSwitchCount} tab switch(es)</span>
             </div>
           )}
-          <div className="text-[#66707F] hidden sm:block">
-            Candidate ID: <code className="text-[#8AB4F8] font-medium">{candidateId.slice(0, 8)}</code>
+          <div className="text-gray-400 hidden sm:block">
+            Candidate Ref: <code className="text-[#4361EE] font-bold">{candidateId.slice(0, 8)}</code>
           </div>
         </div>
       </header>
 
-      {/* Main Container */}
-      <main className="flex-1 max-w-6xl w-full mx-auto p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Left Column: AI Video Frame */}
-        <div className="lg:col-span-7 space-y-4">
-          <div className="relative aspect-video rounded-[12px] bg-[#0A0E16] border border-[rgba(148,163,184,0.12)] overflow-hidden shadow-2xl flex flex-col items-center justify-center group">
-            {/* Ambient Glow */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-[rgba(37,99,235,0.15)] via-transparent to-transparent opacity-80" />
-            
-            {/* Simli AI Video Avatar Frame View */}
-            <div className="relative z-10 text-center space-y-4 p-6">
-              <div className="w-20 h-20 mx-auto rounded-[12px] bg-[rgba(138,180,248,0.10)] border border-[rgba(148,163,184,0.12)] flex items-center justify-center">
-                <Video className="w-10 h-10 text-[#8AB4F8] animate-pulse" strokeWidth={1.75} />
-              </div>
-              <div className="space-y-1">
-                <h3 className="font-display text-lg font-medium text-[#F2F5F9]">AI Interview Avatar</h3>
-                <div className="flex items-center justify-center gap-2 font-mono text-xs text-[#7DA2F2]">
-                  <Sparkles className="w-3.5 h-3.5" strokeWidth={1.75} />
-                  <span>Bilingual Voice &amp; Text Stream Active</span>
+      {/* Main Container: Focus Dark Mode */}
+      <main className="flex-1 max-w-6xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+        {/* Massive 16:9 Video Box (Simli API Avatar Frame) */}
+        <div className="relative aspect-video w-full rounded-2xl bg-[#111827] border border-white/10 overflow-hidden shadow-[0_0_40px_rgba(14,165,233,0.1)] flex flex-col items-center justify-center group">
+          {/* Subtle Ambient Glow Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0B0F19] via-transparent to-transparent opacity-90" />
+          
+          {/* Simli AI Video Avatar Stream Preview */}
+          <div className="relative z-10 text-center space-y-4 p-6">
+            <div className="relative">
+              <div className="w-24 h-24 mx-auto rounded-full bg-gradient-to-tr from-[#4361EE] via-cyan-400 to-blue-500 p-1 shadow-[0_0_30px_rgba(67,97,238,0.4)]">
+                <div className="w-full h-full rounded-full bg-[#0B0F19] flex items-center justify-center text-white">
+                  <Video className="w-10 h-10 text-cyan-400 animate-pulse" strokeWidth={2} />
                 </div>
               </div>
+              <button
+                type="button"
+                onClick={() => setMicActive(!micActive)}
+                className={`absolute bottom-0 right-1/3 transform translate-x-4 p-2 rounded-full text-white shadow-lg transition-all ${
+                  micActive
+                    ? "bg-[#4361EE] hover:bg-[#3A56D4] shadow-[0_0_20px_rgba(67,97,238,0.5)]"
+                    : "bg-red-500 hover:bg-red-600"
+                }`}
+              >
+                {micActive ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
+              </button>
+            </div>
 
-              {/* Audio Wave Visualizer Simulation */}
-              <div className="flex items-center justify-center gap-1.5 pt-2">
-                <span className="w-1 h-4 bg-[#8AB4F8] rounded-full animate-bounce [animation-delay:-0.3s]" />
-                <span className="w-1 h-6 bg-[#8AB4F8] rounded-full animate-bounce [animation-delay:-0.15s]" />
-                <span className="w-1 h-8 bg-[#8AB4F8] rounded-full animate-bounce" />
-                <span className="w-1 h-6 bg-[#8AB4F8] rounded-full animate-bounce [animation-delay:-0.15s]" />
-                <span className="w-1 h-4 bg-[#8AB4F8] rounded-full animate-bounce [animation-delay:-0.3s]" />
+            <div className="space-y-1">
+              <h3 className="font-display text-xl font-bold text-white">Simli AI Avatar Interviewer</h3>
+              <div className="flex items-center justify-center gap-2 font-mono text-xs text-cyan-400">
+                <Sparkles className="w-3.5 h-3.5" strokeWidth={2} />
+                <span>Bilingual Voice Stream Active (English &amp; Urdu)</span>
               </div>
             </div>
 
-            {/* Subtitle / Question Display */}
-            {questionData?.question && (
-              <div className="absolute bottom-4 inset-x-4 z-20 bg-[#0C121D]/90 backdrop-blur-md p-4 rounded-[8px] border border-[rgba(148,163,184,0.12)] text-sm text-[#9AA6B8] shadow-xl">
-                <div className="flex items-center justify-between font-mono text-xs uppercase text-[#7DA2F2] mb-1.5">
-                  <span>Question {questionData.current_question_index + 1} of {questionData.total_questions}</span>
-                  <span className="text-[#66707F]">Technical Screening</span>
-                </div>
-                <p className="font-sans text-sm text-[#F2F5F9] leading-relaxed">{questionData.question}</p>
-              </div>
-            )}
+            {/* Audio Waveform Simulation */}
+            <div className="flex items-center justify-center gap-1.5 pt-2">
+              <span className="w-1 h-4 bg-cyan-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
+              <span className="w-1 h-6 bg-[#4361EE] rounded-full animate-bounce [animation-delay:-0.15s]" />
+              <span className="w-1 h-8 bg-cyan-400 rounded-full animate-bounce" />
+              <span className="w-1 h-6 bg-[#4361EE] rounded-full animate-bounce [animation-delay:-0.15s]" />
+              <span className="w-1 h-4 bg-cyan-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
+            </div>
           </div>
 
-          {showWarning && (
-            <div className="p-4 rounded-[8px] bg-[rgba(234,179,8,0.10)] border border-[rgba(234,179,8,0.25)] text-[#EAB308] text-xs flex items-start gap-3">
-              <AlertTriangle className="w-5 h-5 flex-shrink-0 text-[#EAB308]" strokeWidth={1.75} />
-              <div>
-                <p className="font-display font-medium text-[#EAB308]">Tab Switch Warning Logged</p>
-                <p className="font-sans text-xs text-[#9AA6B8] mt-0.5 leading-relaxed">
-                  Switching tabs during an active interview session is recorded by behavioral proctoring telemetry and directly influences your honesty rating score.
-                </p>
+          {/* Question Overlay Subtitle Bar */}
+          {questionData?.question && (
+            <div className="absolute bottom-4 inset-x-4 z-20 bg-white/10 backdrop-blur-md p-4 rounded-xl border border-white/15 text-sm text-gray-200 shadow-2xl">
+              <div className="flex items-center justify-between font-mono text-xs uppercase text-cyan-400 mb-1 font-bold">
+                <span>Question {questionData.current_question_index + 1} of {questionData.total_questions}</span>
+                <span className="text-gray-400">Bilingual Assessment</span>
               </div>
+              <p className="font-sans text-base text-white font-medium leading-relaxed">{questionData.question}</p>
             </div>
           )}
         </div>
 
-        {/* Right Column: Candidate Answer Input */}
-        <div className="lg:col-span-5 card-enterprise flex flex-col min-h-[420px]">
+        {/* Tab Switch Warning Overlay */}
+        {showWarning && (
+          <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 flex-shrink-0 text-amber-400" strokeWidth={2} />
+            <div>
+              <p className="font-display font-bold text-amber-400">Tab Switch Warning Logged</p>
+              <p className="font-sans text-xs text-gray-300 mt-0.5 leading-relaxed">
+                Switching tabs during an active interview session is recorded by behavioral proctoring telemetry and directly influences your honesty rating score.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Transcript / Response Container (Sleek Dark-Glass Container: bg-white/5 backdrop-blur-md rounded-xl border border-white/10 p-6) */}
+        <div className="bg-white/5 backdrop-blur-md rounded-xl border border-white/10 p-6 space-y-4">
           {completed ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-center space-y-4 py-8">
-              <div className="w-16 h-16 rounded-full bg-[rgba(34,197,94,0.12)] text-[#22C55E] flex items-center justify-center border border-[rgba(34,197,94,0.25)]">
-                <CheckCircle2 className="w-10 h-10" strokeWidth={1.75} />
+            <div className="flex flex-col items-center justify-center text-center space-y-4 py-8">
+              <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30">
+                <CheckCircle2 className="w-10 h-10" strokeWidth={2} />
               </div>
-              <h2 className="font-display text-2xl font-medium text-[#F2F5F9]">Interview Session Completed!</h2>
-              <p className="font-sans text-xs text-[#9AA6B8] leading-relaxed max-w-sm">
-                Your answers and proctoring telemetry logs have been submitted to our Explainable AI (XAI) Scoring Engine.
+              <h2 className="font-display text-2xl font-bold text-white">Interview Session Completed!</h2>
+              <p className="font-sans text-xs text-gray-300 leading-relaxed max-w-sm">
+                Your response stream and proctor telemetry logs have been delivered to our Explainable AI (XAI) Scoring Engine.
               </p>
               <Link href="/">
-                <button className="btn-primary text-xs">
+                <button className="bg-[#4361EE] hover:bg-[#3A56D4] text-white text-xs font-bold py-3 px-6 rounded-full shadow-lg shadow-blue-500/30 flex items-center gap-2 transition-all">
                   <span>Return to Home</span>
-                  <ArrowRight className="w-4 h-4" strokeWidth={1.75} />
+                  <ArrowRight className="w-4 h-4" strokeWidth={2} />
                 </button>
               </Link>
             </div>
           ) : loading ? (
-            <div className="flex-1 flex flex-col items-center justify-center space-y-3">
-              <div className="w-8 h-8 border-2 border-[#8AB4F8] border-t-transparent rounded-full animate-spin" />
-              <p className="font-mono text-xs text-[#66707F]">Fetching next interview question...</p>
+            <div className="flex flex-col items-center justify-center py-12 space-y-3">
+              <div className="w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
+              <p className="font-mono text-xs text-gray-400">Fetching next interview question...</p>
             </div>
           ) : (
-            <form onSubmit={handleSubmitAnswer} className="flex-1 flex flex-col justify-between space-y-4">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between text-xs text-[#9AA6B8] border-b border-[rgba(148,163,184,0.12)] pb-2">
-                  <span className="eyebrow">Candidate Response Panel</span>
-                  <span className="font-mono text-xs text-[#F2F5F9]">
-                    Q {questionData?.current_question_index + 1} / {questionData?.total_questions}
-                  </span>
+            <form onSubmit={handleSubmitAnswer} className="space-y-4">
+              <div className="flex items-center justify-between text-xs text-gray-400 border-b border-white/10 pb-3">
+                <span className="font-mono uppercase font-bold text-cyan-400">Candidate Real-Time Transcription</span>
+                <span className="font-mono text-xs text-white">
+                  Q {questionData?.current_question_index + 1} / {questionData?.total_questions}
+                </span>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="font-mono text-xs uppercase font-bold text-gray-300 block">
+                    Type or Dictate Response:
+                  </label>
+                  {/* Glowing Cyan Microphone Button */}
+                  <button
+                    type="button"
+                    onClick={() => setMicActive(!micActive)}
+                    className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#4361EE] hover:bg-[#3A56D4] text-white text-xs font-mono shadow-[0_0_15px_rgba(67,97,238,0.5)] transition-all"
+                  >
+                    <Mic className="w-3.5 h-3.5" />
+                    <span>{micActive ? "Voice Active" : "Voice Muted"}</span>
+                  </button>
                 </div>
-                <label className="eyebrow block">
-                  Type Your Response:
-                </label>
+
                 <textarea
                   value={answer}
                   onChange={(e) => setAnswer(e.target.value)}
-                  placeholder="Type your response clearly here (English or Urdu articulation supported)..."
-                  rows={8}
-                  className="input-enterprise w-full resize-none font-sans"
+                  placeholder="Type your response clearly here (English or Urdu response supported)..."
+                  rows={6}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm font-sans text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#4361EE] transition-all resize-none"
                   required
                 />
               </div>
 
-              <button
-                type="submit"
-                disabled={submitting || !answer.trim()}
-                className="btn-primary w-full justify-center text-xs h-11"
-              >
-                {submitting ? (
-                  <div className="w-5 h-5 border-2 border-[#06101F] border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <>
-                    <span>Submit Answer &amp; Proceed</span>
-                    <Send className="w-4 h-4" strokeWidth={1.75} />
-                  </>
-                )}
-              </button>
+              <div className="flex justify-end pt-2">
+                <button
+                  type="submit"
+                  disabled={submitting || !answer.trim()}
+                  className="bg-[#4361EE] hover:bg-[#3A56D4] text-white font-bold px-8 py-3 rounded-full text-xs shadow-lg shadow-blue-500/30 flex items-center gap-2 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submitting ? (
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <span>Submit Answer &amp; Next</span>
+                      <Send className="w-4 h-4" strokeWidth={2} />
+                    </>
+                  )}
+                </button>
+              </div>
             </form>
           )}
         </div>

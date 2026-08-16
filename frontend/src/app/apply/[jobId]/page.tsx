@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { UploadCloud, Loader2, CheckCircle2, XCircle, ArrowRight } from "lucide-react";
+import { UploadCloud, Loader2, CheckCircle2, XCircle, ArrowRight, FileText } from "lucide-react";
+import { Logo } from "@/components/ui/logo";
 
 const FASTAPI_URL = process.env.NEXT_PUBLIC_FASTAPI_URL || "http://localhost:8000";
 
@@ -115,7 +116,13 @@ export default function ApplyJobPage() {
       setAnswers({});
       setQuestionIndex(0);
       startTime.current = Date.now();
-      setStage("interview");
+      
+      // Redirect to full interview room or inline stage
+      if (data.candidate_id) {
+        router.push(`/interview/${data.candidate_id}`);
+      } else {
+        setStage("interview");
+      }
     } catch (err: any) {
       setErrorMessage(err.message || "Something went wrong. Please try again.");
       setStage("error");
@@ -123,76 +130,91 @@ export default function ApplyJobPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#05070D] text-[#9AA6B8] px-4 py-12 selection:bg-[#8AB4F8] selection:text-[#06101F] font-sans">
-      <div className="mx-auto w-full max-w-3xl space-y-6">
-        {/* Header */}
-        <div className="text-center space-y-1.5">
-          <span className="eyebrow block">AI-Recruit360 Candidate Portal</span>
-          <h1 className="font-display text-3xl font-medium text-[#F2F5F9]">{jobTitle}</h1>
-          <p className="font-mono text-xs text-[#66707F]">Requisition ID: {jobId}</p>
+    <div className="min-h-screen bg-[#F4F7FE] text-[#6B7280] px-4 py-12 flex flex-col items-center justify-center font-sans selection:bg-[#4361EE] selection:text-white">
+      <div className="mx-auto w-full max-w-2xl space-y-6">
+        {/* Top Header Branding */}
+        <div className="text-center space-y-2">
+          <Logo size="lg" href="/" variant="light" className="mx-auto" />
+          <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-[#1F2937] tracking-tight mt-2">{jobTitle}</h1>
+          <p className="font-mono text-xs text-[#6B7280]">Requisition Reference: {jobId}</p>
         </div>
 
-        {/* ── APPLY STAGE ── */}
+        {/* ── APPLY STAGE FORM CARD ── */}
         {stage === "apply" && (
-          <div className="card-enterprise p-6 sm:p-8 space-y-6">
-            <div className="space-y-1.5 border-b border-[rgba(148,163,184,0.12)] pb-4">
-              <h2 className="font-display text-xl font-medium text-[#F2F5F9]">Start Your Application</h2>
-              <p className="font-sans text-xs text-[#9AA6B8] leading-relaxed">
-                Fill in your details and upload your PDF resume. Our hiring engine will parse your experience and formulate 10 custom interview questions tailored to this position.
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8 sm:p-10 space-y-6">
+            <div className="space-y-1.5 border-b border-gray-100 pb-5">
+              <h2 className="font-display text-xl font-bold text-[#1F2937]">Start Candidate Application</h2>
+              <p className="font-sans text-xs text-[#6B7280] leading-relaxed">
+                Fill in your candidate profile details and upload your PDF resume. Our AI engine will evaluate your experience against role rubrics and formulate 10 custom interview questions.
               </p>
             </div>
-            <div className="space-y-4">
-              <div className="grid gap-2">
-                <label className="eyebrow">Full Name *</label>
+
+            <div className="space-y-5">
+              <div className="grid gap-1.5">
+                <label className="font-mono text-xs uppercase font-bold text-[#1F2937]">Full Name *</label>
                 <input
                   placeholder="e.g. Alex Morgan"
-                  className="input-enterprise h-11"
+                  className="w-full h-11 px-4 text-sm font-sans rounded-lg border border-gray-200 text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#4361EE] transition-all placeholder:text-gray-400"
                   value={application.fullName}
                   onChange={(e) => setApplication((p) => ({ ...p, fullName: e.target.value }))}
                 />
               </div>
-              <div className="grid gap-2">
-                <label className="eyebrow">Email Address *</label>
+
+              <div className="grid gap-1.5">
+                <label className="font-mono text-xs uppercase font-bold text-[#1F2937]">Email Address *</label>
                 <input
                   type="email"
                   placeholder="alex@company.com"
-                  className="input-enterprise h-11"
+                  className="w-full h-11 px-4 text-sm font-sans rounded-lg border border-gray-200 text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#4361EE] transition-all placeholder:text-gray-400"
                   value={application.email}
                   onChange={(e) => setApplication((p) => ({ ...p, email: e.target.value }))}
                 />
               </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <label className="eyebrow">Gender</label>
+                <div className="grid gap-1.5">
+                  <label className="font-mono text-xs uppercase font-bold text-[#1F2937]">Gender</label>
                   <input
                     placeholder="e.g. Male, Female"
-                    className="input-enterprise h-11"
+                    className="w-full h-11 px-4 text-sm font-sans rounded-lg border border-gray-200 text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#4361EE] transition-all placeholder:text-gray-400"
                     value={application.gender}
                     onChange={(e) => setApplication((p) => ({ ...p, gender: e.target.value }))}
                   />
                 </div>
-                <div className="grid gap-2">
-                  <label className="eyebrow">City / Address</label>
+                <div className="grid gap-1.5">
+                  <label className="font-mono text-xs uppercase font-bold text-[#1F2937]">City / Location</label>
                   <input
                     placeholder="e.g. San Francisco, CA"
-                    className="input-enterprise h-11"
+                    className="w-full h-11 px-4 text-sm font-sans rounded-lg border border-gray-200 text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#4361EE] transition-all placeholder:text-gray-400"
                     value={application.address}
                     onChange={(e) => setApplication((p) => ({ ...p, address: e.target.value }))}
                   />
                 </div>
               </div>
-              <div className="grid gap-2">
-                <label className="eyebrow">PDF Resume *</label>
+
+              {/* Large Dashed PDF CV Upload Zone */}
+              <div className="grid gap-1.5">
+                <label className="font-mono text-xs uppercase font-bold text-[#1F2937]">PDF Resume *</label>
                 <label
                   htmlFor="cv"
-                  className="flex cursor-pointer items-center gap-4 rounded-[8px] border border-dashed border-[rgba(148,163,184,0.25)] bg-[#0B1019] p-5 hover:border-[#8AB4F8] transition-all"
+                  className="flex flex-col items-center justify-center gap-3 border-2 border-dashed border-gray-200 rounded-xl p-8 text-center bg-gray-50/50 hover:bg-blue-50/60 hover:border-[#4361EE] transition-all cursor-pointer group"
                 >
-                  <UploadCloud className="h-7 w-7 text-[#8AB4F8] shrink-0" strokeWidth={1.75} />
-                  <span className="font-mono text-xs text-[#9AA6B8]">
-                    {application.cvFile
-                      ? <span className="text-[#8AB4F8] font-medium">{application.cvFile.name}</span>
-                      : "Click to select your PDF CV (max 5MB)"}
-                  </span>
+                  <div className="w-12 h-12 rounded-full bg-blue-50 text-[#4361EE] flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <UploadCloud className="h-6 w-6" strokeWidth={2} />
+                  </div>
+                  <div className="space-y-1">
+                    <span className="font-sans text-sm font-bold text-[#1F2937] block">
+                      {application.cvFile ? (
+                        <span className="text-[#4361EE] flex items-center gap-1.5 justify-center">
+                          <FileText className="w-4 h-4" />
+                          {application.cvFile.name}
+                        </span>
+                      ) : (
+                        "Click or drop your PDF CV here"
+                      )}
+                    </span>
+                    <span className="font-mono text-xs text-[#6B7280]">Supports PDF up to 5MB</span>
+                  </div>
                 </label>
                 <input
                   id="cv"
@@ -202,13 +224,14 @@ export default function ApplyJobPage() {
                   onChange={(e) => setApplication((p) => ({ ...p, cvFile: e.target.files?.[0] ?? null }))}
                 />
               </div>
+
               <button
-                className="btn-primary w-full justify-center h-12 text-sm"
+                className="bg-[#4361EE] hover:bg-[#3A56D4] text-white font-bold w-full justify-center h-12 text-sm rounded-lg shadow-lg shadow-blue-500/25 flex items-center gap-2 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
                 onClick={handleApplySubmit}
                 disabled={!application.fullName.trim() || !application.email.trim() || !application.cvFile}
               >
                 <span>Submit Resume &amp; Begin Assessment</span>
-                <ArrowRight className="w-4 h-4" strokeWidth={1.75} />
+                <ArrowRight className="w-4 h-4" strokeWidth={2} />
               </button>
             </div>
           </div>
@@ -216,27 +239,27 @@ export default function ApplyJobPage() {
 
         {/* ── SCREENING STAGE ── */}
         {stage === "screening" && (
-          <div className="card-enterprise p-12 text-center space-y-4">
-            <div className="w-14 h-14 rounded-full bg-[rgba(138,180,248,0.10)] border border-[rgba(148,163,184,0.12)] flex items-center justify-center mx-auto">
-              <Loader2 className="h-7 w-7 animate-spin text-[#8AB4F8]" strokeWidth={1.75} />
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-12 text-center space-y-4">
+            <div className="w-16 h-16 rounded-full bg-blue-50 text-[#4361EE] flex items-center justify-center mx-auto shadow-sm">
+              <Loader2 className="h-8 w-8 animate-spin text-[#4361EE]" strokeWidth={2} />
             </div>
-            <h3 className="font-display text-xl font-medium text-[#F2F5F9]">AI Resume Screening Active</h3>
-            <p className="font-sans text-xs text-[#9AA6B8] max-w-md mx-auto">{screeningMessage}</p>
-            <p className="font-mono text-[11px] text-[#66707F]">Autonomous Candidate Evaluation Engine Online...</p>
+            <h3 className="font-display text-xl font-bold text-[#1F2937]">AI Resume Screening Active</h3>
+            <p className="font-sans text-xs text-[#6B7280] max-w-md mx-auto">{screeningMessage}</p>
+            <p className="font-mono text-[11px] text-gray-400">Autonomous Candidate Evaluation Engine Online...</p>
           </div>
         )}
 
         {/* ── KNOCKOUT STAGE ── */}
         {stage === "knockout" && (
-          <div className="card-enterprise p-12 text-center space-y-4 border-[rgba(239,68,68,0.25)]">
-            <div className="w-14 h-14 rounded-full bg-[rgba(239,68,68,0.12)] flex items-center justify-center mx-auto">
-              <XCircle className="h-7 w-7 text-[#EF4444]" strokeWidth={1.75} />
+          <div className="bg-white rounded-2xl shadow-lg border border-rose-100 p-12 text-center space-y-4">
+            <div className="w-16 h-16 rounded-full bg-rose-50 text-[#EF4444] flex items-center justify-center mx-auto">
+              <XCircle className="h-8 w-8 text-[#EF4444]" strokeWidth={2} />
             </div>
-            <h3 className="font-display text-xl font-medium text-[#F2F5F9]">Application Criteria Not Matched</h3>
-            <p className="font-sans text-xs text-[#9AA6B8] max-w-lg leading-relaxed mx-auto">
-              Thank you for your interest. Based on our AI resume screening against job requirements, your profile did not meet minimum threshold criteria for this specific role.
+            <h3 className="font-display text-xl font-bold text-[#1F2937]">Application Criteria Not Matched</h3>
+            <p className="font-sans text-xs text-[#6B7280] max-w-lg leading-relaxed mx-auto">
+              Thank you for your interest. Based on our AI resume screening against job rubric requirements, your profile did not meet minimum threshold criteria for this specific role.
             </p>
-            <button onClick={() => router.push("/")} className="btn-secondary text-xs">
+            <button onClick={() => router.push("/")} className="btn-secondary text-xs rounded-lg px-6 py-2.5">
               Return to Home
             </button>
           </div>
@@ -244,15 +267,15 @@ export default function ApplyJobPage() {
 
         {/* ── DONE STAGE ── */}
         {stage === "done" && (
-          <div className="card-enterprise p-12 text-center space-y-4 border-[rgba(34,197,94,0.25)]">
-            <div className="w-16 h-16 rounded-full bg-[rgba(34,197,94,0.12)] flex items-center justify-center mx-auto">
-              <CheckCircle2 className="h-8 w-8 text-[#22C55E]" strokeWidth={1.75} />
+          <div className="bg-white rounded-2xl shadow-lg border border-emerald-100 p-12 text-center space-y-4">
+            <div className="w-16 h-16 rounded-full bg-emerald-50 text-[#10B981] flex items-center justify-center mx-auto">
+              <CheckCircle2 className="h-8 w-8 text-[#10B981]" strokeWidth={2} />
             </div>
-            <h3 className="font-display text-2xl font-medium text-[#F2F5F9]">Interview Completed!</h3>
-            <p className="font-sans text-xs text-[#9AA6B8] max-w-lg leading-relaxed mx-auto">
-              Thank you for completing your interview, <strong>{application.fullName}</strong>. Your answers and proctoring telemetry have been sent to our Explainable AI engine.
+            <h3 className="font-display text-xl font-bold text-[#1F2937]">Application &amp; Assessment Complete</h3>
+            <p className="font-sans text-xs text-[#6B7280] max-w-lg leading-relaxed mx-auto">
+              Your responses have been processed by our Explainable AI Scoring Engine and delivered to the recruiter leaderboard.
             </p>
-            <button onClick={() => router.push("/")} className="btn-secondary text-xs">
+            <button onClick={() => router.push("/")} className="btn-primary text-xs rounded-lg px-6 py-2.5">
               Return to Home
             </button>
           </div>
@@ -260,11 +283,13 @@ export default function ApplyJobPage() {
 
         {/* ── ERROR STAGE ── */}
         {stage === "error" && (
-          <div className="card-enterprise p-12 text-center space-y-4 border-[rgba(239,68,68,0.25)]">
-            <XCircle className="h-9 w-9 text-[#EF4444] mx-auto" strokeWidth={1.75} />
-            <h3 className="font-display text-xl font-medium text-[#F2F5F9]">Submission Failed</h3>
-            <p className="font-sans text-xs text-[#9AA6B8] max-w-md mx-auto">{errorMessage}</p>
-            <button onClick={() => setStage("apply")} className="btn-secondary text-xs">
+          <div className="bg-white rounded-2xl shadow-lg border border-rose-100 p-12 text-center space-y-4">
+            <div className="w-16 h-16 rounded-full bg-rose-50 text-[#EF4444] flex items-center justify-center mx-auto">
+              <XCircle className="h-8 w-8 text-[#EF4444]" strokeWidth={2} />
+            </div>
+            <h3 className="font-display text-xl font-bold text-[#1F2937]">Submission Failed</h3>
+            <p className="font-sans text-xs text-rose-500 max-w-md mx-auto">{errorMessage}</p>
+            <button onClick={() => setStage("apply")} className="btn-secondary text-xs rounded-lg px-6 py-2.5">
               Try Again
             </button>
           </div>

@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ClipboardCheck, Search, ShieldCheck, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { ClipboardCheck, Search, ShieldCheck, AlertTriangle, CheckCircle2, ChevronRight, Sparkles } from "lucide-react";
 import Link from "next/link";
 
 type Job = { id: string; title: string };
@@ -30,23 +30,23 @@ type AssessmentRow = {
 function ScoreBar({ value, color }: { value: number; color: string }) {
   return (
     <div className="flex items-center gap-2 min-w-[120px]">
-      <div className="flex-1 h-1.5 bg-[#0B1019] rounded-full overflow-hidden">
+      <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
         <div
           className={`h-full rounded-full ${color}`}
           style={{ width: `${value}%` }}
         />
       </div>
-      <span className="font-mono text-xs font-medium text-[#F2F5F9] w-8 text-right">{value}%</span>
+      <span className="font-mono text-xs font-bold text-[#1F2937] w-8 text-right">{value}%</span>
     </div>
   );
 }
 
 function IntegrityIcon({ score }: { score: number }) {
   if (score >= 70)
-    return <CheckCircle2 className="w-4 h-4 text-[#22C55E]" strokeWidth={1.75} />;
+    return <CheckCircle2 className="w-4 h-4 text-[#10B981]" strokeWidth={2} />;
   if (score >= 40)
-    return <AlertTriangle className="w-4 h-4 text-[#EAB308]" strokeWidth={1.75} />;
-  return <AlertTriangle className="w-4 h-4 text-[#EF4444]" strokeWidth={1.75} />;
+    return <AlertTriangle className="w-4 h-4 text-amber-500" strokeWidth={2} />;
+  return <AlertTriangle className="w-4 h-4 text-red-500" strokeWidth={2} />;
 }
 
 export default function AssessmentsPage() {
@@ -63,7 +63,7 @@ export default function AssessmentsPage() {
         supabase.from("jobs").select("id, title").order("created_at", { ascending: false }),
         supabase.from("applications").select(`
           id, status, match_score, hiring_confidence, job_id,
-          candidates ( id, first_name, last_name ),
+          candidates ( id, first_name, last_name, name ),
           jobs ( title ),
           interviews ( overall_score, truthfulness_score )
         `),
@@ -79,7 +79,7 @@ export default function AssessmentsPage() {
           
           return {
             id: candidate?.id || app.id,
-            name: `${candidate?.first_name || ''} ${candidate?.last_name || ''}`.trim() || 'Unknown Candidate',
+            name: candidate?.name || `${candidate?.first_name || ''} ${candidate?.last_name || ''}`.trim() || 'Unknown Candidate',
             role_applied: job?.title || "Engineering Role",
             status: app.status || "Pending",
             job_id: app.job_id,
@@ -109,35 +109,35 @@ export default function AssessmentsPage() {
   return (
     <div className="space-y-6 pb-12 font-sans">
       {/* Header */}
-      <div className="border-b border-[rgba(148,163,184,0.12)] pb-6">
-        <div className="eyebrow flex items-center gap-2 mb-1">
-          <ClipboardCheck className="w-3.5 h-3.5 text-[#8AB4F8]" strokeWidth={1.75} />
+      <div className="border-b border-gray-200 pb-6">
+        <div className="eyebrow flex items-center gap-2 mb-1.5">
+          <ClipboardCheck className="w-3.5 h-3.5 text-[#4361EE]" strokeWidth={2} />
           <span>Candidate Evaluation Database</span>
         </div>
-        <h1 className="font-display text-3xl font-medium text-[#F2F5F9]">
-          Assessments
+        <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-[#1F2937] tracking-tight">
+          Assessments &amp; Evaluation Rubrics
         </h1>
-        <p className="font-sans text-xs text-[#9AA6B8] mt-1">
+        <p className="font-sans text-xs text-[#6B7280] mt-1">
           All candidate evaluation scores across match, interview, and truthfulness metrics.
         </p>
       </div>
 
       {/* Filters */}
-      <div className="card-enterprise p-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col gap-3 sm:flex-row sm:items-center justify-between">
         <div className="relative flex-1 sm:max-w-sm">
-          <Search className="absolute left-3.5 top-3 h-4 w-4 text-[#66707F]" strokeWidth={1.75} />
+          <Search className="absolute left-3.5 top-3 h-4 w-4 text-gray-400" strokeWidth={2} />
           <input
             placeholder="Search candidate name or position..."
-            className="input-enterprise w-full pl-10 h-10 text-xs"
+            className="w-full h-10 pl-10 pr-4 text-xs font-sans rounded-lg border border-gray-200 text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#4361EE]"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
         <Select value={selectedJobId} onValueChange={setSelectedJobId}>
-          <SelectTrigger className="w-full sm:w-[220px] h-10 bg-[#0B1019] border-[rgba(148,163,184,0.12)] text-[#F2F5F9] font-mono text-xs rounded-[8px]">
+          <SelectTrigger className="w-full sm:w-[220px] h-10 bg-white border-gray-200 text-[#1F2937] text-xs font-sans rounded-lg focus:ring-2 focus:ring-[#4361EE]">
             <SelectValue placeholder="All Jobs" />
           </SelectTrigger>
-          <SelectContent className="bg-[#0C121D] border-[rgba(148,163,184,0.12)] text-[#F2F5F9] font-sans">
+          <SelectContent className="bg-white border-gray-200 text-[#1F2937]">
             <SelectItem value="all">All Jobs</SelectItem>
             {jobs.map((j) => (
               <SelectItem key={j.id} value={j.id}>{j.title}</SelectItem>
@@ -147,92 +147,70 @@ export default function AssessmentsPage() {
       </div>
 
       {/* Table */}
-      <div className="card-enterprise p-0 overflow-hidden">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-6 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-xs">
+          <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-[rgba(148,163,184,0.12)] bg-[#0A0F18]">
-                <th className="text-left px-4 py-3 eyebrow text-[11px]">Candidate</th>
-                <th className="text-left px-4 py-3 eyebrow text-[11px]">Job Match</th>
-                <th className="text-left px-4 py-3 eyebrow text-[11px]">Interview</th>
-                <th className="text-left px-4 py-3 eyebrow text-[11px]">Truthfulness</th>
-                <th className="text-left px-4 py-3 eyebrow text-[11px]">Confidence</th>
-                <th className="text-left px-4 py-3 eyebrow text-[11px]">Status</th>
+              <tr className="border-b border-gray-200 bg-gray-50/50">
+                <th className="font-mono text-xs uppercase text-[#6B7280] font-semibold py-3 px-4">Candidate</th>
+                <th className="font-mono text-xs uppercase text-[#6B7280] font-semibold py-3 px-4">Position</th>
+                <th className="font-mono text-xs uppercase text-[#6B7280] font-semibold py-3 px-4">Resume Match</th>
+                <th className="font-mono text-xs uppercase text-[#6B7280] font-semibold py-3 px-4">AI Interview</th>
+                <th className="font-mono text-xs uppercase text-[#6B7280] font-semibold py-3 px-4">Truthfulness</th>
+                <th className="font-mono text-xs uppercase text-[#6B7280] font-semibold py-3 px-4">Confidence Score</th>
+                <th className="font-mono text-xs uppercase text-[#6B7280] font-semibold py-3 px-4 text-right">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[rgba(148,163,184,0.12)]">
-              {isLoading
-                ? Array.from({ length: 5 }).map((_, i) => (
-                    <tr key={i}>
-                      {Array.from({ length: 6 }).map((__, j) => (
-                        <td key={j} className="px-4 py-3">
-                          <Skeleton className="h-5 w-full bg-[#0B1019]" />
-                        </td>
-                      ))}
-                    </tr>
-                  ))
-                : filtered.map((row) => (
-                    <tr key={row.id} className="hover:bg-[#121B2B] transition-colors">
-                      <td className="px-4 py-3">
-                        <Link
-                          href={`/dashboard/candidates/${row.id}`}
-                          className="font-display font-medium text-sm text-[#F2F5F9] hover:text-[#8AB4F8] transition-colors"
-                        >
-                          {row.name}
-                        </Link>
-                        <p className="font-sans text-[11px] text-[#9AA6B8]">{row.role_applied}</p>
-                      </td>
-                      <td className="px-4 py-3">
-                        <ScoreBar value={row.match_score} color="bg-[#8AB4F8]" />
-                      </td>
-                      <td className="px-4 py-3">
-                        <ScoreBar value={row.interview_score} color="bg-[#7DA2F2]" />
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <IntegrityIcon score={row.truthfulness_score} />
-                          <ScoreBar
-                            value={row.truthfulness_score}
-                            color={
-                              row.truthfulness_score >= 70
-                                ? "bg-[#22C55E]"
-                                : row.truthfulness_score >= 40
-                                ? "bg-[#EAB308]"
-                                : "bg-[#EF4444]"
-                            }
-                          />
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-1.5 font-mono text-sm font-medium text-[#F2F5F9]">
-                          <span>{row.hiring_confidence_score}</span>
-                          <span className="text-[#66707F] text-xs">/100</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        {row.status === "Verified Match" && <span className="badge-success">{row.status}</span>}
-                        {row.status === "Strong Candidate" && <span className="chip-enterprise">{row.status}</span>}
-                        {row.status === "Review Needed" && <span className="badge-warning">{row.status}</span>}
-                        {row.status === "Risk Detected" && <span className="badge-danger">{row.status}</span>}
-                        {!["Verified Match","Strong Candidate","Review Needed","Risk Detected"].includes(row.status) && (
-                          <span className="badge-warning">{row.status}</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
+            <tbody>
+              {isLoading ? (
+                Array.from({ length: 4 }).map((_, idx) => (
+                  <tr key={idx} className="border-b border-gray-100">
+                    <td colSpan={7} className="p-4">
+                      <Skeleton className="h-6 w-full bg-gray-100" />
+                    </td>
+                  </tr>
+                ))
+              ) : filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="text-center py-16 text-[#6B7280] text-xs font-mono">
+                    No candidate assessment records found.
+                  </td>
+                </tr>
+              ) : (
+                filtered.map((r: any) => (
+                  <tr key={r.id} className="border-b border-gray-100 hover:bg-gray-50/80 transition-colors">
+                    <td className="py-4 px-4 font-display font-bold text-[#1F2937]">{r.name}</td>
+                    <td className="py-4 px-4 font-sans text-xs text-[#6B7280]">{r.role_applied}</td>
+                    <td className="py-4 px-4">
+                      <ScoreBar value={r.match_score} color="bg-[#4361EE]" />
+                    </td>
+                    <td className="py-4 px-4">
+                      <ScoreBar value={r.interview_score} color="bg-[#4361EE]" />
+                    </td>
+                    <td className="py-4 px-4">
+                      <div className="flex items-center gap-1.5 font-mono text-xs">
+                        <IntegrityIcon score={r.truthfulness_score} />
+                        <span className="font-bold text-[#1F2937]">{r.truthfulness_score}%</span>
+                      </div>
+                    </td>
+                    <td className="py-4 px-4">
+                      <div className="font-mono text-xs font-bold text-[#4361EE]">
+                        {r.hiring_confidence_score}%
+                      </div>
+                    </td>
+                    <td className="py-4 px-4 text-right">
+                      <Link href={`/dashboard/candidates/${r.id}`}>
+                        <button className="px-3.5 py-1.5 rounded-lg bg-blue-50 text-[#4361EE] hover:bg-[#4361EE] hover:text-white border border-blue-100 text-xs font-semibold transition-all">
+                          Details
+                        </button>
+                      </Link>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
-
-        {!isLoading && filtered.length === 0 && (
-          <div className="p-12 text-center">
-            <ShieldCheck className="w-10 h-10 text-[#66707F] mx-auto mb-3" strokeWidth={1.75} />
-            <h3 className="font-display text-lg font-medium text-[#F2F5F9] mb-1">No assessment data yet</h3>
-            <p className="font-sans text-xs text-[#9AA6B8]">
-              Process candidate applications to populate assessment scores.
-            </p>
-          </div>
-        )}
       </div>
     </div>
   );

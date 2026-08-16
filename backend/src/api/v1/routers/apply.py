@@ -14,15 +14,19 @@ async def submit_application(
     email: str = Form(...),
     name: Optional[str] = Form(None),
     full_name: Optional[str] = Form(None),
+    gender: Optional[str] = Form(None),
+    city: Optional[str] = Form(None),
+    address: Optional[str] = Form(None),
     github_url: Optional[str] = Form(None),
     file: Optional[UploadFile] = File(None),
     resume: Optional[UploadFile] = File(None)
 ):
     """
-    Public Endpoint: Candidate submits application with PDF resume.
-    Executes PyMuPDF text extraction + LangGraph Screening (Knockout & 10 Bilingual Qs Generator).
+    Public Endpoint: Candidate submits application with demographics & PDF resume.
+    Executes PyMuPDF text extraction + LangGraph 3-Stage Screening Workflow.
     """
     candidate_name = (name or full_name or "Applicant").strip()
+    candidate_city = (city or address or "").strip()
     target_file = file or resume
     if not target_file:
         raise HTTPException(status_code=422, detail="PDF resume file is required.")
@@ -33,7 +37,7 @@ async def submit_application(
         raise HTTPException(status_code=404, detail="Job posting not found.")
 
     job = job_res.data[0]
-    job_description = job["description"]
+    job_description = job.get("description", "")
 
     # 2. Extract PDF Text
     try:
@@ -50,21 +54,28 @@ async def submit_application(
     # 3. Upload Resume to Supabase Storage Bucket
     cv_url = None
     try:
-        file_filename = f"{uuid.uuid4()}_{file.filename}"
+        filename = getattr(target_file, "filename", "resume.pdf")
+        file_filename = f"{uuid.uuid4()}_{filename}"
         storage_res = supabase.storage.from_("resumes").upload(file_filename, pdf_bytes)
         if storage_res:
             cv_url = supabase.storage.from_("resumes").get_public_url(file_filename)
     except Exception:
-        cv_url = f"https://storage.supabase.co/resumes/{file.filename}"
+        cv_url = f"https://storage.supabase.co/resumes/{uuid.uuid4()}.pdf"
 
-    # 4. Run LangGraph Screening Nodes (Node 1: Knockout + Node 2: 10 Bilingual Q Generator)
-    screening = run_candidate_screening(resume_text, job_description)
+    # 4. Run LangGraph Screening Nodes
+    screening = run_candidate_screening(
+        resume_text=resume_text,
+        job_description=job_description,
+        gender=gender,
+        city=candidate_city
+    )
 
     passed_knockout = screening.get("passed_knockout", True)
     knockout_reason = screening.get("knockout_reason", "")
-    questions = screening.get("generated_questions", [])
+    mcq_data = screening.get("mcq_data", [])
+    hr_questions = screening.get("hr_questions", [])
 
-    status_str = "interviewing" if passed_knockout else "rejected"
+    status_str = "assessment_pending" if passed_knockout else "rejected"
 
     # 5. Insert Candidate into Supabase Database
     try:
@@ -72,12 +83,17 @@ async def submit_application(
             "job_id": job_id,
             "name": candidate_name,
             "email": email,
+            "gender": gender,
+            "city": candidate_city,
             "github_url": github_url,
             "cv_url": cv_url,
             "resume_text": resume_text,
             "status": status_str,
             "ai_score": 0 if not passed_knockout else 50,
-            "generated_questions": questions,
+            "mcq_data": mcq_data,
+            "mcq_score": 0,
+            "hr_questions": hr_questions,
+            "generated_questions": hr_questions,
             "current_question_index": 0,
             "interview_transcript": f"Screening note: {knockout_reason}\n\n" if knockout_reason else ""
         }
@@ -94,8 +110,10 @@ async def submit_application(
             "status": candidate["status"],
             "passed_knockout": passed_knockout,
             "knockout_reason": knockout_reason,
-            "questions": questions,
-            "generated_questions": questions
+            "mcq_data": mcq_data,
+            "hr_questions": hr_questions,
+            "questions": hr_questions,
+            "generated_questions": hr_questions
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database Insertion Error: {str(e)}")

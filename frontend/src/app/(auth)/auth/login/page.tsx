@@ -56,12 +56,12 @@ export default function LoginPage() {
 
   return (
     <div className="space-y-6 font-sans">
-      <div className="space-y-1.5">
-        <h2 className="font-display text-2xl font-medium text-[#F2F5F9]">
+      <div className="space-y-1.5 border-b border-gray-100 pb-4">
+        <h2 className="font-display text-2xl font-extrabold text-[#1F2937] tracking-tight">
           Welcome back
         </h2>
-        <p className="font-sans text-xs text-[#9AA6B8]">
-          Enter your recruiter credentials to sign in.
+        <p className="font-sans text-xs text-[#6B7280]">
+          Enter your recruiter credentials to sign in to your AI-Recruit360 workspace.
         </p>
       </div>
 
@@ -79,12 +79,12 @@ export default function LoginPage() {
             control={form.control}
             name="email"
             render={({ field }) => (
-              <FormItem>
-                <label className="eyebrow block mb-1">Email Address *</label>
+              <FormItem className="space-y-1">
+                <label className="font-mono text-xs uppercase font-bold text-[#1F2937]">Email Address *</label>
                 <FormControl>
-                  <input type="email" placeholder="name@company.com" className="input-enterprise w-full h-11" {...field} />
+                  <input type="email" placeholder="name@company.com" className="w-full h-11 px-4 text-xs font-sans rounded-lg border border-gray-200 text-[#1F2937] focus:ring-2 focus:ring-[#4361EE] focus:outline-none placeholder:text-gray-400" {...field} />
                 </FormControl>
-                <FormMessage className="text-[11px] font-mono text-[#EF4444]" />
+                <FormMessage className="text-[11px] font-mono text-red-500" />
               </FormItem>
             )}
           />
@@ -93,35 +93,35 @@ export default function LoginPage() {
             control={form.control}
             name="password"
             render={({ field }) => (
-              <FormItem>
-                <label className="eyebrow block mb-1">Password *</label>
+              <FormItem className="space-y-1">
+                <label className="font-mono text-xs uppercase font-bold text-[#1F2937]">Password *</label>
                 <FormControl>
-                  <input type="password" placeholder="••••••••" className="input-enterprise w-full h-11" {...field} />
+                  <input type="password" placeholder="••••••••" className="w-full h-11 px-4 text-xs font-sans rounded-lg border border-gray-200 text-[#1F2937] focus:ring-2 focus:ring-[#4361EE] focus:outline-none placeholder:text-gray-400" {...field} />
                 </FormControl>
-                <FormMessage className="text-[11px] font-mono text-[#EF4444]" />
+                <FormMessage className="text-[11px] font-mono text-red-500" />
               </FormItem>
             )}
           />
 
           <button
             type="submit"
-            className="btn-primary w-full justify-center h-11 text-xs"
+            className="bg-[#4361EE] hover:bg-[#3A56D4] text-white font-bold w-full justify-center h-12 text-xs rounded-full shadow-lg shadow-blue-500/25 flex items-center gap-2 transition-all active:scale-95 disabled:opacity-50"
             disabled={isSubmitting}
           >
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            <span>Sign In</span>
-            <ArrowRight className="w-4 h-4" strokeWidth={1.75} />
+            <span>Sign In to Dashboard</span>
+            <ArrowRight className="w-4 h-4" strokeWidth={2} />
           </button>
         </form>
       </Form>
 
-      <div className="pt-2 text-center text-xs text-[#9AA6B8] border-t border-[rgba(148,163,184,0.12)]">
-        Don&apos;t have an account?{" "}
+      <div className="pt-4 text-center text-xs text-[#6B7280] border-t border-gray-100 font-sans">
+        Don&apos;t have a recruiter account?{" "}
         <Link
           href="/auth/signup"
-          className="text-[#8AB4F8] hover:underline font-mono"
+          className="text-[#4361EE] hover:underline font-bold"
         >
-          Sign up
+          Create Recruiter Account
         </Link>
       </div>
     </div>

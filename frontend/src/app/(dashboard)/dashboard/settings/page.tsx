@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { FeedbackToast } from "@/components/ui/feedback-toast";
-import { Upload, Settings as SettingsIcon } from "lucide-react";
+import { Upload, Settings as SettingsIcon, Sparkles } from "lucide-react";
 import {
   DASHBOARD_PROFILE_KEY,
   DEFAULT_DASHBOARD_PROFILE,
@@ -106,113 +106,68 @@ export default function SettingsPage() {
   };
 
   if (isLoading) {
-    return <div className="p-8 text-center text-xs font-mono text-[#66707F]">Loading settings...</div>;
+    return <div className="p-12 text-center text-xs font-mono text-[#6B7280]">Loading workspace settings...</div>;
   }
 
   return (
     <div className="space-y-8 pb-12 font-sans">
       {toast ? <FeedbackToast message={toast.message} tone={toast.tone} onClose={() => setToast(null)} /> : null}
       
-      <div className="border-b border-[rgba(148,163,184,0.12)] pb-6">
-        <div className="eyebrow flex items-center gap-2 mb-1">
-          <SettingsIcon className="w-3.5 h-3.5 text-[#8AB4F8]" strokeWidth={1.75} />
+      <div className="border-b border-gray-200 pb-6">
+        <div className="eyebrow flex items-center gap-2 mb-1.5">
+          <SettingsIcon className="w-3.5 h-3.5 text-[#4361EE]" strokeWidth={2} />
           <span>System Configuration</span>
         </div>
-        <h2 className="font-display text-3xl font-medium text-[#F2F5F9]">Settings</h2>
-        <p className="font-sans text-xs text-[#9AA6B8] mt-1">
-          Manage your recruiter workspace credentials, company details, and alerts.
+        <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-[#1F2937] tracking-tight">Workspace Settings</h1>
+        <p className="font-sans text-xs text-[#6B7280] mt-1">
+          Manage your recruiter workspace credentials, company profile, and anti-cheat telemetry.
         </p>
       </div>
 
       <div className="grid gap-8 max-w-4xl">
-        <div className="card-enterprise space-y-6">
-          <div className="border-b border-[rgba(148,163,184,0.12)] pb-4">
-            <h3 className="font-display text-lg font-medium text-[#F2F5F9]">Profile &amp; Branding</h3>
-            <p className="font-sans text-xs text-[#9AA6B8]">Update recruiter details and company workspace settings.</p>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 sm:p-8 space-y-6">
+          <div className="border-b border-gray-100 pb-4">
+            <h3 className="font-display text-lg font-bold text-[#1F2937]">Profile &amp; Organization</h3>
+            <p className="font-sans text-xs text-[#6B7280]">Update recruiter details and company workspace settings.</p>
           </div>
 
-          <div className="space-y-4">
-            <div className="grid gap-2">
-              <label className="eyebrow">Recruiter Name *</label>
+          <div className="space-y-5">
+            <div className="grid gap-1.5">
+              <label className="font-mono text-xs uppercase font-bold text-[#1F2937]">Recruiter Full Name *</label>
               <input
                 value={recruiterName}
                 onChange={(e) => setRecruiterName(e.target.value)}
-                className="input-enterprise h-10"
+                className="w-full h-11 px-4 text-xs font-sans rounded-lg border border-gray-200 text-[#1F2937] focus:ring-2 focus:ring-[#4361EE] focus:outline-none"
               />
             </div>
-            <div className="grid gap-2">
-              <label className="eyebrow">Email Account</label>
+
+            <div className="grid gap-1.5">
+              <label className="font-mono text-xs uppercase font-bold text-[#1F2937]">Work Email Address</label>
               <input
-                type="email"
                 value={email}
                 disabled
-                className="input-enterprise h-10 opacity-60 cursor-not-allowed"
+                className="w-full h-11 px-4 text-xs font-sans rounded-lg border border-gray-200 text-[#6B7280] bg-gray-50 cursor-not-allowed"
               />
             </div>
-            <div className="grid gap-2">
-              <label className="eyebrow">Company Name *</label>
+
+            <div className="grid gap-1.5">
+              <label className="font-mono text-xs uppercase font-bold text-[#1F2937]">Company / Organization Name *</label>
               <input
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
-                className="input-enterprise h-10"
-              />
-            </div>
-
-            <div className="flex items-center gap-4 rounded-[8px] border border-[rgba(148,163,184,0.12)] bg-[#0B1019] p-4">
-              <Avatar className="h-12 w-12 rounded-[8px]">
-                <AvatarImage src={companyLogo} alt="Company Logo" />
-                <AvatarFallback className="bg-[rgba(138,180,248,0.10)] text-[#8AB4F8] font-mono text-xs font-medium">
-                  {companyName
-                    .split(" ")
-                    .map((word) => word[0])
-                    .join("")
-                    .slice(0, 2)
-                    .toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                <p className="font-sans text-xs font-medium text-[#F2F5F9]">Company Logo</p>
-                <p className="font-mono text-[11px] text-[#66707F]">PNG, JPG up to 2MB</p>
-              </div>
-              <button type="button" className="btn-secondary text-xs" onClick={() => fileInputRef.current?.click()}>
-                <Upload className="h-3.5 w-3.5" strokeWidth={1.75} />
-                Upload
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleLogoChange}
+                className="w-full h-11 px-4 text-xs font-sans rounded-lg border border-gray-200 text-[#1F2937] focus:ring-2 focus:ring-[#4361EE] focus:outline-none"
               />
             </div>
           </div>
 
-          <button className="btn-primary text-xs h-10 px-6" onClick={handleSave} disabled={isSaving}>
-            {isSaving ? "Saving Changes..." : "Save Workspace Profile"}
-          </button>
-        </div>
-
-        <div className="card-enterprise space-y-6">
-          <div className="border-b border-[rgba(148,163,184,0.12)] pb-4">
-            <h3 className="font-display text-lg font-medium text-[#F2F5F9]">Notifications &amp; Telemetry</h3>
-            <p className="font-sans text-xs text-[#9AA6B8]">Configure real-time candidate alert preferences.</p>
-          </div>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between rounded-[8px] border border-[rgba(148,163,184,0.12)] bg-[#0B1019] p-4">
-              <div className="space-y-0.5">
-                <p className="font-sans text-xs font-medium text-[#F2F5F9]">Daily Executive Summaries</p>
-                <p className="font-sans text-[11px] text-[#9AA6B8]">Receive automated applicant pipeline reports.</p>
-              </div>
-              <Switch defaultChecked />
-            </div>
-            <div className="flex items-center justify-between rounded-[8px] border border-[rgba(148,163,184,0.12)] bg-[#0B1019] p-4">
-              <div className="space-y-0.5">
-                <p className="font-sans text-xs font-medium text-[#F2F5F9]">Real-time Proctoring Alerts</p>
-                <p className="font-sans text-[11px] text-[#9AA6B8]">Flag suspicious tab switches during live candidate sessions.</p>
-              </div>
-              <Switch defaultChecked />
-            </div>
+          <div className="pt-4 border-t border-gray-100 flex justify-end">
+            <button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="bg-[#4361EE] hover:bg-[#3A56D4] text-white text-xs font-bold py-2.5 px-6 rounded-lg shadow-sm flex items-center gap-2 transition-all active:scale-95 disabled:opacity-50"
+            >
+              {isSaving ? "Saving Changes..." : "Save Workspace Profile"}
+            </button>
           </div>
         </div>
       </div>

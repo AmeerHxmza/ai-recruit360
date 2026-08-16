@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Medal, Trophy, TrendingUp, Users, ShieldCheck } from "lucide-react";
+import { Medal, Trophy, TrendingUp, Users, ShieldCheck, Sparkles } from "lucide-react";
 import Link from "next/link";
 
 type Job = { id: string; title: string; department: string };
@@ -32,13 +32,13 @@ type RankedCandidate = {
 
 function MedalIcon({ rank }: { rank: number }) {
   if (rank === 1)
-    return <Trophy className="w-5 h-5 text-[#EAB308]" strokeWidth={1.75} />;
+    return <Trophy className="w-5 h-5 text-amber-500" strokeWidth={2} />;
   if (rank === 2)
-    return <Medal className="w-5 h-5 text-[#9AA6B8]" strokeWidth={1.75} />;
+    return <Medal className="w-5 h-5 text-slate-400" strokeWidth={2} />;
   if (rank === 3)
-    return <Medal className="w-5 h-5 text-[#7DA2F2]" strokeWidth={1.75} />;
+    return <Medal className="w-5 h-5 text-amber-700" strokeWidth={2} />;
   return (
-    <span className="font-mono text-xs font-medium text-[#66707F]">
+    <span className="font-mono text-xs font-bold text-[#6B7280]">
       #{rank < 10 ? `0${rank}` : rank}
     </span>
   );
@@ -46,11 +46,11 @@ function MedalIcon({ rank }: { rank: number }) {
 
 function StatusBadge({ status }: { status: string }) {
   switch (status) {
-    case "Verified Match":   return <span className="badge-success">Verified Match</span>;
-    case "Strong Candidate": return <span className="chip-enterprise">Strong Candidate</span>;
-    case "Review Needed":    return <span className="badge-warning">Review Needed</span>;
-    case "Risk Detected":    return <span className="badge-danger">Risk Detected</span>;
-    default:                 return <span className="badge-warning">{status || "Pending"}</span>;
+    case "Verified Match":   return <span className="rounded-full px-3 py-1 text-xs font-medium bg-emerald-50 text-[#10B981] border border-emerald-100">Verified Match</span>;
+    case "Strong Candidate": return <span className="rounded-full px-3 py-1 text-xs font-medium bg-blue-50 text-[#4361EE] border border-blue-100">Strong Candidate</span>;
+    case "Review Needed":    return <span className="rounded-full px-3 py-1 text-xs font-medium bg-amber-50 text-[#F59E0B] border border-amber-100">Review Needed</span>;
+    case "Risk Detected":    return <span className="rounded-full px-3 py-1 text-xs font-medium bg-rose-50 text-[#EF4444] border border-rose-100">Risk Detected</span>;
+    default:                 return <span className="rounded-full px-3 py-1 text-xs font-medium bg-emerald-50 text-[#10B981] border border-emerald-100">Passed</span>;
   }
 }
 
@@ -88,7 +88,7 @@ export default function RankingsPage() {
         .from("applications")
         .select(`
           id, status, match_score, hiring_confidence,
-          candidates ( id, first_name, last_name ),
+          candidates ( id, first_name, last_name, name ),
           jobs ( title ),
           interviews ( overall_score, truthfulness_score )
         `)
@@ -103,7 +103,7 @@ export default function RankingsPage() {
           
           return {
             id: candidate?.id || app.id,
-            name: `${candidate?.first_name || ''} ${candidate?.last_name || ''}`.trim() || 'Unknown Candidate',
+            name: candidate?.name || `${candidate?.first_name || ''} ${candidate?.last_name || ''}`.trim() || 'Unknown Candidate',
             role_applied: job?.title || "Engineering Role",
             status: app.status || "Pending",
             rank: idx + 1,
@@ -129,31 +129,33 @@ export default function RankingsPage() {
   return (
     <div className="space-y-6 pb-12 font-sans">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[rgba(148,163,184,0.12)] pb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-200 pb-6">
         <div>
-          <div className="eyebrow flex items-center gap-2 mb-1">
-            <TrendingUp className="w-3.5 h-3.5 text-[#8AB4F8]" strokeWidth={1.75} />
+          <div className="eyebrow flex items-center gap-2 mb-1.5">
+            <TrendingUp className="w-3.5 h-3.5 text-[#4361EE]" strokeWidth={2} />
             <span>Leaderboard Analytics</span>
           </div>
-          <h1 className="font-display text-3xl font-medium text-[#F2F5F9]">
-            Rankings
+          <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-[#1F2937] tracking-tight">
+            Rankings &amp; XAI Leaderboard
           </h1>
-          <p className="font-sans text-xs text-[#9AA6B8] mt-1">
-            Candidate leaderboard ranked by Hiring Confidence Score.
+          <p className="font-sans text-xs text-[#6B7280] mt-1">
+            Candidates ranked dynamically by hiring confidence algorithm score.
           </p>
         </div>
-        <div className="w-full sm:w-64">
+
+        {/* Job Select */}
+        <div className="w-full sm:w-[260px]">
           {jobsLoading ? (
-            <Skeleton className="h-10 w-full bg-[#0C121D]" />
+            <Skeleton className="h-10 w-full bg-gray-100 rounded-lg" />
           ) : (
             <Select value={selectedJobId} onValueChange={setSelectedJobId}>
-              <SelectTrigger className="w-full h-10 bg-[#0B1019] border-[rgba(148,163,184,0.12)] text-[#F2F5F9] font-mono text-xs rounded-[8px]">
-                <SelectValue placeholder="Select a job..." />
+              <SelectTrigger className="w-full h-10 bg-white border-gray-200 text-[#1F2937] text-xs font-sans rounded-lg focus:ring-2 focus:ring-[#4361EE]">
+                <SelectValue placeholder="Select Job Requisition" />
               </SelectTrigger>
-              <SelectContent className="bg-[#0C121D] border-[rgba(148,163,184,0.12)] text-[#F2F5F9] font-sans">
-                {jobs.map((job) => (
-                  <SelectItem key={job.id} value={job.id}>
-                    {job.title}
+              <SelectContent className="bg-white border-gray-200 text-[#1F2937]">
+                {jobs.map((j) => (
+                  <SelectItem key={j.id} value={j.id}>
+                    {j.title}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -162,121 +164,100 @@ export default function RankingsPage() {
         </div>
       </div>
 
-      {/* No Jobs State */}
-      {!jobsLoading && jobs.length === 0 && (
-        <div className="card-enterprise p-12 text-center flex flex-col items-center justify-center min-h-[300px]">
-          <Users className="w-10 h-10 text-[#66707F] mb-4" strokeWidth={1.75} />
-          <h2 className="font-display text-xl font-medium text-[#F2F5F9] mb-2">No Active Jobs</h2>
-          <p className="font-sans text-xs text-[#9AA6B8] max-w-md">
-            Create an active job listing and process candidates to generate rankings.
-          </p>
-        </div>
-      )}
-
-      {/* Top Candidate Hero */}
-      {!isLoading && topCandidate && (
-        <div className="card-enterprise p-6 flex flex-col sm:flex-row items-start sm:items-center gap-5">
-          <div className="flex items-center justify-center w-14 h-14 rounded-full bg-[rgba(234,179,8,0.12)] border border-[rgba(234,179,8,0.25)] shrink-0">
-            <Trophy className="w-7 h-7 text-[#EAB308]" strokeWidth={1.75} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <span className="eyebrow text-[#EAB308] block mb-1">
-              🏆 Top Candidate — {selectedJob?.title}
-            </span>
-            <h2 className="font-display text-2xl font-medium text-[#F2F5F9] truncate">{topCandidate.name}</h2>
-            <p className="font-sans text-xs text-[#9AA6B8]">{topCandidate.role_applied}</p>
-          </div>
-          <div className="text-right shrink-0">
-            <div className="font-mono text-3xl font-medium text-[#F2F5F9]">
-              {topCandidate.scores.hiring_confidence_score}
-              <span className="text-xs text-[#66707F]">/100</span>
+      {/* Top Candidate Spotlight */}
+      {topCandidate && (
+        <div className="bg-white rounded-xl shadow-sm border border-[#4361EE]/30 p-6 flex flex-col sm:flex-row items-center justify-between gap-6 relative overflow-hidden">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-full bg-amber-50 text-amber-500 border border-amber-200 flex items-center justify-center font-bold font-mono text-xl shrink-0 shadow-sm">
+              🏆
             </div>
-            <p className="font-mono text-[11px] text-[#66707F] mt-1">Hiring Confidence</p>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-xs font-bold text-[#4361EE] uppercase">#1 Top Ranked Applicant</span>
+                <StatusBadge status={topCandidate.status} />
+              </div>
+              <h2 className="font-display text-xl font-extrabold text-[#1F2937]">{topCandidate.name}</h2>
+              <p className="font-sans text-xs text-[#6B7280]">{selectedJob?.title || topCandidate.role_applied}</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-6">
+            <div className="text-right">
+              <div className="font-mono text-2xl font-extrabold text-[#4361EE]">
+                {topCandidate.scores.hiring_confidence_score}%
+              </div>
+              <div className="font-sans text-[11px] text-[#6B7280]">Confidence Index</div>
+            </div>
+            <Link href={`/dashboard/candidates/${topCandidate.id}`}>
+              <button className="bg-[#4361EE] hover:bg-[#3A56D4] text-white text-xs font-bold py-2.5 px-5 rounded-lg shadow-sm">
+                View Full Audit
+              </button>
+            </Link>
           </div>
         </div>
       )}
 
-      {/* Rankings Table */}
-      <div className="card-enterprise p-0 overflow-hidden">
-        <div className="px-6 py-4 border-b border-[rgba(148,163,184,0.12)] bg-[#0A0F18] flex items-center justify-between">
-          <h3 className="font-display text-sm font-medium text-[#F2F5F9]">
-            {selectedJob ? `${selectedJob.title} — ${selectedJob.department}` : "Select a job"}
-          </h3>
-          {candidates.length > 0 && (
-            <span className="chip-enterprise">
-              {candidates.length} candidates
-            </span>
-          )}
+      {/* Leaderboard Table */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-6 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead>
+              <tr className="border-b border-gray-200 bg-gray-50/50">
+                <th className="font-mono text-xs uppercase text-[#6B7280] font-semibold py-3 px-4 w-16 text-center">Rank</th>
+                <th className="font-mono text-xs uppercase text-[#6B7280] font-semibold py-3 px-4">Candidate</th>
+                <th className="font-mono text-xs uppercase text-[#6B7280] font-semibold py-3 px-4">Resume Match</th>
+                <th className="font-mono text-xs uppercase text-[#6B7280] font-semibold py-3 px-4">AI Interview</th>
+                <th className="font-mono text-xs uppercase text-[#6B7280] font-semibold py-3 px-4">Truthfulness</th>
+                <th className="font-mono text-xs uppercase text-[#6B7280] font-semibold py-3 px-4">Confidence Score</th>
+                <th className="font-mono text-xs uppercase text-[#6B7280] font-semibold py-3 px-4 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                Array.from({ length: 4 }).map((_, idx) => (
+                  <tr key={idx} className="border-b border-gray-100">
+                    <td colSpan={7} className="p-4">
+                      <Skeleton className="h-6 w-full bg-gray-100" />
+                    </td>
+                  </tr>
+                ))
+              ) : candidates.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="text-center py-16 text-[#6B7280] text-xs font-mono">
+                    No candidates evaluated for this requisition yet.
+                  </td>
+                </tr>
+              ) : (
+                candidates.map((c) => (
+                  <tr key={c.id} className="border-b border-gray-100 hover:bg-gray-50/80 transition-colors">
+                    <td className="py-4 px-4 text-center">
+                      <MedalIcon rank={c.rank} />
+                    </td>
+                    <td className="py-4 px-4">
+                      <div className="font-display font-bold text-sm text-[#1F2937]">{c.name}</div>
+                      <div className="font-sans text-[11px] text-[#6B7280]">{c.role_applied}</div>
+                    </td>
+                    <td className="py-4 px-4 font-mono text-xs font-semibold text-[#1F2937]">{c.scores.match_score}%</td>
+                    <td className="py-4 px-4 font-mono text-xs font-semibold text-[#1F2937]">{c.scores.interview_score}%</td>
+                    <td className="py-4 px-4 font-mono text-xs font-semibold text-[#10B981]">{c.scores.truthfulness_score}%</td>
+                    <td className="py-4 px-4">
+                      <div className="font-mono text-sm font-extrabold text-[#4361EE]">
+                        {c.scores.hiring_confidence_score}%
+                      </div>
+                    </td>
+                    <td className="py-4 px-4 text-right">
+                      <Link href={`/dashboard/candidates/${c.id}`}>
+                        <button className="px-3.5 py-1.5 rounded-lg bg-blue-50 text-[#4361EE] hover:bg-[#4361EE] hover:text-white border border-blue-100 text-xs font-semibold transition-all">
+                          Details
+                        </button>
+                      </Link>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
-
-        {isLoading ? (
-          <div className="p-6 space-y-3">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} className="h-12 w-full bg-[#0B1019] rounded-[8px]" />
-            ))}
-          </div>
-        ) : candidates.length === 0 ? (
-          <div className="p-12 text-center">
-            <ShieldCheck className="w-10 h-10 text-[#66707F] mx-auto mb-3" strokeWidth={1.75} />
-            <h3 className="font-display text-lg font-medium text-[#F2F5F9] mb-1">
-              Insufficient Data for Ranking
-            </h3>
-            <p className="font-sans text-xs text-[#9AA6B8] max-w-md mx-auto">
-              Process candidate applications for this job to generate confidence scores and rankings.
-            </p>
-          </div>
-        ) : (
-          <div className="divide-y divide-[rgba(148,163,184,0.12)]">
-            {candidates.map((candidate, idx) => (
-              <Link
-                key={candidate.id}
-                href={`/dashboard/candidates/${candidate.id}`}
-                className="flex items-center gap-4 px-6 py-4 hover:bg-[#121B2B] transition-colors group"
-              >
-                {/* Rank */}
-                <div className="w-8 flex items-center justify-center shrink-0 font-mono text-xs">
-                  <MedalIcon rank={candidate.rank || idx + 1} />
-                </div>
-
-                {/* Avatar + Name */}
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div className="w-9 h-9 rounded-full bg-[rgba(138,180,248,0.10)] text-[#8AB4F8] font-mono text-xs font-medium flex items-center justify-center shrink-0">
-                    {candidate.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="font-display font-medium text-sm text-[#F2F5F9] truncate group-hover:text-[#8AB4F8] transition-colors">
-                      {candidate.name}
-                    </p>
-                    <p className="font-sans text-xs text-[#9AA6B8] truncate">{candidate.role_applied}</p>
-                  </div>
-                </div>
-
-                {/* Scores */}
-                <div className="hidden lg:flex items-center gap-6 font-mono text-xs">
-                  <div className="text-center">
-                    <div className="font-medium text-[#F2F5F9]">{candidate.scores.match_score}%</div>
-                    <div className="text-[10px] text-[#66707F]">Match</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="font-medium text-[#F2F5F9]">{candidate.scores.interview_score}%</div>
-                    <div className="text-[10px] text-[#66707F]">Interview</div>
-                  </div>
-                  <div className="text-center">
-                    <div className={`font-medium ${candidate.scores.truthfulness_score >= 70 ? "text-[#22C55E]" : candidate.scores.truthfulness_score >= 50 ? "text-[#EAB308]" : "text-[#EF4444]"}`}>
-                      {candidate.scores.truthfulness_score}%
-                    </div>
-                    <div className="text-[10px] text-[#66707F]">Truthfulness</div>
-                  </div>
-                </div>
-
-                {/* Status */}
-                <div className="shrink-0">
-                  <StatusBadge status={candidate.status} />
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
       </div>
     </div>
   );

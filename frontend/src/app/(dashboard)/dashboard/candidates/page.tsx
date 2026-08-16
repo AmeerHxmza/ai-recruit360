@@ -120,24 +120,28 @@ function CandidatesPageContent() {
   );
 
   const getStatusBadge = (status: string, aiScore: number) => {
-    if (status === "completed" && aiScore >= 80) {
+    if (status === "completed" || aiScore >= 80) {
       return (
-        <span className="badge-success">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E] animate-pulse" />
-          Verified Match
+        <span className="rounded-full px-3 py-1 text-xs font-medium bg-emerald-50 text-[#10B981] border border-emerald-100 inline-flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]" />
+          Passed
         </span>
       );
     }
-    if (status === "completed" && aiScore >= 60) {
-      return <span className="chip-enterprise">Strong Candidate</span>;
+    if (status === "rejected" || aiScore < 40) {
+      return (
+        <span className="rounded-full px-3 py-1 text-xs font-medium bg-rose-50 text-[#EF4444] border border-rose-100 inline-flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#EF4444]" />
+          Rejected
+        </span>
+      );
     }
-    if (status === "completed" && aiScore < 40) {
-      return <span className="badge-danger">Risk Detected</span>;
-    }
-    if (status === "rejected") {
-      return <span className="badge-danger">Rejected</span>;
-    }
-    return <span className="badge-warning">Interviewing</span>;
+    return (
+      <span className="rounded-full px-3 py-1 text-xs font-medium bg-amber-50 text-[#F59E0B] border border-amber-100 inline-flex items-center gap-1.5">
+        <span className="w-1.5 h-1.5 rounded-full bg-[#F59E0B]" />
+        Interviewing
+      </span>
+    );
   };
 
   return (
@@ -145,123 +149,147 @@ function CandidatesPageContent() {
       {toast ? <FeedbackToast message={toast.message} tone={toast.tone} onClose={() => setToast(null)} /> : null}
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[rgba(148,163,184,0.12)] pb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-200 pb-6">
         <div>
-          <div className="eyebrow flex items-center gap-2 mb-1">
-            <Sparkles className="w-3.5 h-3.5 text-[#8AB4F8]" strokeWidth={1.75} />
-            <span>Candidate Evaluation Database</span>
+          <div className="eyebrow flex items-center gap-2 mb-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-[#4361EE]" strokeWidth={2} />
+            <span>Candidate Intelligence Pool</span>
           </div>
-          <h1 className="font-display text-3xl font-medium text-[#F2F5F9]">Candidates</h1>
-          <p className="font-sans text-xs text-[#9AA6B8] mt-1">
-            View evaluated applicant profiles, multi-axis technical scores, and XAI evidence reports.
+          <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-[#1F2937] tracking-tight">Candidates Leaderboard</h1>
+          <p className="font-sans text-xs text-[#6B7280] mt-1">
+            Real-time candidate evaluation, multi-axis technical scores, and anti-cheat telemetry logs.
           </p>
         </div>
-
-        <Link href="/dashboard/jobs">
-          <button className="btn-primary text-xs">
-            <Plus className="w-4 h-4" strokeWidth={1.75} />
-            <span>Post New Requisition</span>
-          </button>
-        </Link>
       </div>
 
-      {/* Filters */}
-      <div className="card-enterprise p-4 flex flex-col sm:flex-row items-center gap-4">
-        <div className="relative flex-1 w-full">
-          <Search className="absolute left-3.5 top-3 h-4 w-4 text-[#66707F]" strokeWidth={1.75} />
+      {/* Filter and Search Section */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="relative w-full sm:max-w-md">
+          <Search className="absolute left-3.5 top-3 h-4 w-4 text-gray-400" strokeWidth={2} />
           <input
-            type="search"
-            placeholder="Search candidate name, email, or position..."
-            className="input-enterprise w-full pl-10 h-10 text-xs"
+            placeholder="Search candidates by name, email, or position..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            className="w-full h-10 pl-10 pr-4 text-xs font-sans rounded-lg border border-gray-200 text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#4361EE]"
           />
         </div>
 
-        <Select value={selectedJob} onValueChange={(val) => setSelectedJob(val)}>
-          <SelectTrigger className="w-full sm:w-[220px] h-10 bg-[#0B1019] border-[rgba(148,163,184,0.12)] text-[#F2F5F9] font-mono text-xs rounded-[8px]">
-            <SelectValue placeholder="Filter by Job Role" />
-          </SelectTrigger>
-          <SelectContent className="bg-[#0C121D] border-[rgba(148,163,184,0.12)] text-[#F2F5F9] font-sans">
-            <SelectItem value="all">All Open Positions</SelectItem>
-            {roles.map((r) => (
-              <SelectItem key={r} value={r}>
-                {r}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="w-full sm:w-64">
+          <Select value={selectedJob} onValueChange={setSelectedJob}>
+            <SelectTrigger className="w-full h-10 bg-white border-gray-200 text-[#1F2937] text-xs font-sans rounded-lg focus:ring-2 focus:ring-[#4361EE]">
+              <SelectValue placeholder="All Requisitions" />
+            </SelectTrigger>
+            <SelectContent className="bg-white border-gray-200 text-[#1F2937]">
+              <SelectItem value="all">All Requisitions</SelectItem>
+              {roles.map((r) => (
+                <SelectItem key={r} value={r}>
+                  {r}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      {/* Candidates DataTable */}
-      <div className="card-enterprise p-0 overflow-hidden">
-        {isLoading ? (
-          <div className="p-6 space-y-4">
-            {Array.from({ length: 4 }).map((_, idx) => (
-              <Skeleton key={idx} className="h-12 w-full bg-[#0B1019] rounded-[8px]" />
-            ))}
-          </div>
-        ) : (
+      {/* Candidate Table */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-6">
+        <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="border-b border-[rgba(148,163,184,0.12)] bg-[#0A0F18]">
-                <TableHead className="w-16 text-center eyebrow text-[11px]">Rank</TableHead>
-                <TableHead className="eyebrow text-[11px]">Candidate</TableHead>
-                <TableHead className="eyebrow text-[11px]">Position</TableHead>
-                <TableHead className="eyebrow text-[11px]">Technical</TableHead>
-                <TableHead className="eyebrow text-[11px]">Honesty</TableHead>
-                <TableHead className="eyebrow text-[11px]">Overall Score</TableHead>
-                <TableHead className="eyebrow text-[11px]">Applied Date</TableHead>
-                <TableHead className="eyebrow text-[11px]">Status</TableHead>
-                <TableHead className="text-right eyebrow text-[11px]">Action</TableHead>
+              <TableRow className="border-b border-gray-200 bg-gray-50/50">
+                <TableHead className="w-16 text-center font-mono text-xs uppercase text-[#6B7280] font-semibold py-3">Rank</TableHead>
+                <TableHead className="font-mono text-xs uppercase text-[#6B7280] font-semibold py-3">Candidate Name</TableHead>
+                <TableHead className="font-mono text-xs uppercase text-[#6B7280] font-semibold py-3">Position</TableHead>
+                <TableHead className="font-mono text-xs uppercase text-[#6B7280] font-semibold py-3">Technical</TableHead>
+                <TableHead className="font-mono text-xs uppercase text-[#6B7280] font-semibold py-3">Communication</TableHead>
+                <TableHead className="font-mono text-xs uppercase text-[#6B7280] font-semibold py-3">Honesty</TableHead>
+                <TableHead className="font-mono text-xs uppercase text-[#6B7280] font-semibold py-3">AI Score</TableHead>
+                <TableHead className="font-mono text-xs uppercase text-[#6B7280] font-semibold py-3">Status</TableHead>
+                <TableHead className="text-right font-mono text-xs uppercase text-[#6B7280] font-semibold py-3">Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredAndSortedCandidates.length === 0 ? (
+              {isLoading ? (
+                Array.from({ length: 4 }).map((_, idx) => (
+                  <TableRow key={idx}>
+                    <TableCell colSpan={9} className="py-4">
+                      <Skeleton className="h-6 w-full bg-gray-100" />
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : filteredAndSortedCandidates.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center py-14 text-[#66707F] text-xs font-mono">
-                    No candidates match the selected filters.
+                  <TableCell colSpan={9} className="text-center py-16 text-[#6B7280] text-xs font-mono">
+                    No candidate applications match your search query.
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredAndSortedCandidates.map((c, idx) => {
-                  const rank = idx + 1;
+                filteredAndSortedCandidates.map((candidate, index) => {
+                  const rank = index + 1;
                   return (
-                    <TableRow key={c.id} className="border-b border-[rgba(148,163,184,0.12)] hover:bg-[#121B2B] transition-colors">
-                      <TableCell className="text-center font-mono text-xs font-medium text-[#7DA2F2]">
-                        #{rank < 10 ? `0${rank}` : rank}
+                    <TableRow key={candidate.id} className="border-b border-gray-100 hover:bg-gray-50/80 transition-colors">
+                      <TableCell className="text-center py-4">
+                        <span className="font-mono text-xs font-bold text-[#4361EE]">
+                          #{rank < 10 ? `0${rank}` : rank}
+                        </span>
                       </TableCell>
-                      <TableCell>
+
+                      <TableCell className="py-4">
                         <div className="flex flex-col">
-                          <Link href={`/dashboard/candidates/${c.id}`} className="font-display font-medium text-sm text-[#F2F5F9] hover:text-[#8AB4F8] transition-colors">
-                            {c.name}
+                          <Link
+                            href={`/dashboard/candidates/${candidate.id}`}
+                            className="font-display font-bold text-sm text-[#1F2937] hover:text-[#4361EE] transition-colors"
+                          >
+                            {candidate.name}
                           </Link>
-                          <span className="font-mono text-[11px] text-[#66707F]">{c.email}</span>
+                          <span className="font-mono text-[11px] text-[#6B7280]">{candidate.email}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="font-sans text-xs text-[#9AA6B8]">{c.role}</TableCell>
-                      <TableCell className="font-mono text-xs font-medium text-[#F2F5F9]">{c.techScore}%</TableCell>
-                      <TableCell className="font-mono text-xs font-medium text-[#F2F5F9]">{c.honestyScore}%</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-3 max-w-[140px]">
-                          <div className="flex-1 h-1.5 bg-[#0B1019] rounded-full overflow-hidden">
+
+                      <TableCell className="py-4">
+                        <span className="font-sans text-xs text-[#1F2937] font-medium">{candidate.role}</span>
+                      </TableCell>
+
+                      <TableCell className="py-4 font-mono text-xs font-semibold text-[#1F2937]">
+                        {candidate.techScore}%
+                      </TableCell>
+
+                      <TableCell className="py-4 font-mono text-xs font-semibold text-[#1F2937]">
+                        {candidate.commScore}%
+                      </TableCell>
+
+                      <TableCell className="py-4 font-mono text-xs font-semibold text-[#10B981]">
+                        {candidate.honestyScore}%
+                      </TableCell>
+
+                      <TableCell className="py-4">
+                        <div className="flex items-center gap-3 max-w-[130px]">
+                          <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
                             <div
                               className={`h-full rounded-full transition-all duration-500 ${
-                                c.aiScore >= 80 ? "bg-[#22C55E]" : c.aiScore >= 60 ? "bg-[#8AB4F8]" : "bg-[#EF4444]"
+                                candidate.aiScore >= 80
+                                  ? "bg-[#10B981]"
+                                  : candidate.aiScore >= 60
+                                  ? "bg-[#4361EE]"
+                                  : "bg-[#EF4444]"
                               }`}
-                              style={{ width: `${c.aiScore}%` }}
+                              style={{ width: `${candidate.aiScore}%` }}
                             />
                           </div>
-                          <span className="font-mono text-xs font-medium text-[#8AB4F8]">{c.aiScore}%</span>
+                          <span className="font-mono text-xs font-bold text-[#1F2937] w-8 text-right">
+                            {candidate.aiScore}%
+                          </span>
                         </div>
                       </TableCell>
-                      <TableCell className="font-mono text-[11px] text-[#66707F]">{c.applied}</TableCell>
-                      <TableCell>{getStatusBadge(c.status, c.aiScore)}</TableCell>
-                      <TableCell className="text-right">
-                        <Link href={`/dashboard/candidates/${c.id}`}>
-                          <button className="btn-secondary text-[11px] py-1 px-2.5">
-                            <span>Deep Dive</span>
-                            <ChevronRight className="w-3 h-3" strokeWidth={1.75} />
+
+                      <TableCell className="py-4">
+                        {getStatusBadge(candidate.status, candidate.aiScore)}
+                      </TableCell>
+
+                      <TableCell className="text-right py-4">
+                        <Link href={`/dashboard/candidates/${candidate.id}`}>
+                          <button className="px-3.5 py-1.5 rounded-lg bg-blue-50 text-[#4361EE] hover:bg-[#4361EE] hover:text-white border border-blue-100 text-xs font-semibold transition-all active:scale-95">
+                            View Report
                           </button>
                         </Link>
                       </TableCell>
@@ -271,7 +299,7 @@ function CandidatesPageContent() {
               )}
             </TableBody>
           </Table>
-        )}
+        </div>
       </div>
     </div>
   );
@@ -279,14 +307,11 @@ function CandidatesPageContent() {
 
 export default function CandidatesPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="space-y-4 p-8">
-          <Skeleton className="h-10 w-full bg-[#0C121D]" />
-          <Skeleton className="h-64 w-full bg-[#0C121D]" />
-        </div>
-      }
-    >
+    <Suspense fallback={
+      <div className="p-12 text-center text-xs font-mono text-[#6B7280]">
+        Loading candidate intelligence telemetry...
+      </div>
+    }>
       <CandidatesPageContent />
     </Suspense>
   );

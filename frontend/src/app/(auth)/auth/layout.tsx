@@ -1,4 +1,5 @@
-import { Cpu, Quote } from "lucide-react";
+import { Quote } from "lucide-react";
+import { Logo } from "@/components/ui/logo";
 
 export default function AuthLayout({
   children,
@@ -6,50 +7,45 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen grid lg:grid-cols-2 bg-[#05070D] text-[#9AA6B8] font-sans selection:bg-[#8AB4F8] selection:text-[#06101F]">
-      {/* Left Side - Visual Banner */}
-      <div className="hidden lg:flex flex-col justify-between bg-[#0A0F18] border-r border-[rgba(148,163,184,0.12)] p-12 relative overflow-hidden">
-        {/* Scattered Background Glow */}
-        <div className="absolute top-1/4 left-1/4 w-48 h-48 rounded-full bg-[rgba(37,99,235,0.2)] blur-3xl pointer-events-none" />
+    <div className="min-h-screen grid lg:grid-cols-2 bg-[#F4F7FE] text-[#6B7280] font-sans selection:bg-[#4361EE] selection:text-white">
+      {/* Left Side - Visual Enterprise Banner */}
+      <div className="hidden lg:flex flex-col justify-between bg-[#111827] border-r border-gray-800 p-12 relative overflow-hidden select-none">
+        {/* Background Ambient Glow */}
+        <div className="absolute top-1/3 left-1/4 w-72 h-72 rounded-full bg-[#4361EE]/10 blur-3xl pointer-events-none" />
 
-        {/* Brand */}
-        <div className="flex items-center gap-3 relative z-10">
-          <div className="w-8 h-8 rounded-[8px] bg-[#8AB4F8] text-[#06101F] flex items-center justify-center font-bold">
-            <Cpu className="w-4 h-4" strokeWidth={1.75} />
-          </div>
-          <span className="font-display font-medium text-lg text-[#F2F5F9] tracking-tight">
-            AI-Recruit<span className="text-[#7DA2F2]">360</span>
-          </span>
+        {/* Official Logo */}
+        <div className="relative z-10">
+          <Logo size="lg" href="/" variant="dark" />
         </div>
 
-        {/* Quote Card */}
-        <div className="space-y-6 max-w-lg relative z-10">
-          <div className="eyebrow flex items-center gap-2">
-            <Quote className="w-4 h-4 text-[#8AB4F8]" strokeWidth={1.75} />
-            <span>Recruiter Review</span>
+        {/* Recruiter Testimonial Quote Card */}
+        <div className="space-y-6 max-w-lg relative z-10 bg-white/5 backdrop-blur-md p-8 rounded-2xl border border-white/10">
+          <div className="eyebrow flex items-center gap-2 text-[#4361EE]">
+            <Quote className="w-4 h-4 text-[#4361EE]" strokeWidth={2} />
+            <span>RECRUITER REVIEW</span>
           </div>
-          <blockquote className="font-display text-2xl font-medium text-[#F2F5F9] leading-relaxed">
-            &ldquo;We cut our engineering screening time by 70% and eliminated unverified claims. The XAI evidence quote transparency is a total game changer.&rdquo;
+          <blockquote className="font-display text-xl font-bold text-white leading-relaxed">
+            &ldquo;We cut our technical screening cycle by 70% while verifying candidate claims. The XAI evidence transparency is a game changer.&rdquo;
           </blockquote>
           <div className="flex items-center gap-4 pt-2">
-            <div className="w-10 h-10 rounded-full bg-[rgba(138,180,248,0.10)] border border-[rgba(148,163,184,0.12)] text-[#8AB4F8] font-mono text-xs flex items-center justify-center font-medium">
-              JD
+            <div className="w-10 h-10 rounded-full bg-[#4361EE]/20 border border-[#4361EE]/30 text-white font-mono text-xs flex items-center justify-center font-bold">
+              VP
             </div>
             <div>
-              <div className="font-display text-sm font-medium text-[#F2F5F9]">Jane Doe</div>
-              <div className="font-mono text-[11px] text-[#66707F]">VP of Talent, TechCorp</div>
+              <div className="font-display text-sm font-bold text-white">Talent Acquisition Lead</div>
+              <div className="font-mono text-[11px] text-gray-400">Enterprise AI Engineering</div>
             </div>
           </div>
         </div>
 
-        <div className="font-mono text-[11px] text-[#66707F] relative z-10">
-          &copy; {new Date().getFullYear()} AI-Recruit360 Inc. All rights reserved.
+        <div className="font-mono text-xs text-gray-500 relative z-10">
+          &copy; {new Date().getFullYear()} AI-Recruit360. All rights reserved.
         </div>
       </div>
 
-      {/* Right Side - Form Card Container */}
-      <div className="flex items-center justify-center p-4 sm:p-8 bg-[#05070D]">
-        <div className="w-full max-w-md space-y-6 card-enterprise">
+      {/* Right Side - Center Form Card Container */}
+      <div className="flex items-center justify-center p-6 sm:p-12 bg-[#F4F7FE]">
+        <div className="w-full max-w-md bg-white rounded-2xl shadow-lg border border-gray-100 p-8 sm:p-10 space-y-6">
           {children}
         </div>
       </div>

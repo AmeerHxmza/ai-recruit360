@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -13,26 +13,27 @@ import {
   Menu,
   LogOut,
   Bell,
-  Cpu,
   ClipboardCheck,
   Video,
   TrendingUp,
   BarChart3,
   ChevronRight,
   ShieldCheck,
-  Search
+  Search,
+  Command
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { Logo } from "@/components/ui/logo";
 
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Jobs", href: "/dashboard/jobs", icon: Briefcase },
   { label: "Candidates", href: "/dashboard/candidates", icon: Users },
   { label: "Assessments", href: "/dashboard/assessments", icon: ClipboardCheck },
-  { label: "Interviews", href: "/dashboard/interviews", icon: Video },
-  { label: "Rankings", href: "/dashboard/rankings", icon: TrendingUp },
+  { label: "AI Interviews", href: "/dashboard/interviews", icon: Video },
+  { label: "Rankings & XAI", href: "/dashboard/rankings", icon: TrendingUp },
   { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
   { label: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
@@ -45,57 +46,69 @@ function SidebarContent({ pathname }: { pathname: string }) {
   };
 
   return (
-    <div className="flex h-full flex-col bg-[#0C121D] text-[#9AA6B8] border-r border-[rgba(148,163,184,0.12)] select-none font-sans overflow-hidden">
-      {/* Brand Header */}
-      <div className="flex items-center gap-3 px-5 py-4 border-b border-[rgba(148,163,184,0.12)] shrink-0 bg-[#0A0F18]">
-        <div className="flex items-center justify-center w-9 h-9 rounded-[8px] bg-[#8AB4F8] text-[#06101F] font-bold shrink-0 shadow-md shadow-[rgba(138,180,248,0.2)]">
-          <Cpu className="w-4 h-4" strokeWidth={1.75} />
-        </div>
-        <div className="flex flex-col min-w-0 justify-center">
-          <div className="flex items-center gap-1.5">
-            <span className="font-display font-medium text-sm text-[#F2F5F9] truncate leading-none">
-              AI-Recruit360
-            </span>
-            <span className="bg-[rgba(138,180,248,0.12)] text-[#7DA2F2] border border-[rgba(138,180,248,0.25)] text-[9px] font-mono font-medium py-0.5 px-1.5 rounded-full shrink-0">
-              PRO
-            </span>
-          </div>
-          <p className="font-mono text-[10px] text-[#66707F] truncate mt-1">
-            Talent Intelligence Platform
-          </p>
-        </div>
+    <div className="flex h-full flex-col bg-[#111827] text-gray-300 border-r border-gray-800 select-none font-sans overflow-hidden">
+      {/* Brand Header with Official Logo */}
+      <div className="flex items-center justify-between px-6 py-5 border-b border-gray-800 shrink-0 bg-[#0F172A]">
+        <Logo size="md" href="/dashboard" variant="dark" />
+        <span className="bg-[#4361EE]/20 text-[#4361EE] border border-[#4361EE]/30 text-[10px] font-mono font-bold py-0.5 px-2 rounded-full shrink-0">
+          PRO
+        </span>
       </div>
 
-      {/* Navigation Links */}
-      <div className="flex-1 space-y-1 px-3 py-5 overflow-y-auto">
-        <p className="eyebrow px-3 pb-2 block">
-          Recruiting Platform
+      {/* Navigation Links with border-l-4 border-[#4361EE] for active route */}
+      <div className="flex-1 space-y-1 py-6 overflow-y-auto">
+        <p className="eyebrow px-6 pb-2 block text-[10px] text-gray-400 tracking-wider">
+          RECRUITING PLATFORM
         </p>
-        {NAV_ITEMS.slice(0, 7).map((item) => {
+        {NAV_ITEMS.slice(0, 5).map((item) => {
           const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
           return (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-[8px] px-3.5 py-2.5 text-xs font-sans transition-all",
+                "flex items-center gap-3.5 px-6 py-3 text-sm font-sans transition-all duration-200",
                 isActive
-                  ? "bg-[rgba(148,163,184,0.14)] text-[#F2F5F9] font-medium"
-                  : "text-[#9AA6B8] hover:bg-[#121B2B] hover:text-[#F2F5F9]"
+                  ? "bg-gray-800 text-white font-semibold border-l-4 border-[#4361EE]"
+                  : "text-gray-400 hover:bg-gray-800/60 hover:text-white"
               )}
             >
-              <item.icon className={cn("w-4 h-4 shrink-0 transition-colors", isActive ? "text-[#8AB4F8]" : "text-[#66707F]")} strokeWidth={1.75} />
+              <item.icon className={cn("w-4 h-4 shrink-0 transition-colors", isActive ? "text-[#4361EE]" : "text-gray-400")} strokeWidth={2} />
               <span>{item.label}</span>
               {isActive && (
-                <ChevronRight className="w-3.5 h-3.5 ml-auto text-[#8AB4F8]" strokeWidth={1.75} />
+                <ChevronRight className="w-4 h-4 ml-auto text-[#4361EE]" strokeWidth={2} />
               )}
             </Link>
           );
         })}
 
-        <div className="pt-5">
-          <p className="eyebrow px-3 pb-2 block">
-            System Settings
+        <div className="pt-6">
+          <p className="eyebrow px-6 pb-2 block text-[10px] text-gray-400 tracking-wider">
+            ANALYTICS &amp; ENGINE
+          </p>
+          {NAV_ITEMS.slice(5, 7).map((item) => {
+            const isActive = pathname === item.href || pathname.startsWith(item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "flex items-center gap-3.5 px-6 py-3 text-sm font-sans transition-all duration-200",
+                  isActive
+                    ? "bg-gray-800 text-white font-semibold border-l-4 border-[#4361EE]"
+                    : "text-gray-400 hover:bg-gray-800/60 hover:text-white"
+                )}
+              >
+                <item.icon className={cn("w-4 h-4 shrink-0", isActive ? "text-[#4361EE]" : "text-gray-400")} strokeWidth={2} />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+
+        <div className="pt-6">
+          <p className="eyebrow px-6 pb-2 block text-[10px] text-gray-400 tracking-wider">
+            SYSTEM SETTINGS
           </p>
           {NAV_ITEMS.slice(7).map((item) => {
             const isActive = pathname === item.href;
@@ -104,44 +117,28 @@ function SidebarContent({ pathname }: { pathname: string }) {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-3 rounded-[8px] px-3.5 py-2.5 text-xs font-sans transition-all",
+                  "flex items-center gap-3.5 px-6 py-3 text-sm font-sans transition-all duration-200",
                   isActive
-                    ? "bg-[rgba(148,163,184,0.14)] text-[#F2F5F9] font-medium"
-                    : "text-[#9AA6B8] hover:bg-[#121B2B] hover:text-[#F2F5F9]"
+                    ? "bg-gray-800 text-white font-semibold border-l-4 border-[#4361EE]"
+                    : "text-gray-400 hover:bg-gray-800/60 hover:text-white"
                 )}
               >
-                <item.icon className={cn("w-4 h-4 shrink-0", isActive ? "text-[#8AB4F8]" : "text-[#66707F]")} strokeWidth={1.75} />
+                <item.icon className={cn("w-4 h-4 shrink-0", isActive ? "text-[#4361EE]" : "text-gray-400")} strokeWidth={2} />
                 <span>{item.label}</span>
               </Link>
             );
           })}
         </div>
-
-        {/* System Health Card */}
-        <div className="pt-5 px-1">
-          <div className="rounded-[8px] bg-[#0B1019] border border-[rgba(148,163,184,0.12)] p-3 space-y-1.5">
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-display text-xs font-medium text-[#F2F5F9] flex items-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5 text-[#22C55E]" strokeWidth={1.75} />
-                AI Screening Core
-              </span>
-              <span className="h-2 w-2 rounded-full bg-[#22C55E] animate-pulse" />
-            </div>
-            <p className="font-mono text-[10px] text-[#66707F]">
-              SOC-2 Engine Active
-            </p>
-          </div>
-        </div>
       </div>
 
-      {/* Sign Out Button - Sign Out of Supabase & redirect */}
-      <div className="border-t border-[rgba(148,163,184,0.12)] p-4 pb-8 shrink-0 bg-[#0A0F18]">
+      {/* Sign Out Footer */}
+      <div className="border-t border-gray-800 p-4 shrink-0 bg-[#0F172A]">
         <button
           onClick={handleSignOut}
-          className="flex items-center gap-3 text-[#9AA6B8] hover:text-[#EF4444] text-xs font-sans px-3 py-2 rounded-[8px] transition-colors w-full hover:bg-[rgba(239,68,68,0.08)] cursor-pointer text-left"
+          className="flex items-center gap-3 text-gray-400 hover:text-red-400 text-xs font-sans px-4 py-2.5 rounded-lg transition-colors w-full hover:bg-red-500/10 cursor-pointer text-left font-medium"
         >
-          <LogOut className="w-4 h-4 shrink-0 text-[#66707F]" strokeWidth={1.75} />
-          <span className="font-medium">Sign Out</span>
+          <LogOut className="w-4 h-4 shrink-0 text-gray-400" strokeWidth={2} />
+          <span>Sign Out Session</span>
         </button>
       </div>
     </div>
@@ -159,60 +156,62 @@ export function DashboardLayoutClient({
   const segments = pathname.split("/").filter(Boolean);
   const currentSection =
     segments.length === 1
-      ? "Executive Control Center"
+      ? "Recruiter Control Center"
       : segments[segments.length - 1].charAt(0).toUpperCase() +
         segments[segments.length - 1].slice(1);
 
   const initials = userProfile.companyName
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
+    ? userProfile.companyName
+        .split(" ")
+        .map((w) => w[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase()
+    : "REC";
 
   return (
-    <div className="min-h-screen bg-[#05070D] text-[#9AA6B8] font-sans selection:bg-[#8AB4F8] selection:text-[#06101F]">
-      {/* Mobile Sidebar */}
+    <div className="min-h-screen bg-[#F3F4F6] text-[#6B7280] font-sans selection:bg-[#4361EE] selection:text-white">
+      {/* Mobile Drawer */}
       <Sheet>
         <SheetTrigger asChild>
           <Button
             variant="outline"
             size="icon"
-            className="fixed left-4 top-3.5 z-50 border-[rgba(148,163,184,0.12)] bg-[#0C121D] text-[#F2F5F9] lg:hidden h-9 w-9"
+            className="fixed left-4 top-3.5 z-50 border-gray-200 bg-white text-[#1F2937] lg:hidden h-9 w-9 shadow-sm"
           >
-            <Menu className="w-4 h-4" strokeWidth={1.75} />
+            <Menu className="w-4 h-4" strokeWidth={2} />
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="w-64 border-r-0 p-0 bg-[#0C121D]">
+        <SheetContent side="left" className="w-64 border-r-0 p-0 bg-[#111827]">
           <SidebarContent pathname={pathname} />
         </SheetContent>
       </Sheet>
 
-      {/* Desktop Sidebar */}
+      {/* Desktop Fixed Left Sidebar (w-64 bg-[#111827] text-white) */}
       <div className="fixed inset-y-0 left-0 z-30 hidden w-64 lg:block">
         <SidebarContent pathname={pathname} />
       </div>
 
-      {/* Main Content Area */}
+      {/* Main Workspace Area (Canvas: bg-[#F3F4F6]) */}
       <div className="lg:pl-64 flex flex-col min-h-screen">
-        {/* Top Header */}
-        <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-[rgba(148,163,184,0.12)] bg-[rgba(5,7,13,0.8)] backdrop-blur-md px-6">
+        {/* Top Header: Clean White Bar (h-16 bg-white shadow-sm px-6 flex items-center justify-between) */}
+        <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-gray-200 bg-white shadow-sm px-6">
           <div className="flex items-center gap-3 pl-10 lg:pl-0">
-            <h1 className="font-display text-lg font-medium text-[#F2F5F9]">
+            <h1 className="font-display text-base font-bold text-[#1F2937]">
               {currentSection}
             </h1>
-            <span className="text-[#66707F]">/</span>
-            <span className="font-mono text-xs text-[#7DA2F2]">Talent Command Center</span>
+            <span className="text-gray-300">/</span>
+            <span className="font-mono text-xs text-[#4361EE] font-medium">Talent Workspace</span>
           </div>
 
           <div className="flex items-center gap-4">
-            {/* Search Input */}
-            <div className="relative hidden md:block w-64">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-[#66707F]" strokeWidth={1.75} />
+            {/* Search Input (rounded-lg bg-gray-100 border-none) */}
+            <div className="relative hidden md:block w-72">
+              <Search className="absolute left-3.5 top-2.5 h-4 w-4 text-gray-400" strokeWidth={2} />
               <input
                 type="text"
-                placeholder="Search requisitions, candidates..."
-                className="input-enterprise w-full h-9 pl-9 pr-4 text-xs font-sans placeholder:text-[#66707F]"
+                placeholder="Search candidates, skills, jobs..."
+                className="w-full h-9 pl-9 pr-4 text-xs font-sans rounded-lg bg-gray-100 border-none text-[#1F2937] placeholder:text-gray-400 focus:ring-2 focus:ring-[#4361EE] focus:bg-white transition-all"
               />
             </div>
 
@@ -220,28 +219,32 @@ export function DashboardLayoutClient({
             <Button
               variant="ghost"
               size="icon"
-              className="relative text-[#9AA6B8] hover:bg-[#121B2B] hover:text-[#F2F5F9] h-9 w-9 rounded-[8px]"
+              className="relative text-gray-500 hover:bg-gray-100 hover:text-[#1F2937] h-9 w-9 rounded-lg border border-gray-200"
             >
-              <Bell className="w-4 h-4" strokeWidth={1.75} />
-              <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#8AB4F8]" />
+              <Bell className="w-4 h-4" strokeWidth={2} />
+              <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#4361EE]" />
             </Button>
 
-            {/* Profile */}
-            <div className="flex items-center gap-3 border-l border-[rgba(148,163,184,0.12)] pl-4 ml-1">
+            {/* Recruiter Profile */}
+            <div className="flex items-center gap-3 border-l border-gray-200 pl-4 ml-1">
               <div className="text-right hidden sm:block">
-                <div className="font-display text-xs font-medium text-[#F2F5F9] leading-tight truncate max-w-[140px]">{userProfile.fullName}</div>
-                <div className="font-mono text-[10px] text-[#7DA2F2] truncate max-w-[140px]">{userProfile.companyName}</div>
+                <div className="font-display text-xs font-bold text-[#1F2937] leading-tight truncate max-w-[140px]">
+                  {userProfile.fullName || "Recruiter Manager"}
+                </div>
+                <div className="font-mono text-[10px] text-[#4361EE] truncate max-w-[140px]">
+                  {userProfile.companyName || "TechCorp Intelligence"}
+                </div>
               </div>
-              <Avatar className="h-9 w-9 border border-[rgba(148,163,184,0.12)]">
-                <AvatarFallback className="bg-[#121B2B] text-[#8AB4F8] text-xs font-mono font-medium">
-                  {initials || "REC"}
+              <Avatar className="h-9 w-9 border border-gray-200 shadow-sm">
+                <AvatarFallback className="bg-blue-50 text-[#4361EE] text-xs font-mono font-bold">
+                  {initials}
                 </AvatarFallback>
               </Avatar>
             </div>
           </div>
         </header>
 
-        {/* Animated Page Content */}
+        {/* Canvas Content (bg-[#F3F4F6]) */}
         <main className="flex-1 p-6 lg:p-8">
           <AnimatePresence mode="wait">
             <motion.div
@@ -249,7 +252,7 @@ export function DashboardLayoutClient({
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
+              transition={{ duration: 0.2, ease: "easeInOut" }}
             >
               {children}
             </motion.div>

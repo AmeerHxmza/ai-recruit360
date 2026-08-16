@@ -1,5 +1,5 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Users, Briefcase, CalendarCheck, CheckCircle2, ChevronRight, ShieldCheck, Sparkles, Plus, TrendingUp, Cpu, Activity, Award, ArrowRight } from "lucide-react";
+import { Users, Briefcase, CalendarCheck, ChevronRight, Plus, Sparkles, Filter, Search, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 
@@ -40,151 +40,121 @@ export default async function DashboardPage() {
 
   const totalCandidates = candidates.length;
   const completedInterviews = candidates.filter((c) => c.status === "completed").length;
-  const verifiedMatches = candidates.filter((c) => (c.ai_score ?? 0) >= 80).length;
-
-  let totalScore = 0;
-  candidates.forEach((c) => {
-    totalScore += c.ai_score || 0;
-  });
-  const avgScore = totalCandidates > 0 ? Math.round(totalScore / totalCandidates) : 0;
 
   const getStatusBadge = (status: string, aiScore: number) => {
-    if (status === "completed" && aiScore >= 80) {
+    if (status === "completed" || aiScore >= 80) {
       return (
-        <span className="badge-success">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E] animate-pulse" />
-          Verified Match
+        <span className="rounded-full px-3 py-1 text-xs font-medium bg-emerald-50 text-[#10B981] border border-emerald-100 inline-flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]" />
+          Passed
         </span>
       );
     }
-    if (status === "completed" && aiScore >= 60) {
+    if (status === "rejected" || aiScore < 40) {
       return (
-        <span className="chip-enterprise">
-          Strong Candidate
+        <span className="rounded-full px-3 py-1 text-xs font-medium bg-rose-50 text-[#EF4444] border border-rose-100 inline-flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#EF4444]" />
+          Rejected
         </span>
       );
     }
-    if (status === "completed" && aiScore < 40) {
-      return (
-        <span className="badge-danger">
-          Risk Detected
-        </span>
-      );
-    }
-    if (status === "rejected") {
-      return <span className="badge-danger">Rejected</span>;
-    }
-    return <span className="badge-warning">Interviewing</span>;
+    return (
+      <span className="rounded-full px-3 py-1 text-xs font-medium bg-amber-50 text-[#F59E0B] border border-amber-100 inline-flex items-center gap-1.5">
+        <span className="w-1.5 h-1.5 rounded-full bg-[#F59E0B]" />
+        Interviewing
+      </span>
+    );
   };
 
   return (
     <div className="space-y-8 pb-12 font-sans">
       {/* Top Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[rgba(148,163,184,0.12)] pb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-200 pb-6">
         <div>
-          <div className="eyebrow flex items-center gap-2 mb-1">
-            <Sparkles className="w-3.5 h-3.5 text-[#8AB4F8]" strokeWidth={1.75} />
-            <span>Executive Command Center</span>
+          <div className="eyebrow flex items-center gap-2 mb-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-[#4361EE]" strokeWidth={2} />
+            <span>Recruiter Intelligence Control Center</span>
           </div>
-          <h1 className="font-display text-3xl font-medium text-[#F2F5F9]">
-            Hiring Intelligence Dashboard
+          <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-[#1F2937] tracking-tight">
+            Candidate Pipeline &amp; Evaluations
           </h1>
-          <p className="font-sans text-xs text-[#9AA6B8] mt-1">
-            Real-time candidate evaluation, multi-axis technical scoring, and behavioral audit logs.
+          <p className="font-sans text-xs text-[#6B7280] mt-1 max-w-2xl">
+            Real-time candidate evaluation telemetry, multi-axis technical scoring, and AI proctoring logs.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <Link href="/dashboard/jobs">
-            <button className="btn-primary text-xs">
-              <Plus className="w-4 h-4" strokeWidth={1.75} />
+            <button className="bg-[#4361EE] hover:bg-[#3A56D4] text-white text-xs font-bold py-2.5 px-5 rounded-lg shadow-sm flex items-center gap-2 transition-all active:scale-95">
+              <Plus className="w-4 h-4" strokeWidth={2} />
               <span>Create New Job</span>
             </button>
           </Link>
         </div>
       </div>
 
-      {/* 5 Enterprise KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        {/* Card 1 */}
-        <div className="card-enterprise space-y-3">
+      {/* Top KPI Cards (3 Cards Row: Active Jobs, Total Candidates, Interviews Completed) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Card 1: Active Jobs */}
+        <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm space-y-3">
           <div className="flex items-center justify-between">
-            <span className="eyebrow text-[11px]">Active Jobs</span>
-            <div className="w-8 h-8 rounded-[8px] bg-[rgba(138,180,248,0.10)] text-[#8AB4F8] flex items-center justify-center">
-              <Briefcase className="w-4 h-4" strokeWidth={1.75} />
+            <span className="font-mono text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Active Jobs</span>
+            <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#4361EE] flex items-center justify-center">
+              <Briefcase className="w-5 h-5" strokeWidth={2} />
             </div>
           </div>
-          <div className="font-mono text-3xl font-medium text-[#F2F5F9]">{activeJobsCount || 0}</div>
-          <div className="font-mono text-[11px] text-[#22C55E]">Open requisitions</div>
+          <div className="font-mono text-4xl font-extrabold text-[#1F2937]">{activeJobsCount || 0}</div>
+          <div className="flex items-center gap-1 font-mono text-xs text-[#10B981] font-medium">
+            <ArrowUpRight className="w-3.5 h-3.5" />
+            <span>Open requisitions</span>
+          </div>
         </div>
 
-        {/* Card 2 */}
-        <div className="card-enterprise space-y-3">
+        {/* Card 2: Total Candidates */}
+        <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm space-y-3">
           <div className="flex items-center justify-between">
-            <span className="eyebrow text-[11px]">Applicants</span>
-            <div className="w-8 h-8 rounded-[8px] bg-[rgba(138,180,248,0.10)] text-[#8AB4F8] flex items-center justify-center">
-              <Users className="w-4 h-4" strokeWidth={1.75} />
+            <span className="font-mono text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Total Candidates</span>
+            <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#4361EE] flex items-center justify-center">
+              <Users className="w-5 h-5" strokeWidth={2} />
             </div>
           </div>
-          <div className="font-mono text-3xl font-medium text-[#F2F5F9]">{totalCandidates}</div>
-          <div className="font-mono text-[11px] text-[#66707F]">Total submissions</div>
+          <div className="font-mono text-4xl font-extrabold text-[#1F2937]">{totalCandidates}</div>
+          <div className="flex items-center gap-1 font-mono text-xs text-[#10B981] font-medium">
+            <ArrowUpRight className="w-3.5 h-3.5" />
+            <span>Submissions received</span>
+          </div>
         </div>
 
-        {/* Card 3 */}
-        <div className="card-enterprise space-y-3">
+        {/* Card 3: Interviews Completed */}
+        <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm space-y-3">
           <div className="flex items-center justify-between">
-            <span className="eyebrow text-[11px]">Interviews</span>
-            <div className="w-8 h-8 rounded-[8px] bg-[rgba(138,180,248,0.10)] text-[#8AB4F8] flex items-center justify-center">
-              <CalendarCheck className="w-4 h-4" strokeWidth={1.75} />
+            <span className="font-mono text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Interviews Completed</span>
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-[#10B981] flex items-center justify-center">
+              <CalendarCheck className="w-5 h-5" strokeWidth={2} />
             </div>
           </div>
-          <div className="font-mono text-3xl font-medium text-[#F2F5F9]">{completedInterviews}</div>
-          <div className="font-mono text-[11px] text-[#66707F]">AI sessions done</div>
-        </div>
-
-        {/* Card 4 */}
-        <div className="card-enterprise space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="eyebrow text-[11px]">Verified Match</span>
-            <div className="w-8 h-8 rounded-[8px] bg-[rgba(34,197,94,0.12)] text-[#22C55E] flex items-center justify-center">
-              <CheckCircle2 className="w-4 h-4" strokeWidth={1.75} />
-            </div>
+          <div className="font-mono text-4xl font-extrabold text-[#1F2937]">{completedInterviews}</div>
+          <div className="flex items-center gap-1 font-mono text-xs text-[#6B7280] font-medium">
+            <span>AI voice &amp; video proctored</span>
           </div>
-          <div className="font-mono text-3xl font-medium text-[#F2F5F9]">{verifiedMatches}</div>
-          <div className="font-mono text-[11px] text-[#22C55E]">Score $\ge$ 80%</div>
-        </div>
-
-        {/* Card 5 */}
-        <div className="card-enterprise space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="eyebrow text-[11px]">Quality Index</span>
-            <div className="w-8 h-8 rounded-[8px] bg-[rgba(138,180,248,0.10)] text-[#8AB4F8] flex items-center justify-center">
-              <Award className="w-4 h-4" strokeWidth={1.75} />
-            </div>
-          </div>
-          <div className="font-mono text-3xl font-medium text-[#8AB4F8]">{avgScore}%</div>
-          <div className="font-mono text-[11px] text-[#66707F]">Average overall score</div>
         </div>
       </div>
 
-      {/* Candidate Leaderboard DataTable */}
-      <div className="card-enterprise p-0 overflow-hidden">
-        <div className="p-6 border-b border-[rgba(148,163,184,0.12)] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Candidate DataTable Component (Pure white card rounded-xl, spacious py-4 rows, sorted by ai_score desc) */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-4">
           <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-[#8AB4F8] animate-pulse" />
-              <h2 className="font-display text-lg font-medium text-[#F2F5F9]">
-                Candidate Leaderboard &amp; AI Scores
-              </h2>
-            </div>
-            <p className="font-sans text-xs text-[#9AA6B8]">
-              Ranked dynamically by multi-axis technical, communication, and honesty scores.
+            <h2 className="font-display text-lg font-bold text-[#1F2937]">
+              Evaluated Candidate Leaderboard
+            </h2>
+            <p className="font-sans text-xs text-[#6B7280]">
+              Candidates sorted by AI score descending with multi-axis technical breakdown.
             </p>
           </div>
           <Link href="/dashboard/candidates">
-            <button className="btn-secondary text-xs py-1.5 px-3">
+            <button className="btn-secondary text-xs py-2 px-4 rounded-lg">
               <span>View All Candidates</span>
-              <ChevronRight className="w-3.5 h-3.5" strokeWidth={1.75} />
+              <ChevronRight className="w-3.5 h-3.5" strokeWidth={2} />
             </button>
           </Link>
         </div>
@@ -192,116 +162,115 @@ export default async function DashboardPage() {
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="border-b border-[rgba(148,163,184,0.12)] bg-[#0A0F18]">
-                <TableHead className="w-16 text-center eyebrow text-[11px]">Rank</TableHead>
-                <TableHead className="eyebrow text-[11px]">Candidate Name</TableHead>
-                <TableHead className="eyebrow text-[11px]">Requisition</TableHead>
-                <TableHead className="eyebrow text-[11px]">Technical</TableHead>
-                <TableHead className="eyebrow text-[11px]">Communication</TableHead>
-                <TableHead className="eyebrow text-[11px]">Honesty</TableHead>
-                <TableHead className="eyebrow text-[11px]">Overall Score</TableHead>
-                <TableHead className="eyebrow text-[11px]">Status</TableHead>
-                <TableHead className="text-right eyebrow text-[11px]">Action</TableHead>
+              <TableRow className="border-b border-gray-200 bg-gray-50/50">
+                <TableHead className="w-16 text-center font-mono text-xs uppercase text-[#6B7280] font-semibold py-3">Rank</TableHead>
+                <TableHead className="font-mono text-xs uppercase text-[#6B7280] font-semibold py-3">Candidate Name</TableHead>
+                <TableHead className="font-mono text-xs uppercase text-[#6B7280] font-semibold py-3">Requisition</TableHead>
+                <TableHead className="font-mono text-xs uppercase text-[#6B7280] font-semibold py-3">Technical</TableHead>
+                <TableHead className="font-mono text-xs uppercase text-[#6B7280] font-semibold py-3">Communication</TableHead>
+                <TableHead className="font-mono text-xs uppercase text-[#6B7280] font-semibold py-3">Honesty</TableHead>
+                <TableHead className="font-mono text-xs uppercase text-[#6B7280] font-semibold py-3">AI Score</TableHead>
+                <TableHead className="font-mono text-xs uppercase text-[#6B7280] font-semibold py-3">Status</TableHead>
+                <TableHead className="text-right font-mono text-xs uppercase text-[#6B7280] font-semibold py-3">Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {candidates.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center py-14 text-[#66707F] text-xs font-mono">
-                    No candidates evaluated yet. Candidates will appear here as soon as they complete their interview.
+                  <TableCell colSpan={9} className="text-center py-16 text-[#6B7280] text-xs font-mono">
+                    No candidates evaluated yet. Candidates will stream here live as soon as they complete their interview.
                   </TableCell>
                 </TableRow>
               ) : (
                 candidates.map((candidate: any, index: number) => {
                   const rank = index + 1;
-                  const jobTitle = candidate.jobs?.title || "Engineering Position";
+                  const jobTitle = candidate.jobs?.title || "Engineering Requisition";
                   const aiScore = candidate.ai_score || 0;
 
                   return (
                     <TableRow
                       key={candidate.id}
-                      className="border-b border-[rgba(148,163,184,0.12)] hover:bg-[#121B2B] transition-colors"
+                      className="border-b border-gray-100 hover:bg-gray-50/80 transition-colors"
                     >
                       {/* Rank Badge */}
-                      <TableCell className="text-center">
-                        <span className="font-mono text-xs font-medium text-[#7DA2F2]">
+                      <TableCell className="text-center py-4">
+                        <span className="font-mono text-xs font-bold text-[#4361EE]">
                           #{rank < 10 ? `0${rank}` : rank}
                         </span>
                       </TableCell>
 
                       {/* Candidate Name */}
-                      <TableCell>
+                      <TableCell className="py-4">
                         <div className="flex flex-col">
                           <Link
                             href={`/dashboard/candidates/${candidate.id}`}
-                            className="font-display font-medium text-sm text-[#F2F5F9] hover:text-[#8AB4F8] transition-colors"
+                            className="font-display font-bold text-sm text-[#1F2937] hover:text-[#4361EE] transition-colors"
                           >
                             {candidate.name}
                           </Link>
-                          <span className="font-mono text-[11px] text-[#66707F]">{candidate.email}</span>
+                          <span className="font-mono text-[11px] text-[#6B7280]">{candidate.email}</span>
                         </div>
                       </TableCell>
 
-                      {/* Job Role */}
-                      <TableCell>
-                        <span className="font-sans text-xs text-[#9AA6B8]">
+                      {/* Job Title */}
+                      <TableCell className="py-4">
+                        <span className="font-sans text-xs text-[#1F2937] font-medium">
                           {jobTitle}
                         </span>
                       </TableCell>
 
                       {/* Technical Score */}
-                      <TableCell>
-                        <span className="font-mono text-xs font-medium text-[#F2F5F9]">
+                      <TableCell className="py-4">
+                        <span className="font-mono text-xs font-semibold text-[#1F2937]">
                           {candidate.technical_score || aiScore || 0}%
                         </span>
                       </TableCell>
 
                       {/* Communication Score */}
-                      <TableCell>
-                        <span className="font-mono text-xs font-medium text-[#F2F5F9]">
+                      <TableCell className="py-4">
+                        <span className="font-mono text-xs font-semibold text-[#1F2937]">
                           {candidate.communication_score || aiScore || 0}%
                         </span>
                       </TableCell>
 
                       {/* Honesty Score */}
-                      <TableCell>
-                        <span className="font-mono text-xs font-medium text-[#F2F5F9]">
-                          {candidate.honesty_score || 85}%
+                      <TableCell className="py-4">
+                        <span className="font-mono text-xs font-semibold text-[#10B981]">
+                          {candidate.honesty_score || 88}%
                         </span>
                       </TableCell>
 
-                      {/* Overall AI Score Progress Bar */}
-                      <TableCell>
-                        <div className="flex items-center gap-3 max-w-[140px]">
-                          <div className="flex-1 h-1.5 bg-[#0B1019] rounded-full overflow-hidden">
+                      {/* Overall AI Score */}
+                      <TableCell className="py-4">
+                        <div className="flex items-center gap-3 max-w-[130px]">
+                          <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
                             <div
                               className={`h-full rounded-full transition-all duration-500 ${
                                 aiScore >= 80
-                                  ? "bg-[#22C55E]"
+                                  ? "bg-[#10B981]"
                                   : aiScore >= 60
-                                  ? "bg-[#8AB4F8]"
+                                  ? "bg-[#4361EE]"
                                   : "bg-[#EF4444]"
                               }`}
                               style={{ width: `${aiScore}%` }}
                             />
                           </div>
-                          <span className="font-mono text-xs font-medium text-[#8AB4F8] min-w-[32px]">
+                          <span className="font-mono text-xs font-bold text-[#1F2937] w-8 text-right">
                             {aiScore}%
                           </span>
                         </div>
                       </TableCell>
 
-                      {/* Status */}
-                      <TableCell>
+                      {/* Status Pill Badge */}
+                      <TableCell className="py-4">
                         {getStatusBadge(candidate.status, aiScore)}
                       </TableCell>
 
-                      {/* Actions */}
-                      <TableCell className="text-right">
+                      {/* Action Button */}
+                      <TableCell className="text-right py-4">
                         <Link href={`/dashboard/candidates/${candidate.id}`}>
-                          <button className="btn-secondary text-[11px] py-1 px-2.5">
-                            <span>XAI Report</span>
-                            <ChevronRight className="w-3 h-3" strokeWidth={1.75} />
+                          <button className="px-3.5 py-1.5 rounded-lg bg-blue-50 text-[#4361EE] hover:bg-[#4361EE] hover:text-white border border-blue-100 text-xs font-semibold transition-all active:scale-95">
+                            Details
                           </button>
                         </Link>
                       </TableCell>

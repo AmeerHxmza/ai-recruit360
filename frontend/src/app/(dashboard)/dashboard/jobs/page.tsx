@@ -5,8 +5,6 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 const supabase = createClient();
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FeedbackToast } from "@/components/ui/feedback-toast";
 import {
@@ -29,7 +27,8 @@ import {
   Share2,
   Copy,
   Loader2,
-  Sparkles
+  Sparkles,
+  Briefcase
 } from "lucide-react";
 
 type Job = {
@@ -107,61 +106,62 @@ export default function JobsPage() {
       {toast ? <FeedbackToast message={toast.message} tone={toast.tone} onClose={() => setToast(null)} /> : null}
       
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-[rgba(148,163,184,0.12)] pb-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-gray-200 pb-6">
         <div>
-          <div className="eyebrow flex items-center gap-2 mb-1">
-            <Sparkles className="w-3.5 h-3.5 text-[#8AB4F8]" strokeWidth={1.75} />
+          <div className="eyebrow flex items-center gap-2 mb-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-[#4361EE]" strokeWidth={2} />
             <span>Requisition Management</span>
           </div>
-          <h2 className="font-display text-3xl font-medium text-[#F2F5F9]">Job Postings</h2>
-          <p className="font-sans text-xs text-[#9AA6B8] mt-1">
-            Create, manage, and share active AI-screened job openings.
+          <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-[#1F2937] tracking-tight">Job Requisitions</h2>
+          <p className="font-sans text-xs text-[#6B7280] mt-1">
+            Create, manage, and share active AI-screened job openings with applicants.
           </p>
         </div>
+
         <CreateJobDialog onDone={(message, tone) => setToast({ message, tone })} onCreated={loadJobs} />
       </div>
 
       {/* Filters */}
-      <div className="card-enterprise p-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col gap-3 sm:flex-row sm:items-center justify-between">
         <div className="relative w-full sm:max-w-sm">
-          <Search className="absolute left-3.5 top-3 h-4 w-4 text-[#66707F]" strokeWidth={1.75} />
+          <Search className="absolute left-3.5 top-3 h-4 w-4 text-gray-400" strokeWidth={2} />
           <input
             type="search"
             placeholder="Search job title or department..."
-            className="input-enterprise w-full pl-10 h-10 text-xs"
+            className="w-full h-10 pl-10 pr-4 text-xs font-sans rounded-lg border border-gray-200 text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#4361EE]"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
           />
         </div>
         <button
-          className="btn-secondary text-xs font-mono py-2 px-4"
+          className="bg-gray-100 hover:bg-gray-200 text-[#1F2937] text-xs font-mono font-semibold py-2 px-4 rounded-lg transition-all"
           onClick={() => {
             setStatusFilter((prev) => (prev === "all" ? "active" : prev === "active" ? "closed" : "all"));
           }}
         >
-          Status Filter: {statusFilter}
+          Status Filter: <span className="uppercase text-[#4361EE]">{statusFilter}</span>
         </button>
       </div>
 
-      {/* Jobs List */}
+      {/* Jobs List Grid */}
       <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
         {isLoading
           ? Array.from({ length: 3 }).map((_, idx) => (
-              <div key={idx} className="card-enterprise p-6 space-y-4">
-                <Skeleton className="h-5 w-2/3 bg-[#0B1019]" />
-                <Skeleton className="h-4 w-1/3 bg-[#0B1019]" />
-                <Skeleton className="h-12 w-full bg-[#0B1019]" />
+              <div key={idx} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-4">
+                <Skeleton className="h-5 w-2/3 bg-gray-100" />
+                <Skeleton className="h-4 w-1/3 bg-gray-100" />
+                <Skeleton className="h-12 w-full bg-gray-100" />
               </div>
             ))
           : filteredJobs.map((job) => (
-          <div key={job.id} className="card-enterprise p-6 flex flex-col justify-between space-y-5">
+          <div key={job.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col justify-between space-y-5 hover:shadow-md transition-all">
             <div className="space-y-3">
               <div className="flex items-start justify-between">
                 <div>
                   <span className="eyebrow block mb-1">
                     {job.department}
                   </span>
-                  <h3 className="font-display text-xl font-medium text-[#F2F5F9]">{job.title}</h3>
+                  <h3 className="font-display text-lg font-bold text-[#1F2937]">{job.title}</h3>
                 </div>
                 <div className="flex items-center gap-1">
                   <ShareJobDialog jobTitle={job.title} jobId={job.id} onDone={(message, tone) => setToast({ message, tone })} />
@@ -180,24 +180,24 @@ export default function JobsPage() {
                 </div>
               </div>
 
-              <p className="font-sans text-xs text-[#9AA6B8] line-clamp-3 leading-relaxed">
+              <p className="font-sans text-xs text-[#6B7280] line-clamp-3 leading-relaxed">
                 {job.description || "Active engineering position with automated PyMuPDF resume screening and 10-question AI interview generation."}
               </p>
             </div>
 
-            <div className="space-y-4 pt-3 border-t border-[rgba(148,163,184,0.12)]">
+            <div className="space-y-4 pt-3 border-t border-gray-100">
               <div className="flex items-center justify-between text-xs font-sans">
-                <span className="flex items-center gap-1.5 text-[#9AA6B8]">
-                  <Users className="w-4 h-4 text-[#8AB4F8]" strokeWidth={1.75} />
+                <span className="flex items-center gap-1.5 text-[#6B7280] font-medium">
+                  <Users className="w-4 h-4 text-[#4361EE]" strokeWidth={2} />
                   {job.candidates} Candidate{job.candidates !== 1 ? "s" : ""} Applied
                 </span>
-                <span className={job.status === "Active" ? "badge-success" : "badge-warning"}>
+                <span className={job.status === "Active" ? "rounded-full px-3 py-1 text-xs font-medium bg-emerald-50 text-[#10B981] border border-emerald-100" : "rounded-full px-3 py-1 text-xs font-medium bg-rose-50 text-[#EF4444] border border-rose-100"}>
                   {job.status}
                 </span>
               </div>
 
               <button
-                className="btn-primary w-full justify-center text-xs"
+                className="bg-blue-50 hover:bg-[#4361EE] hover:text-white text-[#4361EE] border border-blue-100 text-xs font-bold py-2.5 px-4 rounded-lg w-full justify-center transition-all active:scale-95"
                 onClick={() => router.push(`/dashboard/candidates?job=${encodeURIComponent(job.id)}`)}
               >
                 View Requisition Candidates
@@ -207,9 +207,9 @@ export default function JobsPage() {
         ))}
 
         {!isLoading && filteredJobs.length === 0 ? (
-          <div className="card-enterprise col-span-full p-12 text-center space-y-2">
-            <h3 className="font-display text-lg font-medium text-[#F2F5F9]">No job postings found</h3>
-            <p className="font-sans text-xs text-[#9AA6B8]">Create your first job posting to start evaluating applicants.</p>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 col-span-full p-12 text-center space-y-2">
+            <h3 className="font-display text-lg font-bold text-[#1F2937]">No job postings found</h3>
+            <p className="font-sans text-xs text-[#6B7280]">Create your first job posting to start evaluating applicants.</p>
           </div>
         ) : null}
       </div>
@@ -283,33 +283,33 @@ function CreateJobDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <button className="btn-primary text-xs">
-          <Plus className="w-4 h-4" strokeWidth={1.75} /> Create New Job Posting
+        <button className="bg-[#4361EE] hover:bg-[#3A56D4] text-white text-xs font-bold py-2.5 px-5 rounded-lg shadow-sm flex items-center gap-2 transition-all active:scale-95">
+          <Plus className="w-4 h-4" strokeWidth={2} /> Create Job Requisition
         </button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[440px] bg-[#0C121D] border-[rgba(148,163,184,0.12)] text-[#F2F5F9] font-sans">
+      <DialogContent className="sm:max-w-[440px] bg-white border-gray-200 text-[#1F2937] font-sans rounded-2xl shadow-xl p-6">
         <DialogHeader>
-          <DialogTitle className="font-display text-lg font-medium text-[#F2F5F9]">Create Job Requisition</DialogTitle>
-          <DialogDescription className="font-sans text-xs text-[#9AA6B8]">
+          <DialogTitle className="font-display text-lg font-bold text-[#1F2937]">Create Job Requisition</DialogTitle>
+          <DialogDescription className="font-sans text-xs text-[#6B7280]">
             Set position requirements for candidate resume screening.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-3">
-          <div className="grid gap-2">
-            <Label htmlFor="title" className="eyebrow">Job Title *</Label>
-            <input id="title" placeholder="e.g. Senior Full-Stack Engineer" className="input-enterprise h-10" value={title} onChange={(e) => setTitle(e.target.value)} />
+          <div className="grid gap-1.5">
+            <label htmlFor="title" className="font-mono text-xs uppercase font-bold text-[#1F2937]">Job Title *</label>
+            <input id="title" placeholder="e.g. Senior Full-Stack Engineer" className="w-full h-10 px-3.5 text-xs font-sans rounded-lg border border-gray-200 text-[#1F2937] focus:ring-2 focus:ring-[#4361EE] focus:outline-none" value={title} onChange={(e) => setTitle(e.target.value)} />
           </div>
-          <div className="grid gap-2">
-            <Label htmlFor="department" className="eyebrow">Department *</Label>
-            <input id="department" placeholder="e.g. Engineering" className="input-enterprise h-10" value={department} onChange={(e) => setDepartment(e.target.value)} />
+          <div className="grid gap-1.5">
+            <label htmlFor="department" className="font-mono text-xs uppercase font-bold text-[#1F2937]">Department *</label>
+            <input id="department" placeholder="e.g. Engineering" className="w-full h-10 px-3.5 text-xs font-sans rounded-lg border border-gray-200 text-[#1F2937] focus:ring-2 focus:ring-[#4361EE] focus:outline-none" value={department} onChange={(e) => setDepartment(e.target.value)} />
           </div>
-          <div className="grid gap-2">
-            <Label htmlFor="desc" className="eyebrow">Description</Label>
-            <input id="desc" placeholder="Role description & required skills" className="input-enterprise h-10" value={description} onChange={(e) => setDescription(e.target.value)} />
+          <div className="grid gap-1.5">
+            <label htmlFor="desc" className="font-mono text-xs uppercase font-bold text-[#1F2937]">Description</label>
+            <input id="desc" placeholder="Role description & required skills" className="w-full h-10 px-3.5 text-xs font-sans rounded-lg border border-gray-200 text-[#1F2937] focus:ring-2 focus:ring-[#4361EE] focus:outline-none" value={description} onChange={(e) => setDescription(e.target.value)} />
           </div>
         </div>
         <DialogFooter>
-          <button className="btn-primary text-xs w-full justify-center h-10" onClick={handleCreate} disabled={isSubmitting}>
+          <button className="bg-[#4361EE] hover:bg-[#3A56D4] text-white font-bold text-xs w-full justify-center h-10 rounded-lg flex items-center gap-2" onClick={handleCreate} disabled={isSubmitting}>
             {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             Publish Requisition
           </button>
@@ -341,21 +341,21 @@ function ShareJobDialog({
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-8 w-8 text-[#8AB4F8] hover:bg-[#121B2B]" title="Share Job">
-          <Share2 className="w-4 h-4" strokeWidth={1.75} />
+        <Button variant="ghost" size="icon" className="h-8 w-8 text-[#4361EE] hover:bg-blue-50 rounded-lg" title="Share Job">
+          <Share2 className="w-4 h-4" strokeWidth={2} />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md bg-[#0C121D] border-[rgba(148,163,184,0.12)] text-[#F2F5F9] font-sans">
+      <DialogContent className="sm:max-w-md bg-white border-gray-200 text-[#1F2937] font-sans rounded-2xl shadow-xl p-6">
         <DialogHeader>
-          <DialogTitle className="font-display text-lg font-medium text-[#F2F5F9]">Share Candidate Portal</DialogTitle>
-          <DialogDescription className="font-sans text-xs text-[#9AA6B8]">
+          <DialogTitle className="font-display text-lg font-bold text-[#1F2937]">Share Candidate Portal</DialogTitle>
+          <DialogDescription className="font-sans text-xs text-[#6B7280]">
             Share this link with applicants for {jobTitle}.
           </DialogDescription>
         </DialogHeader>
         <div className="flex items-center space-x-2 mt-4">
-          <input id="link" defaultValue={jobLink} readOnly className="input-enterprise flex-1 font-mono text-xs h-10" />
-          <button type="button" className="btn-primary h-10 px-4 text-xs" onClick={copyToClipboard}>
-            <Copy className="h-4 w-4" strokeWidth={1.75} />
+          <input id="link" defaultValue={jobLink} readOnly className="w-full h-10 px-3.5 font-mono text-xs rounded-lg border border-gray-200 text-[#1F2937] bg-gray-50 focus:outline-none" />
+          <button type="button" className="bg-[#4361EE] hover:bg-[#3A56D4] text-white font-bold h-10 px-4 text-xs rounded-lg flex items-center justify-center" onClick={copyToClipboard}>
+            <Copy className="h-4 w-4" strokeWidth={2} />
           </button>
         </div>
       </DialogContent>
@@ -389,31 +389,31 @@ function JobActionsMenu({
 
   return (
     <div className="relative" ref={containerRef}>
-      <Button variant="ghost" size="icon" className="h-8 w-8 text-[#9AA6B8] hover:bg-[#121B2B]" onClick={() => setIsOpen((prev) => !prev)}>
-        <MoreVertical className="w-4 h-4" strokeWidth={1.75} />
+      <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:bg-gray-100 rounded-lg" onClick={() => setIsOpen((prev) => !prev)}>
+        <MoreVertical className="w-4 h-4" strokeWidth={2} />
       </Button>
       {isOpen ? (
-        <div className="absolute right-0 z-20 mt-2 w-40 rounded-[8px] border border-[rgba(148,163,184,0.12)] bg-[#0C121D] p-1 shadow-lg text-[#F2F5F9] text-xs font-sans">
+        <div className="absolute right-0 z-20 mt-2 w-44 rounded-xl border border-gray-200 bg-white p-1.5 shadow-lg text-[#1F2937] text-xs font-sans">
           <button
             type="button"
-            className="flex w-full items-center gap-2 rounded-[6px] px-3 py-2 text-left hover:bg-[#121B2B]"
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left hover:bg-gray-100 font-medium"
             onClick={() => { onUpdate(job.id); setIsOpen(false); }}
           >
-            <Pencil className="h-3.5 w-3.5 text-[#8AB4F8]" strokeWidth={1.75} /> Update
+            <Pencil className="h-3.5 w-3.5 text-[#4361EE]" strokeWidth={2} /> Update
           </button>
           <button
             type="button"
-            className="flex w-full items-center gap-2 rounded-[6px] px-3 py-2 text-left hover:bg-[#121B2B]"
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left hover:bg-gray-100 font-medium"
             onClick={() => { onCopyLink(job.id); setIsOpen(false); }}
           >
-            <Link2 className="h-3.5 w-3.5 text-[#8AB4F8]" strokeWidth={1.75} /> Copy Portal Link
+            <Link2 className="h-3.5 w-3.5 text-[#4361EE]" strokeWidth={2} /> Copy Portal Link
           </button>
           <button
             type="button"
-            className="flex w-full items-center gap-2 rounded-[6px] px-3 py-2 text-left text-[#EF4444] hover:bg-[rgba(239,68,68,0.1)]"
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-red-600 hover:bg-red-50 font-medium"
             onClick={() => { onDelete(job.id); setIsOpen(false); }}
           >
-            <Trash2 className="h-3.5 w-3.5" strokeWidth={1.75} /> Delete
+            <Trash2 className="h-3.5 w-3.5 text-red-600" strokeWidth={2} /> Delete
           </button>
         </div>
       ) : null}
@@ -436,23 +436,23 @@ function EditJobDialog({
 
   return (
     <Dialog open={!!job} onOpenChange={(open) => (!open ? onClose() : null)}>
-      <DialogContent className="sm:max-w-[440px] bg-[#0C121D] border-[rgba(148,163,184,0.12)] text-[#F2F5F9] font-sans">
+      <DialogContent className="sm:max-w-[440px] bg-white border-gray-200 text-[#1F2937] font-sans rounded-2xl shadow-xl p-6">
         <DialogHeader>
-          <DialogTitle className="font-display text-lg font-medium text-[#F2F5F9]">Update Job Requisition</DialogTitle>
+          <DialogTitle className="font-display text-lg font-bold text-[#1F2937]">Update Job Requisition</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-2">
-          <div className="grid gap-2">
-            <Label htmlFor="edit-title" className="eyebrow">Job Title</Label>
-            <input id="edit-title" value={formState.title} onChange={(e) => setFormState((p) => p ? { ...p, title: e.target.value } : p)} className="input-enterprise h-10" />
+          <div className="grid gap-1.5">
+            <label htmlFor="edit-title" className="font-mono text-xs uppercase font-bold text-[#1F2937]">Job Title</label>
+            <input id="edit-title" value={formState.title} onChange={(e) => setFormState((p) => p ? { ...p, title: e.target.value } : p)} className="w-full h-10 px-3.5 text-xs font-sans rounded-lg border border-gray-200 text-[#1F2937] focus:ring-2 focus:ring-[#4361EE] focus:outline-none" />
           </div>
-          <div className="grid gap-2">
-            <Label htmlFor="edit-department" className="eyebrow">Department</Label>
-            <input id="edit-department" value={formState.department} onChange={(e) => setFormState((p) => p ? { ...p, department: e.target.value } : p)} className="input-enterprise h-10" />
+          <div className="grid gap-1.5">
+            <label htmlFor="edit-department" className="font-mono text-xs uppercase font-bold text-[#1F2937]">Department</label>
+            <input id="edit-department" value={formState.department} onChange={(e) => setFormState((p) => p ? { ...p, department: e.target.value } : p)} className="w-full h-10 px-3.5 text-xs font-sans rounded-lg border border-gray-200 text-[#1F2937] focus:ring-2 focus:ring-[#4361EE] focus:outline-none" />
           </div>
         </div>
-        <DialogFooter>
-          <button className="btn-secondary text-xs h-10" onClick={onClose}>Cancel</button>
-          <button className="btn-primary text-xs h-10" onClick={() => onSave(formState)}>
+        <DialogFooter className="gap-2">
+          <button className="bg-gray-100 hover:bg-gray-200 text-[#1F2937] text-xs font-semibold px-4 py-2 rounded-lg" onClick={onClose}>Cancel</button>
+          <button className="bg-[#4361EE] hover:bg-[#3A56D4] text-white text-xs font-bold px-4 py-2 rounded-lg" onClick={() => onSave(formState)}>
             Save Changes
           </button>
         </DialogFooter>

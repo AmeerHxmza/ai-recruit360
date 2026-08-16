@@ -17,6 +17,9 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "AI-Recruit360 — Autonomous Hiring Intelligence",
   description: "Verify candidate qualifications, evaluate performance, and generate a Hiring Confidence Score before recruiters invest valuable time.",
+  icons: {
+    icon: "/Logo.png",
+  },
 };
 
 export default function RootLayout({
