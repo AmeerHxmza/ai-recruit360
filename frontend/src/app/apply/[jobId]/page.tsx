@@ -7,13 +7,13 @@ import { Logo } from "@/components/ui/logo";
 
 const FASTAPI_URL = process.env.NEXT_PUBLIC_FASTAPI_URL || "http://localhost:8000";
 
-type Stage = "apply" | "screening" | "knockout" | "interview" | "submitting" | "done" | "error";
+type Stage = "apply" | "screening" | "knockout" | "submitting" | "done" | "error";
 
 type ApplicationData = {
   fullName: string;
   email: string;
   gender: string;
-  address: string;
+  city: string;
   cvFile: File | null;
 };
 
@@ -25,21 +25,13 @@ export default function ApplyJobPage() {
   const [stage, setStage] = useState<Stage>("apply");
   const [screeningMessage, setScreeningMessage] = useState("Analyzing your resume against target experience rubrics...");
   const [errorMessage, setErrorMessage] = useState("");
-  const [questions, setQuestions] = useState<string[]>([]);
-  const [questionIndex, setQuestionIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<number, string>>({});
-  const [candidateId, setCandidateId] = useState<string>("");
   const [jobTitle, setJobTitle] = useState("Open Position");
-
-  // Browser integrity tracking
-  const tabSwitchCount = useRef(0);
-  const startTime = useRef(Date.now());
 
   const [application, setApplication] = useState<ApplicationData>({
     fullName: "",
     email: "",
-    gender: "",
-    address: "",
+    gender: "Male",
+    city: "",
     cvFile: null,
   });
 
@@ -47,7 +39,7 @@ export default function ApplyJobPage() {
   useEffect(() => {
     async function fetchJob() {
       try {
-        const res = await fetch(`${FASTAPI_URL}/api/v1/jobs/${jobId}`);
+        const res = await fetch(`${FASTAPI_URL}/api/jobs/${jobId}`);
         if (res.ok) {
           const job = await res.json();
           setJobTitle(job.title || "Open Position");
@@ -59,30 +51,21 @@ export default function ApplyJobPage() {
     fetchJob();
   }, [jobId]);
 
-  // Track tab switches for integrity scoring
-  useEffect(() => {
-    if (stage !== "interview") return;
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        tabSwitchCount.current++;
-      }
-    };
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, [stage]);
-
   const handleApplySubmit = async () => {
     if (!application.fullName.trim() || !application.email.trim() || !application.cvFile) {
       return;
     }
 
     setStage("screening");
-    setScreeningMessage("Extracting experience and matching against job rubric standards...");
+    setScreeningMessage("Evaluating location, CV stack, and generating technical assessment...");
 
     try {
       const formData = new FormData();
       formData.append("name", application.fullName.trim());
       formData.append("email", application.email.trim());
+      formData.append("gender", application.gender);
+      formData.append("city", application.city.trim());
+      formData.append("address", application.city.trim());
       if (application.cvFile) {
         formData.append("file", application.cvFile);
       }
@@ -109,19 +92,12 @@ export default function ApplyJobPage() {
         return;
       }
 
-      // Interview stage
-      const fetchedQuestions = data.generated_questions || data.questions || [];
-      setCandidateId(data.candidate_id);
-      setQuestions(fetchedQuestions);
-      setAnswers({});
-      setQuestionIndex(0);
-      startTime.current = Date.now();
-      
-      // Redirect to full interview room or inline stage
+      // Hard Knockout passed -> Redirect to 10 MCQ Assessment room
       if (data.candidate_id) {
-        router.push(`/interview/${data.candidate_id}`);
+        router.push(`/assessment/${data.candidate_id}`);
       } else {
-        setStage("interview");
+        setStage("error");
+        setErrorMessage("Failed to initialize candidate assessment ID.");
       }
     } catch (err: any) {
       setErrorMessage(err.message || "Something went wrong. Please try again.");
@@ -143,9 +119,9 @@ export default function ApplyJobPage() {
         {stage === "apply" && (
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8 sm:p-10 space-y-6">
             <div className="space-y-1.5 border-b border-gray-100 pb-5">
-              <h2 className="font-display text-xl font-bold text-[#1F2937]">Start Candidate Application</h2>
+              <h2 className="font-display text-xl font-bold text-[#1F2937]">Candidate Screening Application</h2>
               <p className="font-sans text-xs text-[#6B7280] leading-relaxed">
-                Fill in your candidate profile details and upload your PDF resume. Our AI engine will evaluate your experience against role rubrics and formulate 10 custom interview questions.
+                Fill in your candidate demographics and upload your PDF resume. Our AI engine will run baseline location/stack verification and generate a 10-question technical MCQ assessment.
               </p>
             </div>
 
@@ -173,21 +149,24 @@ export default function ApplyJobPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="grid gap-1.5">
-                  <label className="font-mono text-xs uppercase font-bold text-[#1F2937]">Gender</label>
-                  <input
-                    placeholder="e.g. Male, Female"
-                    className="w-full h-11 px-4 text-sm font-sans rounded-lg border border-gray-200 text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#4361EE] transition-all placeholder:text-gray-400"
+                  <label className="font-mono text-xs uppercase font-bold text-[#1F2937]">Gender *</label>
+                  <select
+                    className="w-full h-11 px-4 text-sm font-sans rounded-lg border border-gray-200 text-[#1F2937] bg-white focus:outline-none focus:ring-2 focus:ring-[#4361EE] transition-all"
                     value={application.gender}
                     onChange={(e) => setApplication((p) => ({ ...p, gender: e.target.value }))}
-                  />
+                  >
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other / Prefer not to say</option>
+                  </select>
                 </div>
                 <div className="grid gap-1.5">
-                  <label className="font-mono text-xs uppercase font-bold text-[#1F2937]">City / Location</label>
+                  <label className="font-mono text-xs uppercase font-bold text-[#1F2937]">City / Location *</label>
                   <input
-                    placeholder="e.g. San Francisco, CA"
+                    placeholder="e.g. San Francisco, CA or Lahore"
                     className="w-full h-11 px-4 text-sm font-sans rounded-lg border border-gray-200 text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#4361EE] transition-all placeholder:text-gray-400"
-                    value={application.address}
-                    onChange={(e) => setApplication((p) => ({ ...p, address: e.target.value }))}
+                    value={application.city}
+                    onChange={(e) => setApplication((p) => ({ ...p, city: e.target.value }))}
                   />
                 </div>
               </div>
@@ -228,9 +207,9 @@ export default function ApplyJobPage() {
               <button
                 className="bg-[#4361EE] hover:bg-[#3A56D4] text-white font-bold w-full justify-center h-12 text-sm rounded-lg shadow-lg shadow-blue-500/25 flex items-center gap-2 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
                 onClick={handleApplySubmit}
-                disabled={!application.fullName.trim() || !application.email.trim() || !application.cvFile}
+                disabled={!application.fullName.trim() || !application.email.trim() || !application.city.trim() || !application.cvFile}
               >
-                <span>Submit Resume &amp; Begin Assessment</span>
+                <span>Submit Application &amp; Start MCQs</span>
                 <ArrowRight className="w-4 h-4" strokeWidth={2} />
               </button>
             </div>
@@ -243,9 +222,9 @@ export default function ApplyJobPage() {
             <div className="w-16 h-16 rounded-full bg-blue-50 text-[#4361EE] flex items-center justify-center mx-auto shadow-sm">
               <Loader2 className="h-8 w-8 animate-spin text-[#4361EE]" strokeWidth={2} />
             </div>
-            <h3 className="font-display text-xl font-bold text-[#1F2937]">AI Resume Screening Active</h3>
+            <h3 className="font-display text-xl font-bold text-[#1F2937]">AI Multi-Stage Screening Active</h3>
             <p className="font-sans text-xs text-[#6B7280] max-w-md mx-auto">{screeningMessage}</p>
-            <p className="font-mono text-[11px] text-gray-400">Autonomous Candidate Evaluation Engine Online...</p>
+            <p className="font-mono text-[11px] text-gray-400">Running Hard Knockout &amp; MCQ Generation Graph...</p>
           </div>
         )}
 
@@ -257,25 +236,9 @@ export default function ApplyJobPage() {
             </div>
             <h3 className="font-display text-xl font-bold text-[#1F2937]">Application Criteria Not Matched</h3>
             <p className="font-sans text-xs text-[#6B7280] max-w-lg leading-relaxed mx-auto">
-              Thank you for your interest. Based on our AI resume screening against job rubric requirements, your profile did not meet minimum threshold criteria for this specific role.
+              Thank you for your interest. Based on our AI hard knockout screening against location and technical stack requirements, your profile did not meet minimum threshold criteria for this specific role.
             </p>
             <button onClick={() => router.push("/")} className="btn-secondary text-xs rounded-lg px-6 py-2.5">
-              Return to Home
-            </button>
-          </div>
-        )}
-
-        {/* ── DONE STAGE ── */}
-        {stage === "done" && (
-          <div className="bg-white rounded-2xl shadow-lg border border-emerald-100 p-12 text-center space-y-4">
-            <div className="w-16 h-16 rounded-full bg-emerald-50 text-[#10B981] flex items-center justify-center mx-auto">
-              <CheckCircle2 className="h-8 w-8 text-[#10B981]" strokeWidth={2} />
-            </div>
-            <h3 className="font-display text-xl font-bold text-[#1F2937]">Application &amp; Assessment Complete</h3>
-            <p className="font-sans text-xs text-[#6B7280] max-w-lg leading-relaxed mx-auto">
-              Your responses have been processed by our Explainable AI Scoring Engine and delivered to the recruiter leaderboard.
-            </p>
-            <button onClick={() => router.push("/")} className="btn-primary text-xs rounded-lg px-6 py-2.5">
               Return to Home
             </button>
           </div>

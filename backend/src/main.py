@@ -2,7 +2,7 @@ import logging
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from src.api.v1.routers import jobs, apply, interview
+from src.api.v1.routers import jobs, apply, interview, assessment
 from src.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -33,6 +33,9 @@ app.include_router(jobs.router, prefix="/api/jobs", tags=["Jobs"])
 
 # Apply Router: /api/apply (Public candidate resume upload & screening)
 app.include_router(apply.router, prefix="/api/apply", tags=["Apply Portal"])
+
+# Assessment Router: /api/assessment (MCQ fetching & evaluation)
+app.include_router(assessment.router, prefix="/api/assessment", tags=["Assessment"])
 
 # Interview Router: /api/interview (Question fetching, answer posting, proctoring)
 app.include_router(interview.router, prefix="/api/interview", tags=["Interview Room"])
