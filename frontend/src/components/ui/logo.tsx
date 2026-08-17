@@ -54,12 +54,12 @@ export function Logo({
         <span
           className={cn(
             "font-display font-extrabold tracking-tight whitespace-nowrap shrink-0 inline-block",
-            variant === "dark" ? "text-white" : "text-[#1F2937]",
+            variant === "dark" ? "text-white" : "text-[#0F172A]",
             text,
             textClassName
           )}
         >
-          AI-Recruit<span className="text-[#4361EE]">360</span>
+          AI-Recruit<span className="text-[#0EA5E9]">360</span>
         </span>
       )}
     </div>

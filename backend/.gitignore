@@ -1,4 +1,18 @@
-venv/
-__pycache__/
-*.pyc
+# Environment Variables
 .env
+.env.local
+
+# Python Caches & Environments
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+.pytest_cache/
+.coverage
+
+# OS & Temp Files
+.DS_Store
+*.log
+
