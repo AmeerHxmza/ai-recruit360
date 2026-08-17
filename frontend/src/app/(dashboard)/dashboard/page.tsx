@@ -87,7 +87,7 @@ export default function RecruiterDashboardPage() {
         if (data && data.length > 0) {
           setCandidates(data as any);
         } else {
-          // Default mock candidate data for Stitch UI demonstration
+          // Default candidate evaluation fallback
           setCandidates([
             {
               id: "demo-cand-1",
@@ -175,9 +175,9 @@ export default function RecruiterDashboardPage() {
       {/* Top Banner Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-200 pb-6">
         <div>
-          <div className="eyebrow flex items-center gap-2 mb-1.5 text-[#0EA5E9]">
-            <Sparkles className="w-3.5 h-3.5 text-[#0EA5E9]" />
-            <span>Stitch Screen ID: e34ccaaab33c4c5ca208e61a659eef0e</span>
+          <div className="eyebrow flex items-center gap-2 mb-1.5 text-[#4361EE]">
+            <Sparkles className="w-3.5 h-3.5 text-[#4361EE]" />
+            <span>Recruiter Intelligence Control Center</span>
           </div>
           <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-[#0F172A] tracking-tight">
             Recruiter Command Center

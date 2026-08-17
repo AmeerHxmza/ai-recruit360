@@ -213,7 +213,7 @@ export default function MCQAssessmentPage({ params }: PageProps) {
         <div className="mb-8">
           <div className="flex items-center justify-between mb-3 text-xs font-mono">
             <span className="text-[#0EA5E9] font-bold">QUESTION {currentIndex + 1} OF {mcqList.length}</span>
-            <span className="text-[#64748B]">Stitch Screen ID: 7c67ac784773493a9493bd298076c71d</span>
+            <span className="text-[#64748B]">Auto-Saved Draft</span>
           </div>
 
           <div className="grid grid-cols-10 gap-2">

@@ -238,7 +238,7 @@ export default function InterviewRoomPage({ params }: PageProps) {
               </div>
 
               <div className="text-xs font-mono text-[#64748B]">
-                Stitch Screen ID: d7da31a5c4d4445fa1d79ef71a089c3f
+                Encrypted Session
               </div>
             </div>
           </div>

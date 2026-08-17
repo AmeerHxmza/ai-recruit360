@@ -22,16 +22,19 @@ import {
   UserCheck,
   Award,
   ArrowUpRight,
-  FileText,
-  Activity,
-  Layers,
-  Sparkle,
+  PlayCircle,
+  Filter,
+  Timer,
+  Volume2,
+  ChevronDown,
 } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
+import { HeroCanvas } from "@/components/home/hero-canvas";
 
-export default function EnterpriseLandingPage() {
+export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
-  const [activeStep, setActiveStep] = useState<number>(1);
+  const [billingCycle, setBillingCycle] = useState<"annual" | "monthly">("annual");
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -41,41 +44,47 @@ export default function EnterpriseLandingPage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const toggleFaq = (index: number) => {
+    setOpenFaq(openFaq === index ? null : index);
+  };
+
   return (
-    <div className="min-h-screen bg-[#0F172A] text-[#94A3B8] font-sans selection:bg-[#0EA5E9] selection:text-white relative overflow-hidden">
-      {/* Background Decorative Ambient Glows */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-gradient-to-b from-[#0EA5E9]/15 via-[#0EA5E9]/5 to-transparent blur-3xl pointer-events-none -z-10" />
-      <div className="absolute top-[400px] right-0 w-[500px] h-[500px] bg-[#0284C7]/10 blur-[120px] pointer-events-none -z-10" />
-
+    <div className="min-h-screen bg-[#F4F7FE] text-[#6B7280] font-sans selection:bg-[#4361EE] selection:text-white relative">
       {/* Header Navbar */}
-      <header className="sticky top-0 z-50 w-full backdrop-blur-md bg-[#0F172A]/80 border-b border-[#334155]/60 transition-all duration-300">
+      <header
+        className={`sticky top-0 z-50 w-full transition-all duration-300 ${
+          scrolled
+            ? "bg-white/80 backdrop-blur-md border-b border-gray-200/80 shadow-sm"
+            : "bg-white/60 backdrop-blur-sm border-b border-gray-200/40"
+        }`}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-          <Logo size="lg" href="/" variant="dark" glow />
+          <Logo size="lg" href="/" variant="light" glow />
 
-          <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-[#94A3B8]">
-            <a href="#pipeline" className="hover:text-[#F8FAFC] transition-colors">
-              Pipeline Architecture
+          <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-[#4B5563]">
+            <a href="#platform" className="hover:text-[#4361EE] transition-colors">
+              Platform
             </a>
-            <a href="#features" className="hover:text-[#F8FAFC] transition-colors">
-              Enterprise Features
+            <a href="#features" className="hover:text-[#4361EE] transition-colors">
+              Solutions
             </a>
-            <a href="#proctoring" className="hover:text-[#F8FAFC] transition-colors">
-              Proctoring & XAI
+            <a href="#pricing" className="hover:text-[#4361EE] transition-colors">
+              Pricing
             </a>
-            <a href="#metrics" className="hover:text-[#F8FAFC] transition-colors">
-              Metrics
+            <a href="#faq" className="hover:text-[#4361EE] transition-colors">
+              FAQ
             </a>
           </nav>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <Link
               href="/auth"
-              className="text-sm font-semibold text-[#F8FAFC] hover:text-[#0EA5E9] transition-colors px-3 py-2"
+              className="text-sm font-semibold text-[#1F2937] hover:text-[#4361EE] transition-colors px-4 py-2"
             >
-              Recruiter Sign In
+              Sign In
             </Link>
-            <Link href="/dashboard" className="btn-cyan">
-              <span>Launch Platform</span>
+            <Link href="/dashboard" className="btn-pill-primary text-sm">
+              <span>Get Started</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
@@ -83,272 +92,462 @@ export default function EnterpriseLandingPage() {
       </header>
 
       {/* Hero Section */}
-      <section className="relative pt-16 pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center">
-        <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-[#1E293B] border border-[#334155] mb-8 animate-pulse-cyan">
-          <Sparkles className="w-4 h-4 text-[#0EA5E9]" />
-          <span className="text-xs font-semibold text-[#F8FAFC] tracking-wide uppercase font-mono">
-            AI-Recruit360 Enterprise Project ID: 13145477300436648467
+      <section className="pt-16 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#EEF2FF] border border-blue-100 mb-6">
+          <Sparkles className="w-3.5 h-3.5 text-[#4361EE]" />
+          <span className="text-xs font-semibold text-[#4361EE] tracking-wide uppercase font-mono">
+            AI-Powered Enterprise Recruitment Platform
           </span>
         </div>
 
-        <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-[#F8FAFC] tracking-tight max-w-5xl mx-auto leading-[1.1]">
-          Autonomous AI Hiring. <br />
-          <span className="bg-gradient-to-r from-[#0EA5E9] via-[#38BDF8] to-[#0284C7] bg-clip-text text-transparent">
-            Zero Human Bias.
-          </span>{" "}
-          10x Faster.
+        <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-[#1F2937] tracking-tight max-w-5xl mx-auto leading-[1.1]">
+          Hire Smarter, <br className="hidden sm:inline" />
+          <span className="text-[#4361EE]">Not Harder.</span>
         </h1>
 
-        <p className="mt-6 text-lg sm:text-xl text-[#94A3B8] max-w-3xl mx-auto font-normal leading-relaxed">
-          The next-generation enterprise recruitment engine powered by PyMuPDF resume screening, bilingual English/Urdu conversational question generation, live proctored video interviews, and explainable XAI score cards.
+        <p className="mt-6 text-lg sm:text-xl text-[#6B7280] max-w-2xl mx-auto font-normal leading-relaxed">
+          AI-Recruit360 automates candidate screening, bilingual interviews, and XAI evaluations—bringing top talent to the surface faster. Experience the future of enterprise recruiting today.
         </p>
 
-        <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-          <Link href="/dashboard" className="btn-cyan text-base px-8 py-3.5 shadow-lg shadow-[#0EA5E9]/25">
-            <span>Enter Recruiter Dashboard</span>
-            <ArrowRight className="w-5 h-5" />
+        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <Link href="/dashboard" className="btn-pill-primary text-base px-8 py-3.5 w-full sm:w-auto">
+            <span>Start Free Trial</span>
+            <ArrowRight className="w-4 h-4" />
           </Link>
-          <Link href="/apply/demo-job" className="btn-slate text-base px-8 py-3.5">
-            <span>Try Candidate Portal</span>
-            <ArrowUpRight className="w-5 h-5 text-[#0EA5E9]" />
-          </Link>
+          <a
+            href="#demo"
+            className="btn-pill-secondary text-base px-8 py-3.5 w-full sm:w-auto flex items-center justify-center gap-2"
+          >
+            <PlayCircle className="w-5 h-5 text-[#4361EE]" />
+            <span>Watch Demo</span>
+          </a>
         </div>
 
-        {/* Live Interactive Pipeline Preview Card */}
-        <div id="pipeline" className="mt-16 glass-card-dark p-6 sm:p-10 text-left border border-[#334155]/80 shadow-2xl relative overflow-hidden">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between pb-6 border-b border-[#334155] gap-4">
-            <div>
-              <div className="eyebrow text-[#0EA5E9]">Enterprise Recruitment Pipeline</div>
-              <h3 className="text-xl sm:text-2xl font-bold text-[#F8FAFC] mt-1">
-                4-Stage End-to-End Autonomous Workflow
-              </h3>
-            </div>
-            <div className="flex items-center gap-2 bg-[#0F172A] p-1.5 rounded-lg border border-[#334155]">
-              {[1, 2, 3, 4].map((step) => (
-                <button
-                  key={step}
-                  onClick={() => setActiveStep(step)}
-                  className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                    activeStep === step
-                      ? "bg-[#0EA5E9] text-white shadow-md shadow-[#0EA5E9]/30"
-                      : "text-[#94A3B8] hover:text-[#F8FAFC]"
-                  }`}
-                >
-                  Stage {step}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mt-8">
-            {/* Step 1 */}
-            <div
-              onClick={() => setActiveStep(1)}
-              className={`p-5 rounded-xl border transition-all cursor-pointer ${
-                activeStep === 1
-                  ? "bg-[#1E293B] border-[#0EA5E9] shadow-lg shadow-[#0EA5E9]/15"
-                  : "bg-[#0F172A]/60 border-[#334155] hover:border-[#475569]"
-              }`}
-            >
-              <div className="w-10 h-10 rounded-lg bg-[#0EA5E9]/10 border border-[#0EA5E9]/30 flex items-center justify-center text-[#0EA5E9] mb-4">
-                <FileText className="w-5 h-5" />
-              </div>
-              <div className="text-xs font-mono text-[#0EA5E9] mb-1">STAGE 01</div>
-              <h4 className="text-base font-bold text-[#F8FAFC] mb-2">Job Spec & Apply</h4>
-              <p className="text-xs text-[#94A3B8]">
-                Candidates upload PDF resume. PyMuPDF extracts raw text in &lt;500ms for immediate AI processing.
-              </p>
-            </div>
-
-            {/* Step 2 */}
-            <div
-              onClick={() => setActiveStep(2)}
-              className={`p-5 rounded-xl border transition-all cursor-pointer ${
-                activeStep === 2
-                  ? "bg-[#1E293B] border-[#0EA5E9] shadow-lg shadow-[#0EA5E9]/15"
-                  : "bg-[#0F172A]/60 border-[#334155] hover:border-[#475569]"
-              }`}
-            >
-              <div className="w-10 h-10 rounded-lg bg-[#0EA5E9]/10 border border-[#0EA5E9]/30 flex items-center justify-center text-[#0EA5E9] mb-4">
-                <FileSearch className="w-5 h-5" />
-              </div>
-              <div className="text-xs font-mono text-[#0EA5E9] mb-1">STAGE 02</div>
-              <h4 className="text-base font-bold text-[#F8FAFC] mb-2">Resume Knockout Filter</h4>
-              <p className="text-xs text-[#94A3B8]">
-                LangGraph Node 1 evaluates candidate credentials against job requirements. Auto-rejects unqualified matches.
-              </p>
-            </div>
-
-            {/* Step 3 */}
-            <div
-              onClick={() => setActiveStep(3)}
-              className={`p-5 rounded-xl border transition-all cursor-pointer ${
-                activeStep === 3
-                  ? "bg-[#1E293B] border-[#0EA5E9] shadow-lg shadow-[#0EA5E9]/15"
-                  : "bg-[#0F172A]/60 border-[#334155] hover:border-[#475569]"
-              }`}
-            >
-              <div className="w-10 h-10 rounded-lg bg-[#0EA5E9]/10 border border-[#0EA5E9]/30 flex items-center justify-center text-[#0EA5E9] mb-4">
-                <Brain className="w-5 h-5" />
-              </div>
-              <div className="text-xs font-mono text-[#0EA5E9] mb-1">STAGE 03</div>
-              <h4 className="text-base font-bold text-[#F8FAFC] mb-2">Bilingual 10 Q Generator</h4>
-              <p className="text-xs text-[#94A3B8]">
-                Generates 10 customized technical questions probing resume claims with English & Urdu articulation.
-              </p>
-            </div>
-
-            {/* Step 4 */}
-            <div
-              onClick={() => setActiveStep(4)}
-              className={`p-5 rounded-xl border transition-all cursor-pointer ${
-                activeStep === 4
-                  ? "bg-[#1E293B] border-[#0EA5E9] shadow-lg shadow-[#0EA5E9]/15"
-                  : "bg-[#0F172A]/60 border-[#334155] hover:border-[#475569]"
-              }`}
-            >
-              <div className="w-10 h-10 rounded-lg bg-[#0EA5E9]/10 border border-[#0EA5E9]/30 flex items-center justify-center text-[#0EA5E9] mb-4">
-                <BarChart3 className="w-5 h-5" />
-              </div>
-              <div className="text-xs font-mono text-[#0EA5E9] mb-1">STAGE 04</div>
-              <h4 className="text-base font-bold text-[#F8FAFC] mb-2">Interview & XAI Radar</h4>
-              <p className="text-xs text-[#94A3B8]">
-                Proctored interview room generates instant Recharts Radar scores and XAI Claim vs Reality audit quotes.
-              </p>
-            </div>
-          </div>
+        {/* Embedded Interactive Hero Canvas */}
+        <div id="demo" className="mt-16">
+          <HeroCanvas />
         </div>
       </section>
 
-      {/* Metrics Ticker */}
-      <section id="metrics" className="py-12 border-y border-[#334155]/60 bg-[#070D1B]/80">
+      {/* Key Metrics Ticker */}
+      <section className="py-12 bg-white border-y border-gray-200/80 shadow-diffused">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
           <div>
-            <div className="text-3xl sm:text-4xl font-extrabold text-[#F8FAFC]">98.4%</div>
-            <div className="text-xs font-mono text-[#0EA5E9] mt-1 uppercase tracking-wider">Knockout Accuracy</div>
+            <div className="text-3xl sm:text-4xl font-extrabold text-[#1F2937]">98.4%</div>
+            <div className="text-xs font-mono text-[#4361EE] mt-1 uppercase tracking-wider font-semibold">
+              Knockout Accuracy
+            </div>
           </div>
           <div>
-            <div className="text-3xl sm:text-4xl font-extrabold text-[#F8FAFC]">10x</div>
-            <div className="text-xs font-mono text-[#0EA5E9] mt-1 uppercase tracking-wider">Recruitment Velocity</div>
+            <div className="text-3xl sm:text-4xl font-extrabold text-[#1F2937]">10x</div>
+            <div className="text-xs font-mono text-[#4361EE] mt-1 uppercase tracking-wider font-semibold">
+              Recruitment Velocity
+            </div>
           </div>
           <div>
-            <div className="text-3xl sm:text-4xl font-extrabold text-[#F8FAFC]">100%</div>
-            <div className="text-xs font-mono text-[#0EA5E9] mt-1 uppercase tracking-wider">XAI Audit Transparency</div>
+            <div className="text-3xl sm:text-4xl font-extrabold text-[#1F2937]">100%</div>
+            <div className="text-xs font-mono text-[#4361EE] mt-1 uppercase tracking-wider font-semibold">
+              Audit Transparency
+            </div>
           </div>
           <div>
-            <div className="text-3xl sm:text-4xl font-extrabold text-[#F8FAFC]">0%</div>
-            <div className="text-xs font-mono text-[#0EA5E9] mt-1 uppercase tracking-wider">Unconscious Bias</div>
+            <div className="text-3xl sm:text-4xl font-extrabold text-[#1F2937]">0%</div>
+            <div className="text-xs font-mono text-[#4361EE] mt-1 uppercase tracking-wider font-semibold">
+              Unconscious Bias
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Enterprise Feature Grid */}
-      <section id="features" className="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Bento Box Feature Grid Section */}
+      <section id="platform" className="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="eyebrow text-[#0EA5E9]">Enterprise Design & AI Core</div>
-          <h2 className="text-3xl sm:text-5xl font-extrabold text-[#F8FAFC] mt-2 tracking-tight">
-            Designed for Modern Technical Hiring Teams
+          <div className="eyebrow-blue">Built for High-Growth Engineering Teams</div>
+          <h2 className="text-3xl sm:text-5xl font-extrabold text-[#1F2937] mt-2 tracking-tight">
+            End-to-End Recruitment Intelligence
           </h2>
-          <p className="mt-4 text-[#94A3B8] text-base">
-            Every screen built with Stitch UI precision, low latency backend integrations, and airtight proctoring telemetries.
+          <p className="mt-4 text-[#6B7280] text-base">
+            Every feature designed to cut manual screening hours, ensure interview integrity, and provide audit-ready candidate evaluations.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Card 1 */}
-          <div className="glass-card-dark p-8 border border-[#334155]">
-            <div className="w-12 h-12 rounded-xl bg-[#0EA5E9]/10 border border-[#0EA5E9]/30 flex items-center justify-center text-[#0EA5E9] mb-6">
-              <FileSearch className="w-6 h-6" />
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+          {/* Feature 1: Smart Knockout Layer (Large 8 Cols) */}
+          <div className="md:col-span-8 card-bento flex flex-col justify-between relative overflow-hidden group">
+            <div className="z-10">
+              <div className="w-12 h-12 rounded-xl bg-[#EEF2FF] border border-blue-100 flex items-center justify-center text-[#4361EE] mb-6">
+                <Filter className="w-6 h-6" />
+              </div>
+              <h3 className="text-2xl font-bold text-[#1F2937] mb-3">Smart Knockout Layer</h3>
+              <p className="text-sm text-[#6B7280] max-w-lg leading-relaxed">
+                Instantly filter out unqualified candidates based on dynamic criteria. Save hundreds of hours in manual resume reviews by automatically screening skill sets, qualifications, and project experiences.
+              </p>
             </div>
-            <h3 className="text-xl font-bold text-[#F8FAFC] mb-3">FastAPI + PyMuPDF Extraction</h3>
-            <p className="text-sm text-[#94A3B8]">
-              High-speed parsing extracts structured skills, projects, and work history directly from raw PDF resume uploads.
-            </p>
+
+            <div className="mt-8 bg-[#F8FAFC] rounded-xl p-4 border border-gray-200/80 flex items-center justify-center h-48 relative overflow-hidden">
+              <div className="w-full h-full flex flex-col justify-center space-y-3 px-4">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-white border border-gray-200 shadow-sm text-xs">
+                  <span className="font-semibold text-[#1F2937]">PyMuPDF Text Extractor</span>
+                  <span className="badge-emerald">Passed (0.42s)</span>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-lg bg-white border border-gray-200 shadow-sm text-xs">
+                  <span className="font-semibold text-[#1F2937]">LangGraph Candidate Screening</span>
+                  <span className="badge-blue">94% Skill Match</span>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Card 2 */}
-          <div className="glass-card-dark p-8 border border-[#334155]">
-            <div className="w-12 h-12 rounded-xl bg-[#0EA5E9]/10 border border-[#0EA5E9]/30 flex items-center justify-center text-[#0EA5E9] mb-6">
-              <Globe2 className="w-6 h-6" />
+          {/* Feature 2: Timed Technical MCQs (4 Cols) */}
+          <div className="md:col-span-4 card-bento flex flex-col justify-between">
+            <div>
+              <div className="w-12 h-12 rounded-xl bg-[#EEF2FF] border border-blue-100 flex items-center justify-center text-[#4361EE] mb-6">
+                <Timer className="w-6 h-6" />
+              </div>
+              <h3 className="text-2xl font-bold text-[#1F2937] mb-3">Timed Technical MCQs</h3>
+              <p className="text-sm text-[#6B7280] leading-relaxed">
+                Assess core technical competencies quickly with auto-graded, timed multiple-choice questionnaires tailored specifically to target engineering roles.
+              </p>
             </div>
-            <h3 className="text-xl font-bold text-[#F8FAFC] mb-3">Bilingual English & Urdu Qs</h3>
-            <p className="text-sm text-[#94A3B8]">
-              Dynamic 10-question generator crafts context-aware questions tailored to candidate project experience in Urdu and English.
-            </p>
+
+            <div className="mt-8 p-4 rounded-xl bg-[#F8FAFC] border border-gray-200 text-center">
+              <div className="text-2xl font-extrabold text-[#1F2937]">20s per Question</div>
+              <div className="text-xs text-[#6B7280] mt-1 font-mono">Automated Score Dispatch</div>
+            </div>
           </div>
 
-          {/* Card 3 */}
-          <div className="glass-card-dark p-8 border border-[#334155]">
-            <div className="w-12 h-12 rounded-xl bg-[#0EA5E9]/10 border border-[#0EA5E9]/30 flex items-center justify-center text-[#0EA5E9] mb-6">
-              <ShieldCheck className="w-6 h-6" />
+          {/* Feature 3: Bilingual Avatar Interviews (12 Cols Wide) */}
+          <div id="features" className="md:col-span-12 card-bento flex flex-col md:flex-row items-center gap-8">
+            <div className="flex-1">
+              <div className="w-12 h-12 rounded-xl bg-[#EEF2FF] border border-blue-100 flex items-center justify-center text-[#4361EE] mb-6">
+                <Volume2 className="w-6 h-6" />
+              </div>
+              <h3 className="text-2xl sm:text-3xl font-bold text-[#1F2937] mb-4">
+                Bilingual Avatar Interviews
+              </h3>
+              <p className="text-base text-[#6B7280] leading-relaxed mb-6">
+                Conduct initial screening interviews using conversational AI avatars capable of interacting naturally in both English and Urdu, ensuring a consistent, accessible, and unbiased preliminary assessment.
+              </p>
+              <div className="flex items-center gap-2 text-sm font-semibold text-[#4361EE]">
+                <Globe2 className="w-4 h-4" />
+                <span>Supports English & Urdu Articulation</span>
+              </div>
             </div>
-            <h3 className="text-xl font-bold text-[#F8FAFC] mb-3">Proctoring & Anti-Cheat</h3>
-            <p className="text-sm text-[#94A3B8]">
-              Real-time tab switch and visibility tracking logs events automatically into PostgreSQL database timeline for integrity audits.
-            </p>
+
+            <div className="flex-1 w-full bg-[#F8FAFC] rounded-xl p-6 border border-gray-200 flex flex-col justify-center space-y-4">
+              <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200 shadow-sm text-xs">
+                <div className="w-8 h-8 rounded-full bg-[#4361EE]/10 flex items-center justify-center text-[#4361EE] font-bold">
+                  AI
+                </div>
+                <div>
+                  <div className="font-semibold text-[#1F2937]">English Prompt</div>
+                  <div className="text-[#6B7280]">"Can you walk us through your backend system architecture?"</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200 shadow-sm text-xs">
+                <div className="w-8 h-8 rounded-full bg-[#10B981]/10 flex items-center justify-center text-[#10B981] font-bold">
+                  UR
+                </div>
+                <div>
+                  <div className="font-semibold text-[#1F2937]">Urdu Prompt</div>
+                  <div className="text-[#6B7280]">"کیا آپ اپنے پائیتھن اور فاسٹ اے پی آئی پروجیکٹ کی وضاحت کر سکتے ہیں؟"</div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Card 4 */}
-          <div className="glass-card-dark p-8 border border-[#334155]">
-            <div className="w-12 h-12 rounded-xl bg-[#0EA5E9]/10 border border-[#0EA5E9]/30 flex items-center justify-center text-[#0EA5E9] mb-6">
+          {/* Feature 4: Explainable XAI Audit (6 Cols) */}
+          <div className="md:col-span-6 card-bento">
+            <div className="w-12 h-12 rounded-xl bg-[#EEF2FF] border border-blue-100 flex items-center justify-center text-[#4361EE] mb-6">
               <BarChart3 className="w-6 h-6" />
             </div>
-            <h3 className="text-xl font-bold text-[#F8FAFC] mb-3">Recharts XAI Radar Radar</h3>
-            <p className="text-sm text-[#94A3B8]">
-              Multi-dimensional evaluation measuring Technical Mastery, Communication Clarity, and Honesty Integrity on a radar scale.
+            <h3 className="text-2xl font-bold text-[#1F2937] mb-3">Explainable XAI Audit</h3>
+            <p className="text-sm text-[#6B7280] leading-relaxed mb-6">
+              Multi-axis evaluation measuring Technical Mastery, Communication Clarity, and Honesty Integrity on an auditable radar scale with direct transcript quotes.
             </p>
+            <span className="badge-blue">Claim vs. Reality Check</span>
           </div>
 
-          {/* Card 5 */}
-          <div className="glass-card-dark p-8 border border-[#334155]">
-            <div className="w-12 h-12 rounded-xl bg-[#0EA5E9]/10 border border-[#0EA5E9]/30 flex items-center justify-center text-[#0EA5E9] mb-6">
-              <Brain className="w-6 h-6" />
-            </div>
-            <h3 className="text-xl font-bold text-[#F8FAFC] mb-3">Claim vs. Reality Audit</h3>
-            <p className="text-sm text-[#94A3B8]">
-              XAI explainable quotes line up resume claims directly against interview transcript responses for zero-doubt verification.
-            </p>
-          </div>
-
-          {/* Card 6 */}
-          <div className="glass-card-dark p-8 border border-[#334155]">
-            <div className="w-12 h-12 rounded-xl bg-[#0EA5E9]/10 border border-[#0EA5E9]/30 flex items-center justify-center text-[#0EA5E9] mb-6">
+          {/* Feature 5: Recruiter Command Center (6 Cols) */}
+          <div className="md:col-span-6 card-bento">
+            <div className="w-12 h-12 rounded-xl bg-[#EEF2FF] border border-blue-100 flex items-center justify-center text-[#4361EE] mb-6">
               <UserCheck className="w-6 h-6" />
             </div>
-            <h3 className="text-xl font-bold text-[#F8FAFC] mb-3">Leaderboard & Drilldown</h3>
-            <p className="text-sm text-[#94A3B8]">
-              Instant candidate sorting by overall AI score, equipped with candidate review drawer sheets and interview transcripts.
+            <h3 className="text-2xl font-bold text-[#1F2937] mb-3">Recruiter Command Center</h3>
+            <p className="text-sm text-[#6B7280] leading-relaxed mb-6">
+              Real-time candidate leaderboard with instant score sorting, evaluation review drawers, and automatic proctoring event logs.
+            </p>
+            <span className="badge-emerald">Proctoring Telemetry Active</span>
+          </div>
+        </div>
+      </section>
+
+      {/* Tiered Pricing Section */}
+      <section id="pricing" className="py-24 bg-white border-t border-gray-200/80">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <div className="eyebrow-blue">Flexible Enterprise Plans</div>
+            <h2 className="text-3xl sm:text-5xl font-extrabold text-[#1F2937] mt-2 tracking-tight">
+              Simple, Transparent Pricing
+            </h2>
+            <p className="mt-4 text-[#6B7280] text-base">
+              Choose the plan that fits your hiring volume. Upgrade or downgrade anytime.
+            </p>
+
+            {/* Billing Toggle */}
+            <div className="mt-8 inline-flex items-center gap-3 bg-[#F4F7FE] p-1.5 rounded-full border border-gray-200">
+              <button
+                onClick={() => setBillingCycle("monthly")}
+                className={`px-5 py-2 rounded-full text-xs font-semibold transition-all ${
+                  billingCycle === "monthly"
+                    ? "bg-[#4361EE] text-white shadow-sm"
+                    : "text-[#6B7280] hover:text-[#1F2937]"
+                }`}
+              >
+                Monthly Billing
+              </button>
+              <button
+                onClick={() => setBillingCycle("annual")}
+                className={`px-5 py-2 rounded-full text-xs font-semibold transition-all flex items-center gap-2 ${
+                  billingCycle === "annual"
+                    ? "bg-[#4361EE] text-white shadow-sm"
+                    : "text-[#6B7280] hover:text-[#1F2937]"
+                }`}
+              >
+                <span>Annual Billing</span>
+                <span className="bg-[#10B981] text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
+                  Save 20%
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Starter Plan */}
+            <div className="card-bento flex flex-col justify-between">
+              <div>
+                <div className="text-sm font-mono font-bold text-[#6B7280] uppercase mb-2">Starter</div>
+                <div className="flex items-baseline gap-1 mb-4">
+                  <span className="text-4xl font-extrabold text-[#1F2937]">
+                    {billingCycle === "annual" ? "$39" : "$49"}
+                  </span>
+                  <span className="text-xs text-[#6B7280]">/ month</span>
+                </div>
+                <p className="text-xs text-[#6B7280] mb-6">
+                  Perfect for small teams and startups initiating automated hiring workflows.
+                </p>
+
+                <ul className="space-y-3 text-xs text-[#4B5563]">
+                  <li className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-[#10B981]" />
+                    <span>Up to 5 Active Job Postings</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-[#10B981]" />
+                    <span>PyMuPDF Resume Knockout Screening</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-[#10B981]" />
+                    <span>Timed MCQ Assessments</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-[#10B981]" />
+                    <span>Standard Email Support</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="mt-8">
+                <Link href="/auth" className="btn-pill-secondary w-full text-center">
+                  Start Free Trial
+                </Link>
+              </div>
+            </div>
+
+            {/* Professional Plan (Featured) */}
+            <div className="card-bento flex flex-col justify-between border-2 border-[#4361EE] shadow-diffused-lg relative">
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#4361EE] text-white text-[10px] font-mono font-bold uppercase px-4 py-1 rounded-full shadow-sm">
+                Most Popular
+              </div>
+
+              <div>
+                <div className="text-sm font-mono font-bold text-[#4361EE] uppercase mb-2">Professional</div>
+                <div className="flex items-baseline gap-1 mb-4">
+                  <span className="text-4xl font-extrabold text-[#1F2937]">
+                    {billingCycle === "annual" ? "$159" : "$199"}
+                  </span>
+                  <span className="text-xs text-[#6B7280]">/ month</span>
+                </div>
+                <p className="text-xs text-[#6B7280] mb-6">
+                  Ideal for scaling companies requiring bilingual interviews and XAI audits.
+                </p>
+
+                <ul className="space-y-3 text-xs text-[#4B5563]">
+                  <li className="flex items-center gap-2 font-medium text-[#1F2937]">
+                    <Check className="w-4 h-4 text-[#4361EE]" />
+                    <span>Unlimited Active Job Postings</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-[#4361EE]" />
+                    <span>Bilingual English & Urdu AI Avatar Interviews</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-[#4361EE]" />
+                    <span>Recharts XAI Radar Score Cards</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-[#4361EE]" />
+                    <span>Real-time Tab Switch Proctoring Telemetry</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-[#4361EE]" />
+                    <span>Priority 24/7 Dedicated Support</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="mt-8">
+                <Link href="/auth" className="btn-pill-primary w-full text-center">
+                  Get Started Now
+                </Link>
+              </div>
+            </div>
+
+            {/* Enterprise Plan */}
+            <div className="card-bento flex flex-col justify-between">
+              <div>
+                <div className="text-sm font-mono font-bold text-[#6B7280] uppercase mb-2">Enterprise</div>
+                <div className="flex items-baseline gap-1 mb-4">
+                  <span className="text-4xl font-extrabold text-[#1F2937]">Custom</span>
+                </div>
+                <p className="text-xs text-[#6B7280] mb-6">
+                  For large enterprises needing custom ATS integrations and SLA guarantees.
+                </p>
+
+                <ul className="space-y-3 text-xs text-[#4B5563]">
+                  <li className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-[#10B981]" />
+                    <span>Custom ATS & Greenhouse/Workday Integrations</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-[#10B981]" />
+                    <span>Dedicated Fine-Tuned AI Models</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-[#10B981]" />
+                    <span>SSO / SAML Authentication</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-[#10B981]" />
+                    <span>Custom SLA & Account Manager</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="mt-8">
+                <Link href="/auth" className="btn-pill-secondary w-full text-center">
+                  Contact Sales
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Accordion Section */}
+      <section id="faq" className="py-24 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <div className="eyebrow-blue">Got Questions?</div>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-[#1F2937] mt-2 tracking-tight">
+            Frequently Asked Questions
+          </h2>
+        </div>
+
+        <div className="space-y-4">
+          {[
+            {
+              q: "How does the PyMuPDF resume knockout filter work?",
+              a: "Candidates upload their PDF resume during application. PyMuPDF extracts raw text in under 500ms and feeds it to LangGraph Node 1, which evaluates experience rubrics against job requirements to automatically screen candidates.",
+            },
+            {
+              q: "Are the AI video interviews supported in Urdu and English?",
+              a: "Yes! AI-Recruit360 supports natural language speech and transcript processing in both English and Urdu, allowing candidates to articulate technical concepts comfortably in their preferred language.",
+            },
+            {
+              q: "How does the real-time proctoring telemetry prevent cheating?",
+              a: "During the assessment and video interview room sessions, visibility listeners automatically capture window blur and tab-switch events, logging every occurrence into the candidate proctor audit timeline for recruiter verification.",
+            },
+            {
+              q: "What is an Explainable AI (XAI) Radar Score?",
+              a: "Instead of a black-box score, XAI evaluates candidates across 3 distinct axes: Technical Mastery, Communication Clarity, and Honesty Integrity. It provides exact transcript quotes and Claim vs. Reality reasoning for total transparency.",
+            },
+          ].map((faq, idx) => (
+            <div
+              key={idx}
+              className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm transition-all"
+            >
+              <button
+                onClick={() => toggleFaq(idx)}
+                className="w-full p-6 text-left flex items-center justify-between font-bold text-[#1F2937] text-base hover:text-[#4361EE]"
+              >
+                <span>{faq.q}</span>
+                <ChevronDown
+                  className={`w-5 h-5 text-[#6B7280] transition-transform ${
+                    openFaq === idx ? "rotate-180 text-[#4361EE]" : ""
+                  }`}
+                />
+              </button>
+              {openFaq === idx && (
+                <div className="px-6 pb-6 text-sm text-[#6B7280] border-t border-gray-100 pt-4 leading-relaxed">
+                  {faq.a}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Footer Component */}
+      <footer className="bg-white border-t border-gray-200 text-xs text-[#6B7280] py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div className="space-y-4">
+            <Logo size="md" variant="light" />
+            <p className="text-[#6B7280] text-xs leading-relaxed">
+              Intelligent recruitment for the modern enterprise. Autonomous AI screening, bilingual video interviews, and XAI evaluations.
             </p>
           </div>
-        </div>
-      </section>
 
-      {/* CTA Section */}
-      <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="glass-card-dark p-12 text-center border border-[#0EA5E9]/30 bg-gradient-to-b from-[#1E293B] to-[#0F172A] relative overflow-hidden">
-          <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-[#0EA5E9]/10 rounded-full blur-3xl pointer-events-none" />
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-[#F8FAFC] tracking-tight">
-            Ready to Automate Your Hiring Pipeline?
-          </h2>
-          <p className="mt-4 text-[#94A3B8] max-w-2xl mx-auto text-base">
-            Access the Recruiter Command Center or test candidate application portals in real-time.
-          </p>
-          <div className="mt-8 flex justify-center gap-4">
-            <Link href="/dashboard" className="btn-cyan text-base px-8 py-3.5">
-              Enter Recruiter Portal
-            </Link>
-            <Link href="/apply/demo-job" className="btn-slate text-base px-8 py-3.5">
-              Apply to Position
-            </Link>
+          <div>
+            <div className="font-bold text-[#1F2937] uppercase tracking-wider mb-3">Product</div>
+            <ul className="space-y-2">
+              <li><a href="#platform" className="hover:text-[#4361EE]">Platform Features</a></li>
+              <li><a href="#pricing" className="hover:text-[#4361EE]">Pricing Plans</a></li>
+              <li><a href="#demo" className="hover:text-[#4361EE]">Live Interactive Demo</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <div className="font-bold text-[#1F2937] uppercase tracking-wider mb-3">Company</div>
+            <ul className="space-y-2">
+              <li><Link href="/auth" className="hover:text-[#4361EE]">Recruiter Login</Link></li>
+              <li><Link href="/dashboard" className="hover:text-[#4361EE]">Dashboard Portal</Link></li>
+              <li><a href="#faq" className="hover:text-[#4361EE]">Support & FAQ</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <div className="font-bold text-[#1F2937] uppercase tracking-wider mb-3">Legal</div>
+            <ul className="space-y-2">
+              <li><a href="#" className="hover:text-[#4361EE]">Privacy Policy</a></li>
+              <li><a href="#" className="hover:text-[#4361EE]">Terms of Service</a></li>
+              <li><a href="#" className="hover:text-[#4361EE]">Proctoring Ethics</a></li>
+            </ul>
           </div>
         </div>
-      </section>
 
-      {/* Footer */}
-      <footer className="border-t border-[#334155]/60 py-8 bg-[#070D1B]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#64748B]">
-          <Logo size="sm" variant="dark" />
-          <div>© 2026 AI-Recruit360 Enterprise. Stitch Project ID: 13145477300436648467</div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 mt-8 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between text-[#9CA3AF]">
+          <div>© 2026 AI-Recruit360 Enterprise. All rights reserved.</div>
+          <div className="mt-2 sm:mt-0 font-mono text-[11px]">Clean Enterprise Edition v2.0</div>
         </div>
       </footer>
     </div>

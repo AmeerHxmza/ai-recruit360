@@ -177,9 +177,6 @@ export default function ApplyJobPage() {
       {/* Top Header Logo */}
       <div className="mb-8 text-center">
         <Logo size="xl" href="/" variant="dark" glow />
-        <div className="text-xs font-mono text-[#0EA5E9] uppercase tracking-widest mt-2">
-          Stitch Screen ID: 06b8323866d7437e9099b0cf31d3b28e
-        </div>
       </div>
 
       <main className="w-full max-w-3xl">
