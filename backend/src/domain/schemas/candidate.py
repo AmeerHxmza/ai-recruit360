@@ -3,34 +3,51 @@ from pydantic import BaseModel, Field
 
 
 class CandidateBase(BaseModel):
-    name: str = Field(..., description="Candidate full name")
+    first_name: str = Field(..., description="Candidate first name")
+    last_name: str = Field(..., description="Candidate last name")
     email: str = Field(..., description="Candidate email address")
-    gender: Optional[str] = Field(None, description="Gender identity (e.g. Male, Female, Other)")
-    city: Optional[str] = Field(None, description="Candidate city/location")
-
-
-class CandidateCreate(CandidateBase):
-    job_id: str
+    phone: Optional[str] = None
+    gender: Optional[str] = None
+    city: Optional[str] = None
     github_url: Optional[str] = None
+    linkedin_url: Optional[str] = None
 
 
-class MCQOptionItem(BaseModel):
-    question: str
-    options: List[str] = Field(..., min_items=4, max_items=4)
-    correct_answer: str
-
-
-class MCQSubmissionPayload(BaseModel):
-    candidate_id: str
-    answers: Dict[str, str] = Field(..., description="Map of question index or question string to selected option")
-
-
-class CandidateResponse(CandidateBase):
-    id: str
+class ApplicationSubmissionPayload(BaseModel):
     job_id: str
+    first_name: str
+    last_name: str
+    email: str
+    phone: Optional[str] = None
+    gender: Optional[str] = None
+    city: Optional[str] = None
+    github_url: Optional[str] = None
+    linkedin_url: Optional[str] = None
+
+
+class CandidateLeaderboardItem(BaseModel):
+    id: str
+    application_id: str
+    job_id: str
+    first_name: str
+    last_name: str
+    email: str
+    city: Optional[str]
+    cv_url: str
     status: str
-    ai_score: int
-    mcq_score: Optional[int] = 0
-    mcq_data: Optional[List[Dict[str, Any]]] = None
-    hr_questions: Optional[List[str]] = None
-    created_at: Optional[str] = None
+    overall_score: int
+    technical_score: int
+    communication_score: int
+    honesty_score: int
+    problem_solving_score: int
+    passed_knockout: bool
+    knockout_reason: Optional[str]
+    applied_at: str
+
+
+class CandidateDetailResponse(BaseModel):
+    candidate: CandidateBase
+    application: Dict[str, Any]
+    interview: Optional[Dict[str, Any]]
+    evaluation: Optional[Dict[str, Any]]
+    proctor_logs: List[Dict[str, Any]] = []

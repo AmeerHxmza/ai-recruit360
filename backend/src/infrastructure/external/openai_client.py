@@ -10,7 +10,7 @@ Uses OpenAI GPT-4o-mini for all AI operations:
 import json
 import re
 from openai import AsyncOpenAI
-from core.config import settings
+from src.core.config import settings
 
 # Async client — works natively with FastAPI's async/await
 client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)

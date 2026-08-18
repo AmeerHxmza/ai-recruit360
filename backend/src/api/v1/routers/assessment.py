@@ -1,85 +1,75 @@
-from fastapi import APIRouter, HTTPException, status
-from pydantic import BaseModel, Field
-from typing import Dict, List, Optional, Any
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+from typing import Dict, List, Any
 from src.core.supabase_client import supabase
 
 router = APIRouter()
 
 
-class MCQSubmitRequest(BaseModel):
-    candidate_id: str = Field(..., description="ID of the candidate submitting the MCQ assessment")
-    answers: Dict[str, str] = Field(..., description="Map of question index (e.g. '0', '1') to selected option string")
+class MCQSubmissionPayload(BaseModel):
+    candidate_id: str
+    answers: Dict[str, str]
 
 
-@router.get("/mcq/{candidate_id}")
+@router.get("/{candidate_id}/mcqs")
 async def get_candidate_mcqs(candidate_id: str):
     """
-    Fetch the 10 generated technical MCQs for a specific candidate.
+    Public Candidate Endpoint: Fetches generated 10 MCQ assessment questions for candidate.
     """
-    res = supabase.table("candidates").select("*").eq("id", candidate_id).execute()
+    res = supabase.table("candidates").select("mcq_data, status").eq("id", candidate_id).execute()
     if not res.data:
-        raise HTTPException(status_code=404, detail="Candidate record not found.")
+        raise HTTPException(status_code=404, detail="Candidate not found.")
 
-    candidate = res.data[0]
+    cand = res.data[0]
+    mcq_data = cand.get("mcq_data") or []
+    
+    # Strip correct answers before sending to client for anti-cheat
+    sanitized_mcqs = []
+    for item in mcq_data:
+        sanitized_mcqs.append({
+            "question": item.get("question", ""),
+            "options": item.get("options", [])
+        })
+
     return {
-        "candidate_id": candidate["id"],
-        "candidate_name": candidate.get("name", "Applicant"),
-        "mcq_data": candidate.get("mcq_data") or [],
-        "status": candidate.get("status", "interviewing")
+        "candidate_id": candidate_id,
+        "total_questions": len(sanitized_mcqs),
+        "mcqs": sanitized_mcqs
     }
 
 
-@router.post("/mcq")
-async def submit_mcq_assessment(payload: MCQSubmitRequest):
+@router.post("/submit")
+async def submit_mcq_assessment(payload: MCQSubmissionPayload):
     """
-    Receives candidate's 10 MCQ answers, calculates the mcq_score (0-100),
-    updates Supabase candidate record, and returns hr_questions for the Avatar Interview.
+    Public Candidate Endpoint: Validates candidate MCQ answers and calculates MCQ Score (0-100).
     """
-    candidate_id = payload.candidate_id
-    user_answers = payload.answers or {}
-
-    # 1. Fetch candidate from database
-    res = supabase.table("candidates").select("*").eq("id", candidate_id).execute()
+    res = supabase.table("candidates").select("mcq_data").eq("id", payload.candidate_id).execute()
     if not res.data:
-        raise HTTPException(status_code=404, detail="Candidate record not found.")
+        raise HTTPException(status_code=404, detail="Candidate not found.")
 
-    candidate = res.data[0]
-    mcq_data: List[Dict[str, Any]] = candidate.get("mcq_data") or []
-    hr_questions: List[str] = candidate.get("hr_questions") or candidate.get("generated_questions") or []
+    mcq_data = res.data[0].get("mcq_data") or []
+    if not mcq_data:
+        return {"candidate_id": payload.candidate_id, "score": 100, "correct_count": 0, "total": 0}
 
-    # 2. Calculate score
     correct_count = 0
-    total_questions = len(mcq_data) if len(mcq_data) > 0 else 10
+    total = len(mcq_data)
 
     for idx, item in enumerate(mcq_data):
-        correct = item.get("correct_answer", "").strip()
-        candidate_ans = user_answers.get(str(idx)) or user_answers.get(item.get("question", "")) or ""
-        if candidate_ans.strip() == correct:
+        correct_ans = item.get("correct_answer", "").strip().lower()
+        user_ans = payload.answers.get(str(idx), payload.answers.get(item.get("question", "")))
+        if user_ans and str(user_ans).strip().lower() == correct_ans:
             correct_count += 1
 
-    # Percentage score
-    mcq_score = int((correct_count / total_questions) * 100) if total_questions > 0 else 0
+    mcq_score = int((correct_count / max(total, 1)) * 100)
 
-    # 3. Update candidate in Supabase with status satisfying candidates_status_check ('interviewing', 'pending', 'completed', 'rejected')
-    try:
-        update_data = {
-            "mcq_score": mcq_score,
-            "status": "interviewing",
-            "ai_score": max(candidate.get("ai_score", 0), int(mcq_score * 0.5 + 25))
-        }
-        supabase.table("candidates").update(update_data).eq("id", candidate_id).execute()
-    except Exception:
-        try:
-            supabase.table("candidates").update({"status": "interviewing"}).eq("id", candidate_id).execute()
-        except Exception:
-            pass
+    # Save MCQ score to database
+    supabase.table("candidates").update({
+        "mcq_score": mcq_score
+    }).eq("id", payload.candidate_id).execute()
 
     return {
-        "message": "MCQ assessment evaluated successfully",
-        "candidate_id": candidate_id,
-        "correct_count": correct_count,
-        "total_questions": total_questions,
+        "candidate_id": payload.candidate_id,
         "mcq_score": mcq_score,
-        "hr_questions": hr_questions,
-        "questions": hr_questions
+        "correct_count": correct_count,
+        "total_questions": total
     }

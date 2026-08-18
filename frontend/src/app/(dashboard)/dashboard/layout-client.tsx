@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -20,7 +21,8 @@ import {
   ChevronRight,
   ShieldCheck,
   Search,
-  Command
+  Zap,
+  Sparkles
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
@@ -38,7 +40,7 @@ const NAV_ITEMS = [
   { label: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 
-function SidebarContent({ pathname }: { pathname: string }) {
+function SidebarContent({ pathname, isAdmin }: { pathname: string; isAdmin: boolean }) {
   const handleSignOut = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
@@ -55,7 +57,7 @@ function SidebarContent({ pathname }: { pathname: string }) {
         </span>
       </div>
 
-      {/* Navigation Links with border-l-4 border-[#4361EE] for active route */}
+      {/* Navigation Links */}
       <div className="flex-1 space-y-1 py-6 overflow-y-auto">
         <p className="eyebrow px-6 pb-2 block text-[10px] text-gray-400 tracking-wider">
           RECRUITING PLATFORM
@@ -81,6 +83,22 @@ function SidebarContent({ pathname }: { pathname: string }) {
             </Link>
           );
         })}
+
+        {/* Super Admin Section if User is Admin */}
+        {isAdmin && (
+          <div className="pt-4 border-t border-gray-800/80 mt-4">
+            <p className="eyebrow px-6 pb-2 block text-[10px] text-purple-400 font-bold tracking-wider uppercase">
+              SUPER ADMIN PLATFORM
+            </p>
+            <Link
+              href="/admin/dashboard"
+              className="flex items-center gap-3.5 px-6 py-3 text-sm font-semibold text-purple-400 hover:bg-purple-500/10 hover:text-purple-300 transition-all border-l-4 border-purple-500"
+            >
+              <ShieldCheck className="w-4 h-4 shrink-0 text-purple-400" strokeWidth={2} />
+              <span>Admin Telemetry Portal</span>
+            </Link>
+          </div>
+        )}
 
         <div className="pt-6">
           <p className="eyebrow px-6 pb-2 block text-[10px] text-gray-400 tracking-wider">
@@ -153,6 +171,8 @@ export function DashboardLayoutClient({
   userProfile: { fullName: string; companyName: string };
 }) {
   const pathname = usePathname();
+  const [creditsBalance, setCreditsBalance] = useState<number>(100);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const segments = pathname.split("/").filter(Boolean);
   const currentSection =
     segments.length === 1
@@ -169,6 +189,27 @@ export function DashboardLayoutClient({
         .toUpperCase()
     : "REC";
 
+  useEffect(() => {
+    async function fetchRecruiterCredits() {
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const { data } = await supabase
+          .from("recruiters")
+          .select("credits_balance, role")
+          .eq("id", session.user.id)
+          .single();
+        if (data) {
+          if (data.credits_balance !== undefined) setCreditsBalance(data.credits_balance);
+          if (data.role === "admin" || session.user.email === "admin@ai-recruit360.com") {
+            setIsAdmin(true);
+          }
+        }
+      }
+    }
+    fetchRecruiterCredits();
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#F3F4F6] text-[#6B7280] font-sans selection:bg-[#4361EE] selection:text-white">
       {/* Mobile Drawer */}
@@ -183,18 +224,18 @@ export function DashboardLayoutClient({
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="w-64 border-r-0 p-0 bg-[#111827]">
-          <SidebarContent pathname={pathname} />
+          <SidebarContent pathname={pathname} isAdmin={isAdmin} />
         </SheetContent>
       </Sheet>
 
-      {/* Desktop Fixed Left Sidebar (w-64 bg-[#111827] text-white) */}
+      {/* Desktop Fixed Left Sidebar */}
       <div className="fixed inset-y-0 left-0 z-30 hidden w-64 lg:block">
-        <SidebarContent pathname={pathname} />
+        <SidebarContent pathname={pathname} isAdmin={isAdmin} />
       </div>
 
-      {/* Main Workspace Area (Canvas: bg-[#F3F4F6]) */}
+      {/* Main Workspace Area */}
       <div className="lg:pl-64 flex flex-col min-h-screen">
-        {/* Top Header: Clean White Bar (h-16 bg-white shadow-sm px-6 flex items-center justify-between) */}
+        {/* Top Header */}
         <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-gray-200 bg-white shadow-sm px-6">
           <div className="flex items-center gap-3 pl-10 lg:pl-0">
             <h1 className="font-display text-base font-bold text-[#1F2937]">
@@ -205,8 +246,14 @@ export function DashboardLayoutClient({
           </div>
 
           <div className="flex items-center gap-4">
-            {/* Search Input (rounded-lg bg-gray-100 border-none) */}
-            <div className="relative hidden md:block w-72">
+            {/* SaaS Credits Indicator Badge */}
+            <div className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-amber-500/10 border border-amber-500/30 rounded-full text-amber-700 text-xs font-bold shadow-xs">
+              <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+              <span>{creditsBalance} Evaluation Credits</span>
+            </div>
+
+            {/* Search Input */}
+            <div className="relative hidden md:block w-64">
               <Search className="absolute left-3.5 top-2.5 h-4 w-4 text-gray-400" strokeWidth={2} />
               <input
                 type="text"
@@ -244,7 +291,7 @@ export function DashboardLayoutClient({
           </div>
         </header>
 
-        {/* Canvas Content (bg-[#F3F4F6]) */}
+        {/* Canvas Content */}
         <main className="flex-1 p-6 lg:p-8">
           <AnimatePresence mode="wait">
             <motion.div

@@ -1,137 +1,184 @@
--- ============================================================================
--- AI-Recruit360 Database Schema (Supabase PostgreSQL)
--- Multi-Tenant Recruiter & Candidate Isolation Schema
--- ============================================================================
+-- =============================================================================
+-- AI-Recruit360 Production Database Schema (PostgreSQL on Supabase)
+-- Master Architecture & SaaS Multi-Tenant DDL Specification
+-- =============================================================================
 
--- 1. Create Recruiters Profile Table (Extends auth.users)
-CREATE TABLE IF NOT EXISTS public.recruiters (
+-- 0. CLEAN SLATE: DROP OLD LEGACY TABLES IF THEY EXIST
+DROP TABLE IF EXISTS public.audit_logs CASCADE;
+DROP TABLE IF EXISTS public.proctor_logs CASCADE;
+DROP TABLE IF EXISTS public.evaluations CASCADE;
+DROP TABLE IF EXISTS public.interviews CASCADE;
+DROP TABLE IF EXISTS public.questions CASCADE;
+DROP TABLE IF EXISTS public.applications CASCADE;
+DROP TABLE IF EXISTS public.candidates CASCADE;
+DROP TABLE IF EXISTS public.jobs CASCADE;
+DROP TABLE IF EXISTS public.recruiters CASCADE;
+
+-- 1. RECRUITERS (Extends native Supabase auth.users)
+CREATE TABLE public.recruiters (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-    full_name TEXT NOT NULL,
-    company_name TEXT NOT NULL,
-    company_website TEXT,
-    role TEXT DEFAULT 'recruiter',
-    created_at TIMESTAMPTZ DEFAULT timezone('utc', now()) NOT NULL
+    full_name VARCHAR(255) NOT NULL,
+    company_name VARCHAR(255) NOT NULL,
+    role VARCHAR(50) DEFAULT 'recruiter' CHECK (role IN ('admin', 'recruiter')),
+    is_allowed BOOLEAN DEFAULT true NOT NULL,
+    credits_balance INT DEFAULT 100 CHECK (credits_balance >= 0) NOT NULL,
+    total_credits_used INT DEFAULT 0 CHECK (total_credits_used >= 0) NOT NULL,
+    total_ai_tokens_used INT DEFAULT 0 CHECK (total_ai_tokens_used >= 0) NOT NULL,
+    total_ai_cost_usd NUMERIC(10, 4) DEFAULT 0.0000 CHECK (total_ai_cost_usd >= 0) NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT timezone('utc', now()) NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT timezone('utc', now()) NOT NULL
 );
 
--- 2. Create Jobs Table (Linked to Recruiter)
-CREATE TABLE IF NOT EXISTS public.jobs (
+-- 2. JOBS (Recruiter Job Postings with Expiration Lifecycle)
+CREATE TABLE public.jobs (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    recruiter_id UUID REFERENCES public.recruiters(id) ON DELETE CASCADE NOT NULL,
-    title TEXT NOT NULL,
+    recruiter_id UUID REFERENCES public.recruiters(id) ON DELETE SET NULL,
+    title VARCHAR(255) NOT NULL,
+    department VARCHAR(100) DEFAULT 'Engineering',
     description TEXT NOT NULL,
-    department TEXT,
-    min_experience INT DEFAULT 0,
-    status TEXT DEFAULT 'active' CHECK (status IN ('active', 'closed', 'draft')),
-    created_at TIMESTAMPTZ DEFAULT timezone('utc', now()) NOT NULL
+    min_experience SMALLINT DEFAULT 0 CHECK (min_experience >= 0),
+    duration_days SMALLINT DEFAULT 30 CHECK (duration_days > 0),
+    expires_at TIMESTAMPTZ DEFAULT timezone('utc', now() + interval '30 days') NOT NULL,
+    status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('draft', 'active', 'expired', 'closed')),
+    created_at TIMESTAMPTZ DEFAULT timezone('utc', now()) NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT timezone('utc', now()) NOT NULL
 );
 
--- 3. Create Candidates Table (Linked to Specific Job)
-CREATE TABLE IF NOT EXISTS public.candidates (
+-- 3. CANDIDATES (Normalized Candidate Demographic Profiles)
+CREATE TABLE public.candidates (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    job_id UUID REFERENCES public.jobs(id) ON DELETE CASCADE NOT NULL,
-    name TEXT NOT NULL,
-    email TEXT NOT NULL,
-    github_url TEXT,
-    cv_url TEXT,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    phone VARCHAR(50),
+    gender VARCHAR(20),
+    city VARCHAR(100),
+    github_url VARCHAR(255),
+    linkedin_url VARCHAR(255),
+    created_at TIMESTAMPTZ DEFAULT timezone('utc', now()) NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT timezone('utc', now()) NOT NULL
+);
+
+-- 4. APPLICATIONS (Junction Table: Job Applications & Screening State)
+CREATE TABLE public.applications (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    job_id UUID NOT NULL REFERENCES public.jobs(id) ON DELETE CASCADE,
+    candidate_id UUID NOT NULL REFERENCES public.candidates(id) ON DELETE CASCADE,
+    status VARCHAR(30) DEFAULT 'pending' CHECK (status IN ('pending', 'screening', 'interviewing', 'completed', 'offered', 'rejected')),
+    cv_url VARCHAR(512) NOT NULL,
     resume_text TEXT,
-    status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'interviewing', 'completed', 'rejected')),
-    ai_score INT DEFAULT 0,
-    technical_score INT DEFAULT 0,
-    communication_score INT DEFAULT 0,
-    honesty_score INT DEFAULT 0,
-    xai_reasoning JSONB DEFAULT '{}'::jsonb,
-    generated_questions JSONB DEFAULT '[]'::jsonb,
-    current_question_index INT DEFAULT 0,
-    interview_transcript TEXT DEFAULT '',
-    created_at TIMESTAMPTZ DEFAULT timezone('utc', now()) NOT NULL
+    ai_summary TEXT,
+    match_score SMALLINT CHECK (match_score >= 0 AND match_score <= 100),
+    hiring_confidence SMALLINT CHECK (hiring_confidence >= 0 AND hiring_confidence <= 100),
+    passed_knockout BOOLEAN DEFAULT true,
+    knockout_reason TEXT,
+    applied_at TIMESTAMPTZ DEFAULT timezone('utc', now()) NOT NULL,
+    CONSTRAINT unique_candidate_per_job UNIQUE(job_id, candidate_id)
 );
 
--- 4. Create Proctor Logs Table (Linked to Candidate)
-CREATE TABLE IF NOT EXISTS public.proctor_logs (
+-- 5. QUESTIONS (Dynamic Technical & HR Questions per Job)
+CREATE TABLE public.questions (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    candidate_id UUID REFERENCES public.candidates(id) ON DELETE CASCADE NOT NULL,
-    event_type TEXT NOT NULL,
+    job_id UUID NOT NULL REFERENCES public.jobs(id) ON DELETE CASCADE,
+    question_text TEXT NOT NULL,
+    category VARCHAR(50) DEFAULT 'technical' CHECK (category IN ('technical', 'hr', 'mcq')),
+    ideal_answer TEXT,
+    mcq_options JSONB,
+    correct_option VARCHAR(255),
     created_at TIMESTAMPTZ DEFAULT timezone('utc', now()) NOT NULL
 );
 
--- 5. Automatic Trigger: Create Recruiter Profile on Auth User Signup
-CREATE OR REPLACE FUNCTION public.handle_new_recruiter()
-RETURNS TRIGGER AS $$
-BEGIN
-    INSERT INTO public.recruiters (id, full_name, company_name)
-    VALUES (
-        NEW.id,
-        COALESCE(NEW.raw_user_meta_data->>'full_name', 'Recruiter'),
-        COALESCE(NEW.raw_user_meta_data->>'company_name', 'My Company')
-    )
-    ON CONFLICT (id) DO NOTHING;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+-- 6. INTERVIEWS (Candidate Asynchronous AI Interview Session)
+CREATE TABLE public.interviews (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    application_id UUID UNIQUE NOT NULL REFERENCES public.applications(id) ON DELETE CASCADE,
+    candidate_id UUID NOT NULL REFERENCES public.candidates(id) ON DELETE CASCADE,
+    status VARCHAR(30) DEFAULT 'scheduled' CHECK (status IN ('scheduled', 'in_progress', 'completed', 'abandoned')),
+    current_question_index SMALLINT DEFAULT 0 CHECK (current_question_index >= 0),
+    interview_transcript TEXT DEFAULT '',
+    overall_score SMALLINT CHECK (overall_score >= 0 AND overall_score <= 100),
+    truthfulness_score SMALLINT CHECK (truthfulness_score >= 0 AND truthfulness_score <= 100),
+    started_at TIMESTAMPTZ,
+    completed_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT timezone('utc', now()) NOT NULL
+);
 
--- Drop trigger if exists before recreating
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-CREATE TRIGGER on_auth_user_created
-    AFTER INSERT ON auth.users
-    FOR EACH ROW EXECUTE FUNCTION public.handle_new_recruiter();
+-- 7. EVALUATIONS (4-Dimensional XAI Scoring & Feedback)
+CREATE TABLE public.evaluations (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    interview_id UUID NOT NULL REFERENCES public.interviews(id) ON DELETE CASCADE,
+    technical_score SMALLINT CHECK (technical_score >= 0 AND technical_score <= 100),
+    communication_score SMALLINT CHECK (communication_score >= 0 AND communication_score <= 100),
+    honesty_score SMALLINT CHECK (honesty_score >= 0 AND honesty_score <= 100),
+    problem_solving_score SMALLINT CHECK (problem_solving_score >= 0 AND problem_solving_score <= 100),
+    overall_score SMALLINT CHECK (overall_score >= 0 AND overall_score <= 100),
+    xai_reasoning JSONB NOT NULL,
+    strengths TEXT[] DEFAULT '{}',
+    red_flags TEXT[] DEFAULT '{}',
+    created_at TIMESTAMPTZ DEFAULT timezone('utc', now()) NOT NULL
+);
 
--- 6. Enable Row Level Security (RLS)
+-- 8. PROCTOR_LOGS (Anti-Cheat Telemetry Audit Log)
+CREATE TABLE public.proctor_logs (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    interview_id UUID NOT NULL REFERENCES public.interviews(id) ON DELETE CASCADE,
+    candidate_id UUID REFERENCES public.candidates(id) ON DELETE CASCADE,
+    event_type VARCHAR(100) NOT NULL,
+    description TEXT,
+    severity VARCHAR(20) DEFAULT 'warning' CHECK (severity IN ('info', 'warning', 'critical')),
+    created_at TIMESTAMPTZ DEFAULT timezone('utc', now()) NOT NULL
+);
+
+-- 9. AUDIT_LOGS (System Governance Audit Trail)
+CREATE TABLE public.audit_logs (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    actor_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+    action VARCHAR(100) NOT NULL,
+    target_resource VARCHAR(100),
+    details JSONB,
+    ip_address VARCHAR(45),
+    created_at TIMESTAMPTZ DEFAULT timezone('utc', now()) NOT NULL
+);
+
+-- =============================================================================
+-- INDEXES & PERFORMANCE OPTIMIZATIONS
+-- =============================================================================
+CREATE INDEX idx_jobs_recruiter ON public.jobs(recruiter_id);
+CREATE INDEX idx_jobs_status_expires ON public.jobs(status, expires_at);
+CREATE INDEX idx_applications_job ON public.applications(job_id);
+CREATE INDEX idx_applications_candidate ON public.applications(candidate_id);
+CREATE INDEX idx_interviews_application ON public.interviews(application_id);
+CREATE INDEX idx_evaluations_interview ON public.evaluations(interview_id);
+CREATE INDEX idx_proctor_logs_interview ON public.proctor_logs(interview_id);
+CREATE INDEX idx_audit_logs_actor ON public.audit_logs(actor_id);
+
+-- =============================================================================
+-- ROW LEVEL SECURITY (RLS) POLICIES
+-- =============================================================================
 ALTER TABLE public.recruiters ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.jobs ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.candidates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.applications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.interviews ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.evaluations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.proctor_logs ENABLE ROW LEVEL SECURITY;
 
--- 7. Define Row Level Security (RLS) Policies
-
--- Recruiters Table RLS Policies
-DROP POLICY IF EXISTS "Recruiters read/update own profile" ON public.recruiters;
-CREATE POLICY "Recruiters read/update own profile" ON public.recruiters
+-- Recruiters can read and update their own profile
+CREATE POLICY "Recruiters access own profile" ON public.recruiters 
     FOR ALL USING (auth.uid() = id);
 
--- Jobs Table RLS Policies
-DROP POLICY IF EXISTS "Recruiters manage own jobs" ON public.jobs;
+-- Public read active non-expired jobs; Recruiters manage own jobs
+CREATE POLICY "Public read active jobs" ON public.jobs 
+    FOR SELECT USING (status = 'active' AND expires_at > timezone('utc', now()));
+
 CREATE POLICY "Recruiters manage own jobs" ON public.jobs 
-    FOR ALL USING (auth.uid() = recruiter_id);
+    FOR ALL USING (recruiter_id = auth.uid());
 
-DROP POLICY IF EXISTS "Public read active jobs" ON public.jobs;
-CREATE POLICY "Public read active jobs" ON public.jobs
-    FOR SELECT USING (status = 'active');
-
--- Candidates Table RLS Policies
-DROP POLICY IF EXISTS "Public insert candidates" ON public.candidates;
-CREATE POLICY "Public insert candidates" ON public.candidates 
-    FOR INSERT WITH CHECK (true);
-
-DROP POLICY IF EXISTS "Public read candidate interview" ON public.candidates;
-CREATE POLICY "Public read candidate interview" ON public.candidates 
-    FOR SELECT USING (true);
-
-DROP POLICY IF EXISTS "Recruiters view own job candidates" ON public.candidates;
-CREATE POLICY "Recruiters view own job candidates" ON public.candidates 
-    FOR ALL USING (
-        EXISTS (
-            SELECT 1 FROM public.jobs 
-            WHERE jobs.id = candidates.job_id 
-            AND jobs.recruiter_id = auth.uid()
-        )
-    );
-
--- Proctor Logs Table RLS Policies
-DROP POLICY IF EXISTS "Public insert proctor logs" ON public.proctor_logs;
-CREATE POLICY "Public insert proctor logs" ON public.proctor_logs 
-    FOR INSERT WITH CHECK (true);
-
-DROP POLICY IF EXISTS "Recruiters view proctor logs for own candidates" ON public.proctor_logs;
-CREATE POLICY "Recruiters view proctor logs for own candidates" ON public.proctor_logs 
+-- Recruiters view applications for their jobs
+CREATE POLICY "Recruiters view applications" ON public.applications 
     FOR SELECT USING (
         EXISTS (
-            SELECT 1 FROM public.candidates
-            JOIN public.jobs ON jobs.id = candidates.job_id
-            WHERE candidates.id = proctor_logs.candidate_id
+            SELECT 1 FROM public.jobs 
+            WHERE jobs.id = applications.job_id 
             AND jobs.recruiter_id = auth.uid()
         )
     );
-
--- 8. Storage Bucket Setup for Resumes
-INSERT INTO storage.buckets (id, name, public) VALUES ('resumes', 'resumes', true)
-ON CONFLICT (id) DO NOTHING;

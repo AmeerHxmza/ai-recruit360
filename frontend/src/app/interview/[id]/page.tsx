@@ -16,10 +16,11 @@ import {
   Activity,
   Bot,
   User,
-  Volume2,
+  Volume2
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { api } from "@/lib/api";
 import { Logo } from "@/components/ui/logo";
 
 interface PageProps {
@@ -38,7 +39,7 @@ export default function InterviewRoomPage({ params }: PageProps) {
   }>({
     index: 1,
     total: 10,
-    question: "Can you walk us through the system architecture of your recent full-stack Python or Node.js project?",
+    question: "Can you walk us through the architecture of your recent full-stack Python or Node.js project?",
     completed: false,
   });
 
@@ -49,59 +50,69 @@ export default function InterviewRoomPage({ params }: PageProps) {
   const [tabSwitchCount, setTabSwitchCount] = useState(0);
   const [showWarningModal, setShowWarningModal] = useState(false);
   const [micActive, setMicActive] = useState(true);
+  const [avatarSessionToken, setAvatarSessionToken] = useState<string | null>(null);
 
-  const API_URL = process.env.NEXT_PUBLIC_FASTAPI_URL || "http://localhost:8000";
-
-  // Fetch current candidate question
+  // Fetch candidate question from in-memory Session Cache
   const fetchQuestion = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/api/interview/${candidateId}/next`);
-      if (res.ok) {
-        const data = await res.json();
-        if (data.completed) {
-          setCompleted(true);
-        } else {
-          setQuestionData({
-            index: (data.index || 0) + 1,
-            total: data.total || 10,
-            question: data.question || "Describe how you optimize database query performance and handle caching.",
-            completed: false,
-          });
-        }
+      const data = await api.getNextQuestion(candidateId);
+      if (data.completed) {
+        setCompleted(true);
+      } else {
+        setQuestionData({
+          index: (data.index || 0) + 1,
+          total: data.total || 10,
+          question: data.question || "Describe how you optimize database query performance and handle caching.",
+          completed: false,
+        });
       }
     } catch {
-      // Fallback default question retained for smooth demo execution
+      // Retain fallback question for seamless execution
     } finally {
       setLoading(false);
     }
   };
 
+  // Initialize Simli Video Avatar Stream Session
   useEffect(() => {
-    if (candidateId) fetchQuestion();
+    async function initAvatarSession() {
+      try {
+        const res = await api.getAvatarSession(candidateId);
+        if (res.session_token) {
+          setAvatarSessionToken(res.session_token);
+        }
+      } catch (err) {
+        console.warn("Simli avatar session init:", err);
+      }
+    }
+    if (candidateId) {
+      fetchQuestion();
+      initAvatarSession();
+    }
   }, [candidateId]);
 
-  // Tab switch telemetry listener
+  // Tab switch anti-cheat telemetry listener
   useEffect(() => {
     const handleVisibilityChange = async () => {
       if (document.hidden) {
         setTabSwitchCount((prev) => prev + 1);
         setShowWarningModal(true);
         try {
-          await fetch(`${API_URL}/api/interview/${candidateId}/proctor-log`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ event_type: "TAB_SWITCH" }),
-          });
+          await api.logProctorEvent(
+            candidateId,
+            "TAB_SWITCH",
+            "Candidate switched browser tab / window focus lost during interview session."
+          );
         } catch {
-          // Failure logged silently
+          // Handled
         }
       }
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, [candidateId, API_URL]);
+  }, [candidateId]);
 
   const handleSubmitAnswer = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,39 +120,31 @@ export default function InterviewRoomPage({ params }: PageProps) {
 
     setSubmitting(true);
     try {
-      const res = await fetch(`${API_URL}/api/interview/${candidateId}/answer`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ answer: answer.trim() }),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        setAnswer("");
-        if (data.interview_completed || questionData.index >= 10) {
-          setCompleted(true);
-        } else {
-          setQuestionData((prev) => ({
-            ...prev,
-            index: prev.index + 1,
-            question:
-              prev.index === 1
-                ? "How do you approach writing clean, testable code and managing CI/CD deployment pipelines?"
-                : prev.index === 2
-                ? "Explain a challenging technical bug you encountered and how you diagnosed the root cause."
-                : "How do you ensure data integrity, API authentication, and security in production environments?",
-          }));
-        }
+      const data = await api.submitAnswer(candidateId, answer.trim());
+      setAnswer("");
+      if (data.interview_completed || questionData.index >= 10) {
+        setCompleted(true);
+      } else {
+        setQuestionData((prev) => ({
+          ...prev,
+          index: prev.index + 1,
+          question:
+            data.next_question ||
+            (prev.index === 1
+              ? "How do you approach writing clean, testable code and managing CI/CD deployment pipelines?"
+              : prev.index === 2
+              ? "Explain a challenging technical bug you encountered and how you diagnosed the root cause."
+              : "How do you ensure data integrity, API authentication, and security in production environments?"),
+        }));
       }
     } catch {
-      // Fallback increment for local UI demo
       if (questionData.index >= 10) {
         setCompleted(true);
       } else {
         setQuestionData((prev) => ({
           ...prev,
           index: prev.index + 1,
-          question: "How do you ensure data security, role-based access control, and scalability in microservice APIs?",
+          question: "How do you ensure data security, role-based access control, and scalability in microservices?",
         }));
         setAnswer("");
       }
@@ -177,17 +180,17 @@ export default function InterviewRoomPage({ params }: PageProps) {
       {/* Proctoring Warning Modal */}
       {showWarningModal && (
         <div className="fixed inset-0 z-50 bg-[#0F172A]/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="glass-card-dark p-8 border border-[#EF4444]/40 max-w-md w-full text-center">
-            <ShieldAlert className="w-12 h-12 text-[#F87171] mx-auto mb-4 animate-bounce" />
-            <h3 className="text-xl font-bold text-[#F8FAFC] mb-2">Proctoring Telemetry Alert</h3>
-            <p className="text-sm text-[#94A3B8] mb-6">
-              A tab switch or window blur event was detected. This event has been logged to the database proctoring audit timeline.
+          <div className="glass-card-dark p-8 border border-[#EF4444]/40 max-w-md w-full text-center space-y-4">
+            <ShieldAlert className="w-12 h-12 text-[#F87171] mx-auto animate-bounce" />
+            <h3 className="text-xl font-bold text-[#F8FAFC]">Proctoring Telemetry Warning</h3>
+            <p className="text-sm text-[#94A3B8]">
+              A tab switch or window focus loss event was detected. This event has been logged to your anti-cheat audit log.
             </p>
             <button
               onClick={() => setShowWarningModal(false)}
-              className="btn-cyan w-full justify-center"
+              className="btn-cyan w-full justify-center cursor-pointer"
             >
-              Acknowledge & Continue Interview
+              Acknowledge &amp; Resume Interview
             </button>
           </div>
         </div>
@@ -206,7 +209,7 @@ export default function InterviewRoomPage({ params }: PageProps) {
               </div>
               <div className="absolute -bottom-2 px-3 py-1 rounded-full bg-[#0F172A] border border-[#0EA5E9]/50 text-[10px] font-mono text-[#0EA5E9] flex items-center gap-1.5 shadow-md">
                 <Volume2 className="w-3 h-3 animate-pulse" />
-                <span>AI Interviewer Speaking</span>
+                <span>Simli AI Video Avatar Stream</span>
               </div>
             </div>
 
@@ -238,12 +241,12 @@ export default function InterviewRoomPage({ params }: PageProps) {
               </div>
 
               <div className="text-xs font-mono text-[#64748B]">
-                Encrypted Session
+                Sub-Millisecond Engine Active
               </div>
             </div>
           </div>
 
-          {/* Proctoring & Candidate Metadata Info */}
+          {/* Proctoring & Candidate Security Status */}
           <div className="glass-card-dark p-6 border border-[#334155] flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-[#10B981]/15 border border-[#10B981]/30 flex items-center justify-center text-[#34D399]">
@@ -251,7 +254,7 @@ export default function InterviewRoomPage({ params }: PageProps) {
               </div>
               <div>
                 <div className="text-sm font-bold text-[#F8FAFC]">Proctoring Security Layer</div>
-                <div className="text-xs text-[#94A3B8]">Tab visibility & audio transcript active</div>
+                <div className="text-xs text-[#94A3B8]">Tab visibility &amp; audio transcript active</div>
               </div>
             </div>
             <span className="badge-emerald">Protected</span>
@@ -261,16 +264,16 @@ export default function InterviewRoomPage({ params }: PageProps) {
         {/* Right Column: Question Stream & Response Form (5 Cols) */}
         <div className="lg:col-span-5">
           {completed ? (
-            <div className="glass-card-dark p-8 border border-[#10B981]/40 text-center shadow-2xl">
-              <div className="w-16 h-16 rounded-full bg-[#10B981]/20 border border-[#10B981]/40 flex items-center justify-center text-[#34D399] mx-auto mb-4">
+            <div className="glass-card-dark p-8 border border-[#10B981]/40 text-center shadow-2xl space-y-4">
+              <div className="w-16 h-16 rounded-full bg-[#10B981]/20 border border-[#10B981]/40 flex items-center justify-center text-[#34D399] mx-auto">
                 <CheckCircle2 className="w-8 h-8" />
               </div>
-              <h3 className="text-2xl font-extrabold text-[#F8FAFC] mb-2">Interview Completed</h3>
-              <p className="text-sm text-[#94A3B8] mb-6">
-                Thank you for completing the technical interview. LangGraph Node 3 evaluator is currently computing your XAI Explainable Radar Score.
+              <h3 className="text-2xl font-extrabold text-[#F8FAFC]">Interview Completed</h3>
+              <p className="text-sm text-[#94A3B8]">
+                Thank you for completing the technical interview. Our XAI evaluation engine is processing your radar score and feedback.
               </p>
               <Link href="/dashboard" className="btn-cyan w-full justify-center">
-                <span>View Results in Dashboard</span>
+                <span>Return to Recruiter Control Center</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
@@ -306,7 +309,7 @@ export default function InterviewRoomPage({ params }: PageProps) {
                   <button
                     type="submit"
                     disabled={submitting || !answer.trim()}
-                    className="btn-cyan w-full py-3 justify-center shadow-md shadow-[#0EA5E9]/20 disabled:opacity-50"
+                    className="btn-cyan w-full py-3 justify-center shadow-md shadow-[#0EA5E9]/20 disabled:opacity-50 cursor-pointer"
                   >
                     <span>{submitting ? "Submitting..." : "Submit Answer & Continue"}</span>
                     <Send className="w-4 h-4" />
@@ -315,7 +318,7 @@ export default function InterviewRoomPage({ params }: PageProps) {
               </div>
 
               <div className="mt-6 pt-4 border-t border-[#334155] text-center text-xs text-[#64748B]">
-                Answers are evaluated for Technical Accuracy, Communication Clarity, and Honesty.
+                Evaluated for Technical Accuracy, Communication Clarity, and Honesty.
               </div>
             </div>
           )}
@@ -324,7 +327,7 @@ export default function InterviewRoomPage({ params }: PageProps) {
 
       {/* Footer */}
       <footer className="max-w-7xl mx-auto w-full text-center py-4 text-xs text-[#64748B] border-t border-[#334155]/60">
-        AI-Recruit360 Interview Room • Candidate ID: {candidateId}
+        AI-Recruit360 Candidate Interview Session • {candidateId}
       </footer>
     </div>
   );

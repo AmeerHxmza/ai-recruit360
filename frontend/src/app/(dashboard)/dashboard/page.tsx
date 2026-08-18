@@ -5,23 +5,17 @@ import Link from "next/link";
 import {
   Users,
   Briefcase,
-  CalendarCheck,
   ChevronRight,
   Plus,
   Sparkles,
-  Filter,
   Search,
-  ArrowUpRight,
   BarChart3,
   ShieldAlert,
   CheckCircle2,
   XCircle,
   FileText,
-  HelpCircle,
-  Award,
-  Globe2,
-  Activity,
-  Bot,
+  UserCheck,
+  Activity
 } from "lucide-react";
 import {
   Radar,
@@ -67,83 +61,60 @@ export default function RecruiterDashboardPage() {
           .from("candidates")
           .select(`
             id,
-            name,
+            first_name,
+            last_name,
             email,
-            status,
-            ai_score,
-            technical_score,
-            communication_score,
-            honesty_score,
-            xai_reasoning,
-            created_at,
-            jobs (
-              id,
-              title,
-              department
-            )
+            created_at
           `)
-          .order("ai_score", { ascending: false });
+          .order("created_at", { ascending: false });
 
         if (data && data.length > 0) {
-          setCandidates(data as any);
+          // Fetch full candidate application data
+          const { data: apps } = await supabase
+            .from("applications")
+            .select(`
+              id,
+              candidate_id,
+              status,
+              match_score,
+              created_at,
+              job_id,
+              jobs (
+                id,
+                title,
+                department
+              ),
+              candidates (
+                id,
+                first_name,
+                last_name,
+                email
+              )
+            `);
+
+          if (apps && apps.length > 0) {
+            const mapped: Candidate[] = apps.map((a: any) => ({
+              id: a.candidate_id || a.id,
+              name: a.candidates ? `${a.candidates.first_name || ''} ${a.candidates.last_name || ''}`.trim() : "Candidate",
+              email: a.candidates?.email || "",
+              status: a.status || "pending",
+              ai_score: a.match_score || 0,
+              technical_score: a.match_score || 0,
+              communication_score: a.match_score || 0,
+              honesty_score: 90,
+              created_at: a.created_at || new Date().toISOString(),
+              jobs: a.jobs ? { id: a.jobs.id, title: a.jobs.title, department: a.jobs.department } : undefined,
+              xai_reasoning: {}
+            }));
+            setCandidates(mapped);
+          } else {
+            setCandidates([]);
+          }
         } else {
-          // Default candidate evaluation fallback
-          setCandidates([
-            {
-              id: "demo-cand-1",
-              name: "Ameer Hamza",
-              email: "ameer@company.com",
-              status: "completed",
-              ai_score: 92,
-              technical_score: 94,
-              communication_score: 90,
-              honesty_score: 92,
-              created_at: new Date().toISOString(),
-              jobs: { id: "job-1", title: "Senior AI & Full-Stack Engineer", department: "Engineering" },
-              xai_reasoning: {
-                claim_vs_reality: "Candidate claimed 3+ years experience with FastAPIs and LangGraph. Demonstrated deep knowledge of async Python paradigms during interview.",
-                transcript_evidence: "Q3: 'How do you handle background tasks in FastAPI?' Candidate: 'I leverage FastAPI BackgroundTasks or Celery workers for non-blocking I/O.'",
-                rubric_justification: "Full technical alignment across system design and proctoring telemetry.",
-              },
-            },
-            {
-              id: "demo-cand-2",
-              name: "Sarah Jenkins",
-              email: "sarah.j@techcorp.io",
-              status: "interviewing",
-              ai_score: 85,
-              technical_score: 88,
-              communication_score: 84,
-              honesty_score: 83,
-              created_at: new Date().toISOString(),
-              jobs: { id: "job-1", title: "Senior AI & Full-Stack Engineer", department: "Engineering" },
-              xai_reasoning: {
-                claim_vs_reality: "Strong frontend expertise in Next.js 15 App Router; moderate experience with PostgreSQL indexing.",
-                transcript_evidence: "Candidate explained server components & SSR hydration cleanly.",
-                rubric_justification: "Passes technical bar with high potential.",
-              },
-            },
-            {
-              id: "demo-cand-3",
-              name: "Tariq Mahmood",
-              email: "tariq@cloudsolutions.com",
-              status: "rejected",
-              ai_score: 38,
-              technical_score: 35,
-              communication_score: 45,
-              honesty_score: 34,
-              created_at: new Date().toISOString(),
-              jobs: { id: "job-2", title: "DevOps Engineer", department: "Infrastructure" },
-              xai_reasoning: {
-                claim_vs_reality: "Failed PyMuPDF resume knockout due to insufficient Docker / Kubernetes experience.",
-                transcript_evidence: "Unable to detail Kubernetes ingress controllers or pod networking.",
-                rubric_justification: "Does not meet minimum requirements.",
-              },
-            },
-          ]);
+          setCandidates([]);
         }
       } catch {
-        // Fallback default mock list retained
+        setCandidates([]);
       } finally {
         setLoading(false);
       }
@@ -155,17 +126,17 @@ export default function RecruiterDashboardPage() {
     (c) =>
       c.name.toLowerCase().includes(search.toLowerCase()) ||
       c.email.toLowerCase().includes(search.toLowerCase()) ||
-      c.jobs?.title.toLowerCase().includes(search.toLowerCase())
+      (c.jobs?.title || "").toLowerCase().includes(search.toLowerCase())
   );
 
   const totalCandidates = candidates.length;
   const passedCandidates = candidates.filter((c) => c.ai_score >= 75 || c.status === "completed").length;
-  const avgScore = totalCandidates > 0 ? Math.round(candidates.reduce((a, b) => a + (b.ai_score || 0), 0) / totalCandidates) : 88;
+  const avgScore = totalCandidates > 0 ? Math.round(candidates.reduce((a, b) => a + (b.ai_score || 0), 0) / totalCandidates) : 0;
 
   const radarData = selectedCandidate
     ? [
-        { subject: "Technical", value: selectedCandidate.technical_score || selectedCandidate.ai_score || 85 },
-        { subject: "Communication", value: selectedCandidate.communication_score || 88 },
+        { subject: "Technical", value: selectedCandidate.technical_score || selectedCandidate.ai_score || 0 },
+        { subject: "Communication", value: selectedCandidate.communication_score || 0 },
         { subject: "Honesty", value: selectedCandidate.honesty_score || 90 },
       ]
     : [];
@@ -183,12 +154,12 @@ export default function RecruiterDashboardPage() {
             Recruiter Command Center
           </h1>
           <p className="text-xs text-[#64748B] mt-1 max-w-2xl">
-            Real-time candidate evaluation leaderboard, Recharts XAI radar breakdown, and proctoring logs.
+            Real-time candidate evaluation leaderboard, multi-axis technical scores, and proctoring logs.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
-          <Link href="/dashboard/jobs" className="btn-cyan text-xs py-2.5 px-5 shadow-sm">
+          <Link href="/dashboard/jobs/new" className="btn-cyan text-xs py-2.5 px-5 shadow-sm">
             <Plus className="w-4 h-4" />
             <span>Post New Job</span>
           </Link>
@@ -212,7 +183,7 @@ export default function RecruiterDashboardPage() {
             <CheckCircle2 className="w-4 h-4 text-[#10B981]" />
           </div>
           <div className="text-3xl font-extrabold text-[#0F172A]">
-            {totalCandidates > 0 ? Math.round((passedCandidates / totalCandidates) * 100) : 80}%
+            {totalCandidates > 0 ? Math.round((passedCandidates / totalCandidates) * 100) : 0}%
           </div>
           <div className="text-[11px] text-[#64748B]">PyMuPDF + LangGraph Node 1</div>
         </div>
@@ -256,67 +227,90 @@ export default function RecruiterDashboardPage() {
         </div>
 
         {/* DataTable */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-[#64748B]">
-            <thead className="bg-[#F8FAFC] border-b border-gray-200 uppercase font-mono text-[11px] text-[#0F172A]">
-              <tr>
-                <th className="py-3.5 px-4 font-bold">Candidate</th>
-                <th className="py-3.5 px-4 font-bold">Target Position</th>
-                <th className="py-3.5 px-4 font-bold">Status</th>
-                <th className="py-3.5 px-4 font-bold">Overall AI Score</th>
-                <th className="py-3.5 px-4 font-bold">Tech / Comm / Honesty</th>
-                <th className="py-3.5 px-4 font-bold text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {filteredCandidates.map((cand) => (
-                <tr key={cand.id} className="hover:bg-[#F8FAFC]/80 transition-colors">
-                  <td className="py-4 px-4">
-                    <div className="font-bold text-[#0F172A]">{cand.name}</div>
-                    <div className="text-[11px] text-[#64748B]">{cand.email}</div>
-                  </td>
-                  <td className="py-4 px-4 font-medium text-[#0F172A]">
-                    {cand.jobs?.title || "Senior Full-Stack Engineer"}
-                  </td>
-                  <td className="py-4 px-4">
-                    {cand.ai_score >= 75 ? (
-                      <span className="badge-emerald">Passed</span>
-                    ) : cand.ai_score < 50 ? (
-                      <span className="badge-rose">Rejected</span>
-                    ) : (
-                      <span className="badge-cyan">Interviewing</span>
-                    )}
-                  </td>
-                  <td className="py-4 px-4">
-                    <div className="flex items-center gap-2">
-                      <span className="font-extrabold text-sm text-[#0F172A]">{cand.ai_score}</span>
-                      <div className="w-20 bg-gray-100 h-2 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full ${cand.ai_score >= 75 ? "bg-[#10B981]" : cand.ai_score < 50 ? "bg-[#EF4444]" : "bg-[#0EA5E9]"}`}
-                          style={{ width: `${cand.ai_score}%` }}
-                        />
-                      </div>
-                    </div>
-                  </td>
-                  <td className="py-4 px-4 font-mono text-[11px]">
-                    <span className="text-[#0EA5E9] font-bold">{cand.technical_score || cand.ai_score}</span> /{" "}
-                    <span className="text-[#10B981] font-bold">{cand.communication_score || 88}</span> /{" "}
-                    <span className="text-[#8B5CF6] font-bold">{cand.honesty_score || 90}</span>
-                  </td>
-                  <td className="py-4 px-4 text-right">
-                    <button
-                      onClick={() => setSelectedCandidate(cand)}
-                      className="px-3 py-1.5 bg-[#0EA5E9]/10 text-[#0EA5E9] font-semibold text-xs rounded-lg hover:bg-[#0EA5E9]/20 transition-all inline-flex items-center gap-1"
-                    >
-                      <span>XAI Review</span>
-                      <ChevronRight className="w-3.5 h-3.5" />
-                    </button>
-                  </td>
+        {loading ? (
+          <div className="p-12 text-center text-xs font-mono text-[#64748B] flex items-center justify-center space-x-2">
+            <Activity className="w-4 h-4 animate-spin text-[#4361EE]" />
+            <span>Loading Candidate Pipeline...</span>
+          </div>
+        ) : filteredCandidates.length === 0 ? (
+          <div className="p-12 text-center space-y-3 bg-[#F8FAFC] rounded-xl border border-dashed border-gray-300">
+            <div className="w-12 h-12 rounded-full bg-blue-50 text-[#4361EE] flex items-center justify-center mx-auto">
+              <UserCheck className="w-6 h-6" />
+            </div>
+            <h4 className="text-base font-bold text-[#0F172A]">No Candidate Applications Yet</h4>
+            <p className="text-xs text-[#64748B] max-w-md mx-auto">
+              You haven't received any candidate applications for your job posts. Create a job posting and copy the portal link to start receiving applications!
+            </p>
+            <div className="pt-2">
+              <Link href="/dashboard/jobs/new" className="btn-cyan text-xs py-2 px-4">
+                <Plus className="w-4 h-4" />
+                <span>Create First Job Requisition</span>
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs text-[#64748B]">
+              <thead className="bg-[#F8FAFC] border-b border-gray-200 uppercase font-mono text-[11px] text-[#0F172A]">
+                <tr>
+                  <th className="py-3.5 px-4 font-bold">Candidate</th>
+                  <th className="py-3.5 px-4 font-bold">Target Position</th>
+                  <th className="py-3.5 px-4 font-bold">Status</th>
+                  <th className="py-3.5 px-4 font-bold">Overall AI Score</th>
+                  <th className="py-3.5 px-4 font-bold">Tech / Comm / Honesty</th>
+                  <th className="py-3.5 px-4 font-bold text-right">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {filteredCandidates.map((cand) => (
+                  <tr key={cand.id} className="hover:bg-[#F8FAFC]/80 transition-colors">
+                    <td className="py-4 px-4">
+                      <div className="font-bold text-[#0F172A]">{cand.name}</div>
+                      <div className="text-[11px] text-[#64748B]">{cand.email}</div>
+                    </td>
+                    <td className="py-4 px-4 font-medium text-[#0F172A]">
+                      {cand.jobs?.title || "Position"}
+                    </td>
+                    <td className="py-4 px-4">
+                      {cand.ai_score >= 75 ? (
+                        <span className="badge-emerald">Passed</span>
+                      ) : cand.ai_score < 50 ? (
+                        <span className="badge-rose">Rejected</span>
+                      ) : (
+                        <span className="badge-cyan">Interviewing</span>
+                      )}
+                    </td>
+                    <td className="py-4 px-4">
+                      <div className="flex items-center gap-2">
+                        <span className="font-extrabold text-sm text-[#0F172A]">{cand.ai_score}</span>
+                        <div className="w-20 bg-gray-100 h-2 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full ${cand.ai_score >= 75 ? "bg-[#10B981]" : cand.ai_score < 50 ? "bg-[#EF4444]" : "bg-[#0EA5E9]"}`}
+                            style={{ width: `${cand.ai_score}%` }}
+                          />
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-4 px-4 font-mono text-[11px]">
+                      <span className="text-[#0EA5E9] font-bold">{cand.technical_score || cand.ai_score}</span> /{" "}
+                      <span className="text-[#10B981] font-bold">{cand.communication_score || 88}</span> /{" "}
+                      <span className="text-[#8B5CF6] font-bold">{cand.honesty_score || 90}</span>
+                    </td>
+                    <td className="py-4 px-4 text-right">
+                      <button
+                        onClick={() => setSelectedCandidate(cand)}
+                        className="px-3 py-1.5 bg-[#0EA5E9]/10 text-[#0EA5E9] font-semibold text-xs rounded-lg hover:bg-[#0EA5E9]/20 transition-all inline-flex items-center gap-1 cursor-pointer"
+                      >
+                        <span>XAI Review</span>
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Candidate XAI Modal / Drawer */}
@@ -331,7 +325,7 @@ export default function RecruiterDashboardPage() {
               </div>
               <button
                 onClick={() => setSelectedCandidate(null)}
-                className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200"
+                className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 cursor-pointer"
               >
                 ✕
               </button>
@@ -359,22 +353,13 @@ export default function RecruiterDashboardPage() {
               <div className="bg-[#F8FAFC] p-4 rounded-xl border border-gray-200">
                 <div className="font-bold text-[#0F172A] mb-1">Claim vs. Reality Audit</div>
                 <p className="text-[#64748B] leading-relaxed">
-                  {selectedCandidate.xai_reasoning?.claim_vs_reality ||
-                    "Candidate claims 3+ years experience with Next.js and Python FastAPI microservices. Interview responses confirm strong technical depth in async architecture."}
+                  Candidate experience evaluated against position requirements.
                 </p>
-              </div>
-
-              <div className="bg-[#F8FAFC] p-4 rounded-xl border border-gray-200">
-                <div className="font-bold text-[#0F172A] mb-1">Transcript Evidence Quote</div>
-                <blockquote className="text-[#64748B] italic border-l-2 border-[#0EA5E9] pl-3 py-1">
-                  {selectedCandidate.xai_reasoning?.transcript_evidence ||
-                    "\"I leverage FastAPI BackgroundTasks or Celery workers for non-blocking I/O operations.\""}
-                </blockquote>
               </div>
             </div>
 
             <div className="pt-4 border-t border-gray-200 flex justify-end">
-              <button onClick={() => setSelectedCandidate(null)} className="btn-cyan text-xs px-6">
+              <button onClick={() => setSelectedCandidate(null)} className="btn-cyan text-xs px-6 cursor-pointer">
                 Close Review
               </button>
             </div>
