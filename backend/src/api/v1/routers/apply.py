@@ -72,6 +72,7 @@ async def submit_application(
             "knockout_reason": result["knockout_reason"],
             "mcq_data": result["mcq_data"],
             "questions": result["questions"],
+            "generated_questions": result["questions"],
             "cv_url": result["cv_url"]
         }
 

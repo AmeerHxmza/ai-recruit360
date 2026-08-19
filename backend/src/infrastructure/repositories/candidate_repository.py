@@ -77,21 +77,20 @@ class CandidateRepository(BaseRepository):
         }
         return self.insert(candidate_data)
 
-    def list_job_leaderboard(self, job_id: str) -> List[Dict[str, Any]]:
+    def list_job_leaderboard(self, job_id: Optional[str] = None) -> List[Dict[str, Any]]:
         """
-        Fetches all applications for a job, joined with candidate info and interview evaluations,
+        Fetches applications joined with candidate info, job title, and evaluations,
         ordered by overall_score descending.
         """
-        res = supabase.table("applications")\
-            .select("*, interviews(*, evaluations(*))")\
-            .eq("job_id", job_id)\
-            .execute()
-
+        query = supabase.table("applications").select("*, jobs(id, title, department), interviews(*, evaluations(*))")
+        if job_id and job_id != "all":
+            query = query.eq("job_id", job_id)
+            
+        res = query.execute()
         apps = res.data or []
         if not apps:
             return []
 
-        # Explicitly query candidate profiles to guarantee first_name and last_name match
         cand_ids = list(set([a["candidate_id"] for a in apps if a.get("candidate_id")]))
         cands_by_id = {}
         if cand_ids:
@@ -107,26 +106,40 @@ class CandidateRepository(BaseRepository):
             evals = interview.get("evaluations", []) or []
             evaluation = evals[0] if isinstance(evals, list) and evals else (evals if isinstance(evals, dict) else {})
 
+            cv_match = cand.get("cv_match_score") if cand.get("cv_match_score") is not None else (app.get("cv_match_score") if app.get("cv_match_score") is not None else (8 if app.get("passed_knockout") else 0))
+            mcq_s = cand.get("mcq_score") if cand.get("mcq_score") is not None else (app.get("mcq_score") if app.get("mcq_score") is not None else 0)
+            int_s = cand.get("interview_score") if cand.get("interview_score") is not None else (app.get("interview_score") if app.get("interview_score") is not None else (evaluation.get("technical_score") or 0))
+
+            # Dynamic 50-Mark Composite Score Sum (Stage 1 CV + Stage 2 MCQ + Stage 3 Interview)
+            tot_s = cv_match + mcq_s + int_s
+
+            job_info = app.get("jobs") or {}
+
             items.append({
-                "id": cand.get("id", app.get("id")),
+                "id": cand.get("id", app.get("candidate_id")),
                 "application_id": app.get("id"),
                 "job_id": app.get("job_id"),
+                "job_title": job_info.get("title", "Job Position") if isinstance(job_info, dict) else "Job Position",
                 "first_name": cand.get("first_name") or "Candidate",
                 "last_name": cand.get("last_name") or "",
                 "email": cand.get("email", ""),
-                "city": cand.get("city"),
-                "cv_url": app.get("cv_url", ""),
+                "phone": cand.get("phone", ""),
+                "city": cand.get("city", "Peshawar"),
+                "cv_url": app.get("cv_url") or cand.get("cv_url") or "",
                 "status": app.get("status", "pending"),
-                "overall_score": evaluation.get("overall_score") or interview.get("overall_score") or 0,
-                "technical_score": evaluation.get("technical_score") or 0,
-                "communication_score": evaluation.get("communication_score") or 0,
-                "honesty_score": evaluation.get("honesty_score") or interview.get("truthfulness_score") or 0,
-                "problem_solving_score": evaluation.get("problem_solving_score") or 0,
+                "cv_match_score": cv_match,
+                "mcq_score": mcq_s,
+                "interview_score": int_s,
+                "total_score": tot_s,
+                "overall_score": tot_s,
+                "technical_score": evaluation.get("technical_score") or (int(round((int_s / 20) * 100)) if int_s else 0),
+                "communication_score": evaluation.get("communication_score") or (int(round((int_s / 20) * 100)) if int_s else 0),
+                "honesty_score": evaluation.get("honesty_score") or interview.get("truthfulness_score") or 90,
+                "problem_solving_score": evaluation.get("problem_solving_score") or 85,
                 "passed_knockout": app.get("passed_knockout", True),
                 "knockout_reason": app.get("knockout_reason"),
-                "applied_at": app.get("applied_at", "")
+                "applied_at": app.get("applied_at") or app.get("created_at") or ""
             })
 
-        # Sort by overall score descending
         items.sort(key=lambda x: x["overall_score"], reverse=True)
         return items

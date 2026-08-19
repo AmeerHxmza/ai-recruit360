@@ -110,6 +110,7 @@ class CandidateService:
         )
 
         # 8. Create or Update Application Record
+        cv_match_score_10 = 8 if passed_knockout else 0
         status_str = "screening" if passed_knockout else "rejected"
         app_data = {
             "job_id": job_id,
@@ -118,8 +119,12 @@ class CandidateService:
             "cv_url": cv_url,
             "resume_text": resume_text,
             "ai_summary": knockout_reason or "Resume screening completed.",
-            "match_score": 50 if passed_knockout else 0,
-            "hiring_confidence": 50 if passed_knockout else 0,
+            "match_score": cv_match_score_10 * 10,
+            "cv_match_score": cv_match_score_10,
+            "mcq_score": 0,
+            "interview_score": 0,
+            "total_score": cv_match_score_10,
+            "hiring_confidence": cv_match_score_10 * 10,
             "passed_knockout": passed_knockout,
             "knockout_reason": knockout_reason
         }
@@ -138,6 +143,15 @@ class CandidateService:
         else:
             app_res = supabase.table("applications").insert(app_data).execute()
             application = app_res.data[0]
+
+        # Update candidate profile with Stage 1 score
+        try:
+            supabase.table("candidates").update({
+                "cv_match_score": cv_match_score_10,
+                "total_score": cv_match_score_10
+            }).eq("id", cand_profile["id"]).execute()
+        except Exception:
+            pass
 
         # 9. Create or Update Interview Session Record
         existing_interviews = supabase.table("interviews")\
@@ -168,6 +182,18 @@ class CandidateService:
                     "job_id": job_id,
                     "question_text": q_text,
                     "category": "technical"
+                }).execute()
+            except Exception:
+                pass
+
+        for idx, mcq in enumerate(mcq_data):
+            try:
+                supabase.table("questions").insert({
+                    "job_id": job_id,
+                    "question_text": mcq.get("question", ""),
+                    "category": "mcq",
+                    "mcq_options": mcq.get("options", []),
+                    "correct_option": mcq.get("correct_answer", "")
                 }).execute()
             except Exception:
                 pass

@@ -31,12 +31,9 @@ import { Logo } from "@/components/ui/logo";
 
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Jobs", href: "/dashboard/jobs", icon: Briefcase },
-  { label: "Candidates", href: "/dashboard/candidates", icon: Users },
-  { label: "Assessments", href: "/dashboard/assessments", icon: ClipboardCheck },
-  { label: "AI Interviews", href: "/dashboard/interviews", icon: Video },
-  { label: "Rankings & XAI", href: "/dashboard/rankings", icon: TrendingUp },
-  { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
+  { label: "Jobs Requisitions", href: "/dashboard/jobs", icon: Briefcase },
+  { label: "Candidates Leaderboard", href: "/dashboard/candidates", icon: Users },
+  { label: "Analytics & Integrity", href: "/dashboard/analytics", icon: BarChart3 },
   { label: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 
@@ -62,7 +59,7 @@ function SidebarContent({ pathname, isAdmin }: { pathname: string; isAdmin: bool
         <p className="eyebrow px-6 pb-2 block text-[10px] text-gray-400 tracking-wider">
           RECRUITING PLATFORM
         </p>
-        {NAV_ITEMS.slice(0, 5).map((item) => {
+        {NAV_ITEMS.map((item) => {
           const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
           return (
             <Link
@@ -99,54 +96,6 @@ function SidebarContent({ pathname, isAdmin }: { pathname: string; isAdmin: bool
             </Link>
           </div>
         )}
-
-        <div className="pt-6">
-          <p className="eyebrow px-6 pb-2 block text-[10px] text-gray-400 tracking-wider">
-            ANALYTICS &amp; ENGINE
-          </p>
-          {NAV_ITEMS.slice(5, 7).map((item) => {
-            const isActive = pathname === item.href || pathname.startsWith(item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-3.5 px-6 py-3 text-sm font-sans transition-all duration-200",
-                  isActive
-                    ? "bg-gray-800 text-white font-semibold border-l-4 border-[#4361EE]"
-                    : "text-gray-400 hover:bg-gray-800/60 hover:text-white"
-                )}
-              >
-                <item.icon className={cn("w-4 h-4 shrink-0", isActive ? "text-[#4361EE]" : "text-gray-400")} strokeWidth={2} />
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
-        </div>
-
-        <div className="pt-6">
-          <p className="eyebrow px-6 pb-2 block text-[10px] text-gray-400 tracking-wider">
-            SYSTEM SETTINGS
-          </p>
-          {NAV_ITEMS.slice(7).map((item) => {
-            const isActive = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-3.5 px-6 py-3 text-sm font-sans transition-all duration-200",
-                  isActive
-                    ? "bg-gray-800 text-white font-semibold border-l-4 border-[#4361EE]"
-                    : "text-gray-400 hover:bg-gray-800/60 hover:text-white"
-                )}
-              >
-                <item.icon className={cn("w-4 h-4 shrink-0", isActive ? "text-[#4361EE]" : "text-gray-400")} strokeWidth={2} />
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
-        </div>
       </div>
 
       {/* Sign Out Footer */}

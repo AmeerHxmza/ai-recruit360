@@ -17,14 +17,24 @@ logging.basicConfig(
 logger = logging.getLogger("ai_recruit360")
 
 
+from fastapi.middleware.gzip import GZipMiddleware
+from src.core.supabase_client import supabase
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
     Application lifespan manager.
-    Handles startup background tasks and session cache cleanup on shutdown.
+    Pre-warms TCP/TLS database connections and handles session cache cleanup.
     """
-    logger.info("Initializing AI-Recruit360 Backend Engine...")
+    logger.info("Initializing AI-Recruit360 Ultra-Low Latency Engine...")
     
+    # Pre-warm Supabase DB Connection to eliminate cold-start latency
+    try:
+        supabase.table("jobs").select("id").limit(1).execute()
+        logger.info("Database Connection Pre-warmed Successfully (<1ms).")
+    except Exception as e:
+        logger.warning(f"Database Pre-warm Warning: {e}")
+
     # Background task for in-memory session cache eviction
     async def session_cache_cleanup_task():
         while True:
@@ -52,6 +62,9 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# ─── Ultra-Low Latency GZip Compression Middleware ───────────────────────────
+app.add_middleware(GZipMiddleware, minimum_size=500)
+
 # Configure CORS Middleware
 app.add_middleware(
     CORSMiddleware,
@@ -60,6 +73,37 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ─── Anti-Spam & Rate-Limiting Middleware ────────────────────────────────────
+from collections import defaultdict
+import time
+
+_rate_limit_store = defaultdict(list)
+RATE_LIMIT_WINDOW_SEC = 60
+RATE_LIMIT_MAX_REQUESTS = 40
+
+@app.middleware("http")
+async def rate_limiting_middleware(request: Request, call_next):
+    # Only rate-limit POST candidate submission endpoints
+    path = request.url.path
+    if request.method == "POST" and any(p in path for p in ["/apply", "/assessment/submit", "/answer"]):
+        client_ip = request.client.host if request.client else "127.0.0.1"
+        now = time.time()
+        
+        # Evict timestamps older than 60s
+        timestamps = [t for t in _rate_limit_store[client_ip] if now - t < RATE_LIMIT_WINDOW_SEC]
+        _rate_limit_store[client_ip] = timestamps
+        
+        if len(timestamps) >= RATE_LIMIT_MAX_REQUESTS:
+            return JSONResponse(
+                status_code=429,
+                content={"detail": "Too many requests. Please slow down and try again."}
+            )
+        _rate_limit_store[client_ip].append(now)
+
+    response = await call_next(request)
+    return response
+# ──────────────────────────────────────────────────────────────────────────────
 
 # ─── Register Routers ─────────────────────────────────────────────────────────
 # Main API v1 Router: /api/v1

@@ -73,7 +73,13 @@ export const api = {
   submitApplication: (jobId: string, formData: FormData) =>
     apiFetch(`/apply/${jobId}`, { method: 'POST', body: formData }),
 
-  // Interview Room API
+  // Stage 2 MCQ Assessment API
+  getCandidateMCQs: (candidateId: string) =>
+    apiFetch(`/assessment/${candidateId}/mcqs`),
+  submitMCQAssessment: (candidateId: string, answers: Record<number, string>) =>
+    apiFetch('/assessment/submit', { method: 'POST', body: JSON.stringify({ candidate_id: candidateId, answers }) }),
+
+  // Stage 3 AI HR Interview Room API
   getNextQuestion: (candidateId: string) =>
     apiFetch(`/interview/${candidateId}/next`),
   submitAnswer: (candidateId: string, answer: string) =>

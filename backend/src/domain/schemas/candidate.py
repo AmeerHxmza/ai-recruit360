@@ -35,11 +35,15 @@ class CandidateLeaderboardItem(BaseModel):
     city: Optional[str]
     cv_url: str
     status: str
-    overall_score: int
-    technical_score: int
-    communication_score: int
-    honesty_score: int
-    problem_solving_score: int
+    cv_match_score: int = Field(default=0, description="Stage 1 CV Match Score out of 10")
+    mcq_score: int = Field(default=0, description="Stage 2 MCQ Score out of 20")
+    interview_score: int = Field(default=0, description="Stage 3 AI HR Interview Score out of 20")
+    total_score: int = Field(default=0, description="Total Composite Score out of 50")
+    overall_score: int = Field(default=0, description="Composite score out of 50")
+    technical_score: int = Field(default=0)
+    communication_score: int = Field(default=0)
+    honesty_score: int = Field(default=100)
+    problem_solving_score: int = Field(default=0)
     passed_knockout: bool
     knockout_reason: Optional[str]
     applied_at: str

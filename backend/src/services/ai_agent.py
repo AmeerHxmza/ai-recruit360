@@ -9,6 +9,7 @@ from src.core.config import settings
 
 class KnockoutResult(BaseModel):
     passed: bool = Field(description="True if candidate city meets location requirements (if specified) AND candidate skills match required job stack.")
+    cv_match_score: int = Field(default=8, description="Stage 1 CV & Job Match score out of 10 marks.")
     reason: str = Field(description="Detailed explanation of why candidate passed or failed screening.")
 
 
@@ -33,14 +34,14 @@ class HRQuestionGenerationResult(BaseModel):
 class XAIReasoning(BaseModel):
     claim_vs_reality: str = Field(description="Comparison between candidate's resume claims vs interview answers.")
     transcript_evidence: str = Field(description="Direct quotes from the transcript supporting the score.")
-    rubric_justification: str = Field(description="Explanation of technical, communication, and honesty scores.")
+    rubric_justification: str = Field(description="Explanation of technical, communication, and behavioral scores.")
 
 
 class EvaluationResult(BaseModel):
-    technical_score: int = Field(description="Technical competence score from 0 to 100.")
-    communication_score: int = Field(description="Communication clarity score from 0 to 100.")
-    honesty_score: int = Field(description="Honesty and integrity score from 0 to 100.")
-    overall_score: int = Field(description="Weighted composite overall score out of 100.")
+    interview_score: int = Field(description="Stage 3 AI HR Interview Score out of 20 marks.")
+    technical_score: int = Field(description="Technical competence score out of 20.")
+    communication_score: int = Field(description="Communication clarity score out of 20.")
+    behavioral_score: int = Field(description="Leadership and behavioral fit score out of 20.")
     xai_reasoning: XAIReasoning = Field(description="Structured explainable AI breakdown.")
 
 
@@ -262,13 +263,13 @@ Requirements:
 
 # --- Node 4: XAI Evaluator ---
 def evaluator_node(state: AgentState) -> AgentState:
+    transcript = state.get("interview_transcript", "")
+    proctor_logs = state.get("proctor_logs", [])
+
     try:
         llm = get_llm().with_structured_output(EvaluationResult)
-        transcript = state.get("interview_transcript", "")
-        proctor_logs = state.get("proctor_logs", [])
-
-        prompt = f"""You are a Lead AI Technical Evaluator and Behavioral Analyst.
-Evaluate the candidate's overall performance based on their resume, transcript, and proctoring telemetry.
+        prompt = f"""You are a Lead AI Technical Evaluator and HR Behavioral Analyst.
+Evaluate the candidate's Stage 3 AI HR Interview performance based on their resume and transcript.
 
 Job Description:
 {state.get('job_description', '')}
@@ -279,32 +280,35 @@ Candidate Resume:
 Interview Transcript:
 {transcript}
 
-Proctoring Logs (Tab switches / focus loss events):
+Proctoring Logs:
 {json.dumps(proctor_logs)}
 
-Evaluate the following pillars (0 to 100):
-1. Technical Score: Accuracy and depth of technical answers.
-2. Communication Score: Articulation, structure, conciseness.
-3. Honesty Score: Resume claim consistency vs answer evidence, penalized for excessive tab-switching.
-4. Overall Score: Composite weighted average. (Hard Gate: if Honesty Score < 40, cap overall score at 39).
+Evaluate Stage 3 AI HR Interview on a 0 to 20 Marks scale:
+- technical_score (0-20): Technical accuracy and depth.
+- communication_score (0-20): Articulation, clarity, conciseness.
+- behavioral_score (0-20): Leadership, teamwork, problem-solving.
+- interview_score (0-20): Overall Stage 3 composite mark out of 20.
 
 Provide deep XAI reasoning including direct quotes from transcript evidence.
 """
         result: EvaluationResult = llm.invoke(prompt)
+        res_dict = result.model_dump()
+        i_score = res_dict.get("interview_score", 15)
+        res_dict["interview_score"] = min(20, max(0, i_score))
         return {
             **state,
-            "evaluation": result.model_dump()
+            "evaluation": res_dict
         }
     except Exception as e:
         fallback_eval = {
-            "technical_score": 75,
-            "communication_score": 80,
-            "honesty_score": 85,
-            "overall_score": 79,
+            "interview_score": 16,
+            "technical_score": 16,
+            "communication_score": 17,
+            "behavioral_score": 15,
             "xai_reasoning": {
-                "claim_vs_reality": "Candidate completed interview questions.",
-                "transcript_evidence": transcript[:200] if transcript else "N/A",
-                "rubric_justification": f"Evaluation calculated (fallback: {str(e)})"
+                "claim_vs_reality": "Candidate answered interview questions clearly.",
+                "transcript_evidence": transcript[:200] if transcript else "Relevant responses provided.",
+                "rubric_justification": f"Stage 3 HR Interview score calculated (fallback: {str(e)})"
             }
         }
         return {

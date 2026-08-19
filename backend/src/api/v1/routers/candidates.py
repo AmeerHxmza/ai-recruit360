@@ -12,16 +12,16 @@ router = APIRouter()
 @router.get("")
 @router.get("/")
 async def list_candidates_leaderboard(
-    job_id: str,
+    job_id: Optional[str] = None,
     current_user: dict = Depends(require_active_recruiter)
 ):
     """
-    Recruiter Endpoint: Fetches candidate leaderboard for a specific job, ranked by overall AI score.
+    Recruiter Endpoint: Fetches candidate leaderboard ranked by 50-mark composite score.
     """
     try:
         leaderboard = candidate_service.get_leaderboard(job_id)
         return {
-            "job_id": job_id,
+            "job_id": job_id or "all",
             "total_candidates": len(leaderboard),
             "candidates": leaderboard
         }

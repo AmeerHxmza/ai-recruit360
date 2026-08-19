@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useState, use, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   CheckCircle2,
@@ -8,16 +8,13 @@ import {
   AlertTriangle,
   ArrowRight,
   Loader2,
-  Sparkles,
-  HelpCircle,
   Globe2,
   ShieldCheck,
-  Code2,
   Terminal,
+  Check,
 } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
-
-const FASTAPI_URL = process.env.NEXT_PUBLIC_FASTAPI_URL || "http://localhost:8000";
+import { api } from "@/lib/api";
 
 interface PageProps {
   params: Promise<{ candidate_id: string }>;
@@ -36,35 +33,38 @@ export default function MCQAssessmentPage({ params }: PageProps) {
 
   const [mcqList, setMcqList] = useState<MCQItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [userAnswers, setUserAnswers] = useState<Record<number, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [lang, setLang] = useState<"en" | "ur">("en");
+  const [showDisclaimer, setShowDisclaimer] = useState(true);
 
   // 20-Second Reverse Countdown Timer per Question
   const [timeLeft, setTimeLeft] = useState(20);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // 1. Fetch Candidate MCQs on mount
   useEffect(() => {
     async function fetchMCQs() {
       setLoading(true);
       try {
-        const res = await fetch(`${FASTAPI_URL}/api/assessment/mcq/${candidateId}`);
-        if (res.ok) {
-          const data = await res.json();
-          if (data.mcq_data && data.mcq_data.length > 0) {
-            setMcqList(data.mcq_data);
-            setLoading(false);
-            return;
-          }
+        const res = await api.getCandidateMCQs(candidateId);
+        if (res && res.mcqs && res.mcqs.length > 0) {
+          const mapped: MCQItem[] = res.mcqs.map((m: any) => ({
+            question: m.question_text || m.question || "Technical Qualification Question",
+            options: m.mcq_options || m.options || ["Option A", "Option B", "Option C", "Option D"],
+            correct_answer: m.correct_option || m.correct_answer
+          }));
+          setMcqList(mapped);
+          setLoading(false);
+          return;
         }
       } catch (err) {
-        console.warn("Using fallback default MCQ list:", err);
+        console.warn("Using default fallback 10 MCQs:", err);
       }
 
-      // Default 10 technical MCQs probing core computer science & software engineering
+      // Default 10 technical MCQs
       setMcqList([
         {
           question: "Which HTTP method is idempotent and used to create or replace a target resource payload?",
@@ -122,22 +122,37 @@ export default function MCQAssessmentPage({ params }: PageProps) {
     fetchMCQs();
   }, [candidateId]);
 
-  // Timer Countdown Effect
+  // Timer Countdown Effect (20 Seconds Per MCQ)
   useEffect(() => {
-    if (loading || submitting || mcqList.length === 0) return;
+    if (loading || submitting || mcqList.length === 0 || showDisclaimer) return;
 
-    const timer = setInterval(() => {
+    setTimeLeft(20);
+    if (timerRef.current) clearInterval(timerRef.current);
+
+    timerRef.current = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
-          handleNextQuestion();
+          if (timerRef.current) clearInterval(timerRef.current);
+          handleAutoAdvanceOnTimeout();
           return 20;
         }
         return prev - 1;
       });
     }, 1000);
 
-    return () => clearInterval(timer);
-  }, [currentIndex, loading, submitting, mcqList]);
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [currentIndex, loading, submitting, mcqList, showDisclaimer]);
+
+  const handleAutoAdvanceOnTimeout = () => {
+    if (currentIndex < mcqList.length - 1) {
+      setCurrentIndex((prev) => prev + 1);
+      setSelectedOption(userAnswers[currentIndex + 1] || null);
+    } else {
+      handleFinalSubmit();
+    }
+  };
 
   const handleSelectOption = (option: string) => {
     setSelectedOption(option);
@@ -148,7 +163,6 @@ export default function MCQAssessmentPage({ params }: PageProps) {
     if (currentIndex < mcqList.length - 1) {
       setCurrentIndex((prev) => prev + 1);
       setSelectedOption(userAnswers[currentIndex + 1] || null);
-      setTimeLeft(20);
     } else {
       handleFinalSubmit();
     }
@@ -157,13 +171,9 @@ export default function MCQAssessmentPage({ params }: PageProps) {
   const handleFinalSubmit = async () => {
     setSubmitting(true);
     try {
-      await fetch(`${FASTAPI_URL}/api/assessment/mcq/${candidateId}/submit`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ answers: userAnswers }),
-      }).catch(() => {});
+      await api.submitMCQAssessment(candidateId, userAnswers);
     } catch {
-      // Proceed to interview room regardless of network state
+      // Proceed to interview room
     }
     router.push(`/interview/${candidateId}`);
   };
@@ -171,10 +181,10 @@ export default function MCQAssessmentPage({ params }: PageProps) {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0F172A] flex items-center justify-center p-4">
-        <div className="glass-card-dark p-12 text-center border border-[#0EA5E9]/30 max-w-md w-full">
-          <Loader2 className="w-12 h-12 text-[#0EA5E9] animate-spin mx-auto mb-6" />
-          <h3 className="text-xl font-extrabold text-[#F8FAFC]">Preparing Technical Assessment</h3>
-          <p className="text-xs text-[#94A3B8] mt-2">Loading 10 personalized questions for candidate screening...</p>
+        <div className="glass-card-dark p-12 text-center border border-[#4361EE]/30 max-w-md w-full shadow-2xl">
+          <Loader2 className="w-12 h-12 text-[#4361EE] animate-spin mx-auto mb-6" />
+          <h3 className="text-xl font-extrabold text-[#F8FAFC]">Preparing Technical 10 MCQs</h3>
+          <p className="text-xs text-[#94A3B8] mt-2">Generating candidate-specific questions from CV and JD...</p>
         </div>
       </div>
     );
@@ -185,124 +195,159 @@ export default function MCQAssessmentPage({ params }: PageProps) {
   return (
     <div className="min-h-screen bg-[#0F172A] text-[#94A3B8] font-sans py-8 px-4 sm:px-6 lg:px-8 flex flex-col justify-between relative overflow-hidden">
       {/* Background Ambient Glow */}
-      <div className="absolute top-0 right-1/4 w-[600px] h-[300px] bg-[#0EA5E9]/10 blur-[120px] pointer-events-none -z-10" />
+      <div className="absolute top-0 right-1/4 w-[600px] h-[300px] bg-[#4361EE]/10 blur-[140px] pointer-events-none -z-10" />
 
-      {/* Top Bar Header */}
+      {/* Header */}
       <header className="max-w-5xl mx-auto w-full flex items-center justify-between pb-6 border-b border-[#334155]">
         <Logo size="md" href="/" variant="dark" glow />
 
         <div className="flex items-center gap-4">
           <button
             onClick={() => setLang(lang === "en" ? "ur" : "en")}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#1E293B] border border-[#334155] text-xs font-semibold text-[#F8FAFC] hover:border-[#0EA5E9] transition-all"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#1E293B] border border-[#334155] text-xs font-semibold text-[#F8FAFC] hover:border-[#4361EE] transition-all cursor-pointer"
           >
-            <Globe2 className="w-3.5 h-3.5 text-[#0EA5E9]" />
+            <Globe2 className="w-3.5 h-3.5 text-[#4361EE]" />
             <span>Language: {lang === "en" ? "English" : "اردو (Urdu)"}</span>
           </button>
 
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#1E293B] border border-[#0EA5E9]/40 text-xs font-mono text-[#0EA5E9]">
-            <Clock className="w-3.5 h-3.5 animate-pulse" />
-            <span>00:{timeLeft < 10 ? `0${timeLeft}` : timeLeft}</span>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#1E293B] border border-[#F59E0B]/40 text-xs font-mono text-[#F59E0B]">
+            <Clock className="w-3.5 h-3.5 animate-spin" />
+            <span className="font-bold text-sm">00:{timeLeft < 10 ? `0${timeLeft}` : timeLeft}</span>
           </div>
         </div>
       </header>
 
-      {/* Main Assessment Container */}
+      {/* Main Container */}
       <main className="max-w-4xl mx-auto w-full my-8">
-        {/* Stepper Progress Bar */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-3 text-xs font-mono">
-            <span className="text-[#0EA5E9] font-bold">QUESTION {currentIndex + 1} OF {mcqList.length}</span>
-            <span className="text-[#64748B]">Auto-Saved Draft</span>
-          </div>
+        {/* Stage 2 Disclaimer Modal */}
+        {showDisclaimer ? (
+          <div className="glass-card-dark p-8 border border-[#F59E0B]/40 text-center max-w-2xl mx-auto shadow-2xl space-y-6">
+            <div className="w-16 h-16 rounded-full bg-[#F59E0B]/15 border border-[#F59E0B]/30 flex items-center justify-center text-[#F59E0B] mx-auto">
+              <Clock className="w-8 h-8 animate-pulse" />
+            </div>
 
-          <div className="grid grid-cols-10 gap-2">
-            {mcqList.map((_, idx) => (
-              <div
-                key={idx}
-                className={`h-2 rounded-full transition-all ${
-                  idx === currentIndex
-                    ? "bg-[#0EA5E9] shadow-md shadow-[#0EA5E9]/40"
-                    : userAnswers[idx]
-                    ? "bg-[#10B981]"
-                    : "bg-[#334155]"
-                }`}
-              />
-            ))}
-          </div>
-        </div>
+            <h2 className="text-2xl font-extrabold text-[#F8FAFC]">Stage 2 Disclaimer: 20-Second MCQ Timer</h2>
 
-        {/* Question Card */}
-        <div className="glass-card-dark p-8 sm:p-10 border border-[#334155] shadow-2xl relative">
-          <div className="flex items-center gap-2 mb-4">
-            <Terminal className="w-5 h-5 text-[#0EA5E9]" />
-            <span className="eyebrow text-[#0EA5E9]">Technical Qualification Probing</span>
-          </div>
-
-          <h2 className="text-xl sm:text-2xl font-bold text-[#F8FAFC] leading-snug mb-8">
-            {lang === "ur" && currentMCQ.urdu_question
-              ? currentMCQ.urdu_question
-              : currentMCQ.question}
-          </h2>
-
-          {/* Options Grid */}
-          <div className="grid grid-cols-1 gap-4 mb-8">
-            {currentMCQ.options.map((opt, oIdx) => {
-              const letter = String.fromCharCode(65 + oIdx);
-              const isSelected = selectedOption === opt;
-
-              return (
-                <div
-                  key={oIdx}
-                  onClick={() => handleSelectOption(opt)}
-                  className={`p-4 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
-                    isSelected
-                      ? "bg-[#1E293B] border-[#0EA5E9] shadow-lg shadow-[#0EA5E9]/15"
-                      : "bg-[#0F172A]/70 border-[#334155] hover:border-[#475569] hover:bg-[#1E293B]/50"
-                  }`}
-                >
-                  <div className="flex items-center gap-4">
-                    <div
-                      className={`w-8 h-8 rounded-lg flex items-center justify-center font-mono font-bold text-sm ${
-                        isSelected
-                          ? "bg-[#0EA5E9] text-white"
-                          : "bg-[#334155]/60 text-[#94A3B8]"
-                      }`}
-                    >
-                      {letter}
-                    </div>
-                    <span className={`text-sm sm:text-base ${isSelected ? "text-[#F8FAFC] font-semibold" : "text-[#94A3B8]"}`}>
-                      {opt}
-                    </span>
-                  </div>
-
-                  {isSelected && <CheckCircle2 className="w-5 h-5 text-[#0EA5E9]" />}
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Action Footer */}
-          <div className="flex items-center justify-between pt-6 border-t border-[#334155]">
-            <div className="flex items-center gap-2 text-xs text-[#64748B]">
-              <ShieldCheck className="w-4 h-4 text-[#10B981]" />
-              <span>Proctor Telemetry Active</span>
+            <div className="p-5 rounded-xl bg-[#0F172A] border border-[#EF4444]/40 text-left text-sm text-[#94A3B8] space-y-3">
+              <div className="flex items-start gap-2 text-[#F87171] font-semibold">
+                <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
+                <span>Important Assessment Rules:</span>
+              </div>
+              <ul className="list-disc list-inside space-y-2 text-xs pl-1">
+                <li>Every question has a strict <strong>20-second countdown timer</strong>.</li>
+                <li>If an answer is not submitted within 20 seconds, the question will <strong>automatically move forward</strong> and will be <strong>marked 0</strong>.</li>
+                <li>Image capturing, AI copy-pasting, and tab switching are logged to anti-cheat telemetry.</li>
+              </ul>
             </div>
 
             <button
-              onClick={handleNextQuestion}
-              className="btn-cyan text-sm px-6 py-2.5 shadow-md shadow-[#0EA5E9]/20"
+              onClick={() => setShowDisclaimer(false)}
+              className="btn-pill-primary w-full justify-center py-3.5 text-base cursor-pointer shadow-lg shadow-[#4361EE]/30"
             >
-              <span>{currentIndex === mcqList.length - 1 ? "Finalize & Enter Interview Room" : "Next Question"}</span>
-              <ArrowRight className="w-4 h-4" />
+              <span>I Understand — Begin 10 MCQs Test</span>
+              <ArrowRight className="w-5 h-5" />
             </button>
           </div>
-        </div>
+        ) : (
+          /* MCQ Question Card */
+          <div>
+            {/* Stepper Progress Bar */}
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-2 text-xs font-mono">
+                <span className="text-[#4361EE] font-bold">QUESTION {currentIndex + 1} OF {mcqList.length}</span>
+                <span className="text-[#F59E0B] font-bold flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5" /> {timeLeft}s remaining
+                </span>
+              </div>
+
+              <div className="grid grid-cols-10 gap-2">
+                {mcqList.map((_, idx) => (
+                  <div
+                    key={idx}
+                    className={`h-2 rounded-full transition-all ${
+                      idx === currentIndex
+                        ? "bg-[#4361EE] shadow-md shadow-[#4361EE]/40"
+                        : userAnswers[idx]
+                        ? "bg-[#10B981]"
+                        : "bg-[#334155]"
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Question Box */}
+            <div className="glass-card-dark p-8 sm:p-10 border border-[#334155] shadow-2xl relative space-y-6">
+              <div className="flex items-center gap-2">
+                <Terminal className="w-5 h-5 text-[#4361EE]" />
+                <span className="eyebrow text-[#4361EE]">Stage 2 Technical &amp; CV Qualification</span>
+              </div>
+
+              <h2 className="text-xl sm:text-2xl font-bold text-[#F8FAFC] leading-snug">
+                {lang === "ur" && currentMCQ.urdu_question
+                  ? currentMCQ.urdu_question
+                  : currentMCQ.question}
+              </h2>
+
+              {/* Options Grid */}
+              <div className="grid grid-cols-1 gap-4">
+                {currentMCQ.options.map((opt, oIdx) => {
+                  const letter = String.fromCharCode(65 + oIdx);
+                  const isSelected = selectedOption === opt;
+
+                  return (
+                    <div
+                      key={oIdx}
+                      onClick={() => handleSelectOption(opt)}
+                      className={`p-4 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
+                        isSelected
+                          ? "bg-[#1E293B] border-[#4361EE] shadow-lg shadow-[#4361EE]/20 text-[#F8FAFC] font-semibold"
+                          : "bg-[#0F172A]/70 border-[#334155] hover:border-[#475569] text-[#94A3B8]"
+                      }`}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div
+                          className={`w-8 h-8 rounded-lg flex items-center justify-center font-mono font-bold text-sm ${
+                            isSelected
+                              ? "bg-[#4361EE] text-white"
+                              : "bg-[#334155]/60 text-[#94A3B8]"
+                          }`}
+                        >
+                          {letter}
+                        </div>
+                        <span className="text-sm sm:text-base">{opt}</span>
+                      </div>
+
+                      {isSelected && <Check className="w-5 h-5 text-[#4361EE]" />}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Footer */}
+              <div className="flex items-center justify-between pt-6 border-t border-[#334155]">
+                <div className="flex items-center gap-2 text-xs text-[#64748B]">
+                  <ShieldCheck className="w-4 h-4 text-[#10B981]" />
+                  <span>Proctoring Active (20s Timer Enforced)</span>
+                </div>
+
+                <button
+                  onClick={handleNextQuestion}
+                  disabled={submitting}
+                  className="btn-pill-primary text-sm px-6 py-2.5 shadow-md shadow-[#4361EE]/20 cursor-pointer"
+                >
+                  <span>{currentIndex === mcqList.length - 1 ? "Submit MCQs & Launch Simli AI Avatar" : "Next Question"}</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
 
       {/* Footer */}
       <footer className="max-w-5xl mx-auto w-full text-center py-4 text-xs text-[#64748B] border-t border-[#334155]/60">
-        AI-Recruit360 Candidate Assessment System • Candidate ID: {candidateId}
+        AI-Recruit360 Candidate Stage 2 MCQs System • Candidate ID: {candidateId}
       </footer>
     </div>
   );

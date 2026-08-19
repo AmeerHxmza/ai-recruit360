@@ -171,11 +171,11 @@ export default function ApplyJobPage() {
         return;
       }
 
-      // Candidate Screening Passed -> Route to Technical MCQs Assessment Test first
+      // Candidate Screening Passed -> Route to 3-Stage Screening Room (/interview/{id})
       if (data.candidate_id) {
-        router.push(`/assessment/${data.candidate_id}`);
+        router.push(`/interview/${data.candidate_id}`);
       } else {
-        router.push(`/assessment/demo-candidate-123`);
+        router.push(`/interview/demo-candidate-123`);
       }
     } catch (err: any) {
       setErrorMessage(err.message || "An unexpected error occurred during application processing.");

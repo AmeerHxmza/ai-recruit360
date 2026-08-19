@@ -32,6 +32,8 @@ async def submit_answer(candidate_id: str, payload: AnswerSubmitRequest):
     except SessionExpiredError as e:
         raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
+        import logging
+        logging.getLogger("ai_recruit360").error(f"Error in submit_answer endpoint: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to record answer: {str(e)}")
 
 

@@ -1,4 +1,5 @@
 import logging
+import asyncio
 from typing import Dict, Any, List, Optional
 from src.core.session_cache import session_cache
 from src.infrastructure.repositories.interview_repository import InterviewRepository
@@ -101,8 +102,11 @@ class InterviewService:
         is_completed = result["is_completed"]
 
         if is_completed:
-            # Asynchronously flush interview results and run XAI evaluation
-            asyncio.create_task(self.flush_completed_interview(session))
+            # Synchronously flush interview results and run XAI evaluation
+            try:
+                await self.flush_completed_interview(session)
+            except Exception as e:
+                logger.error(f"Error executing flush_completed_interview: {e}")
 
         return {
             "message": "Answer recorded successfully.",
@@ -153,7 +157,7 @@ class InterviewService:
                 except Exception:
                     pass
 
-            # Run 4D XAI Evaluation Service
+            # Run 4D XAI Evaluation Service for Stage 3 (0-20 Marks)
             eval_res = await evaluation_service.evaluate_interview_session(
                 candidate_id=candidate_id,
                 job_description=session.job_description,
@@ -162,31 +166,62 @@ class InterviewService:
             )
 
             scores = eval_res.get("scores", {})
-            tech_score = scores.get("technical_score", 75)
-            comm_score = scores.get("communication_score", 80)
-            honesty_score = scores.get("honesty_score", 85)
-            problem_score = scores.get("problem_solving_score", 75)
-            overall_score = scores.get("overall_score", 79)
-            xai = eval_res.get("xai_reasoning", {})
+            interview_score_20 = scores.get("interview_score", 16)
 
-            # Save evaluation results to Supabase DB
+            # Fetch candidate's exact Stage 1 (CV Match /10) and Stage 2 (MCQ /20) scores from DB
+            cv_match_score_10 = 8
+            mcq_score_20 = 2
+            try:
+                cand_data = supabase.table("candidates").select("cv_match_score, mcq_score").eq("id", candidate_id).execute()
+                if cand_data.data:
+                    c = cand_data.data[0]
+                    if c.get("cv_match_score") is not None:
+                        cv_match_score_10 = c.get("cv_match_score")
+                    if c.get("mcq_score") is not None:
+                        mcq_score_20 = c.get("mcq_score")
+            except Exception:
+                pass
+
+            # Calculate Composite 50-Mark Total Score
+            total_score_50 = cv_match_score_10 + mcq_score_20 + interview_score_20
+
+            # Save evaluation results and composite 50-mark score to Supabase DB
             self.interview_repo.save_interview_evaluation(
                 interview_id=interview_id,
                 application_id=application_id,
-                overall_score=overall_score,
-                truthfulness_score=honesty_score,
-                technical_score=tech_score,
-                communication_score=comm_score,
-                honesty_score=honesty_score,
-                problem_solving_score=problem_score,
-                xai_reasoning=xai,
+                overall_score=total_score_50,
+                truthfulness_score=100 - min(60, len(proctor_events) * 20),
+                technical_score=scores.get("technical_score", 16),
+                communication_score=scores.get("communication_score", 17),
+                honesty_score=100 - min(60, len(proctor_events) * 20),
+                problem_solving_score=scores.get("behavioral_score", 15),
+                xai_reasoning=eval_res.get("xai_reasoning", {}),
                 strengths=eval_res.get("strengths", []),
                 red_flags=eval_res.get("red_flags", [])
             )
 
+            # Update candidate & application records with 50-mark composite breakdown
+            try:
+                supabase.table("candidates").update({
+                    "cv_match_score": cv_match_score_10,
+                    "mcq_score": mcq_score_20,
+                    "interview_score": interview_score_20,
+                    "total_score": total_score_50
+                }).eq("id", candidate_id).execute()
+
+                supabase.table("applications").update({
+                    "cv_match_score": cv_match_score_10,
+                    "mcq_score": mcq_score_20,
+                    "interview_score": interview_score_20,
+                    "total_score": total_score_50,
+                    "status": "completed"
+                }).eq("id", application_id).execute()
+            except Exception:
+                pass
+
             # Remove session from in-memory cache
             await session_cache.remove_session(candidate_id)
-            logger.info(f"Successfully flushed interview and XAI evaluation for Candidate {candidate_id}")
+            logger.info(f"Successfully flushed interview (Total Score: {total_score_50}/50) for Candidate {candidate_id}")
 
         except Exception as e:
             logger.error(f"Failed to flush interview session for candidate {session.candidate_id}: {e}", exc_info=True)

@@ -1,6 +1,4 @@
-import { StatsCard } from "@/components/features/";
 import { BarChart3, Clock, Filter, LineChart, TrendingUp, Users, Sparkles } from "lucide-react";
-import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 
 export const revalidate = 0;
